@@ -1,3 +1,10 @@
+Tue Sep 21 13:30:11 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: release of 0.0.10
+	* libgamin/fam.h libgamin/gam_api.c: fixing an API/ABI incompatibility
+	  between FAM and gamin about FAMErrno and FamErrlist, which though
+	  in fam-2.6.10 are documented as not used, should close bug #132944
+
 Mon Sep 20 17:18:23 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* doc/config.html doc/*: added documentation for the config file.

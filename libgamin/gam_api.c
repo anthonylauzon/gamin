@@ -23,6 +23,29 @@
 
 #define MAX_RETRIES 25
 
+int FAMErrno = 0;
+
+enum FAMError {
+    FAM_OK = 0,
+    FAM_ARG,	/* Bad arguments */
+    FAM_FILE,	/* Bad filename */
+    FAM_CONNECT,/* Connection failure */
+    FAM_AUTH,	/* Authentication failure */
+    FAM_MEM,	/* Memory allocation */
+    FAM_UNIMPLEM/* Unimplemented */
+};
+
+const char *FamErrlist[] = {
+    "Okay",
+    "Bad arguments",
+    "Bad filename",
+    "Connection failure",
+    "Authentication failure",
+    "Memory allocation failure",
+    "Unimplemented function",
+    NULL
+};
+
 #ifdef TEST_DEBUG
 static char *
 gamin_dump_event(FAMEvent *event) {
@@ -489,20 +512,28 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
         reqnum = fr->reqnum;
     } else if (has_reqnum == 0) {
         len = strlen(filename);
-        if (len > MAXPATHLEN)
+        if (len > MAXPATHLEN) {
+	    FAMErrno = FAM_FILE;
             return (-1);
+	}
         reqnum = gamin_data_get_reqnum(data, filename, (int) type, userData);
-        if (reqnum < 0)
+        if (reqnum < 0) {
+	    FAMErrno = FAM_ARG;
             return (-1);
+	}
 	fr->reqnum = reqnum;
     } else {
         len = strlen(filename);
-        if (len > MAXPATHLEN)
+        if (len > MAXPATHLEN) {
+	    FAMErrno = FAM_FILE;
             return (-1);
+	}
         reqnum = gamin_data_get_request(data, filename, (int) type, userData,
 	                                fr->reqnum);
-        if (reqnum < 0)
+        if (reqnum < 0) {
+	    FAMErrno = FAM_MEM;
             return (-1);
+	}
     }
     tlen = sizeof(GAMPacket) - MAXPATHLEN + len;
     /* We use only local socket so no need for network byte order conversion */
@@ -517,6 +548,9 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
 
     GAM_DEBUG(DEBUG_INFO, "gamin_send_request %d for socket %d\n", reqnum,
               fd);
+    if (ret < 0) {
+        FAMErrno = FAM_CONNECT;
+    }
     return (ret);
 }
 
@@ -839,27 +873,34 @@ FAMOpen(FAMConnection * fc)
 
     GAM_DEBUG(DEBUG_INFO, "FAMOpen()\n");
 
-    if (fc == NULL)
+    if (fc == NULL) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     socket_name = gamin_get_socket_path();
-    if (socket_name == NULL)
+    if (socket_name == NULL) {
+        FAMErrno = FAM_CONNECT;
         return (-1);
+    }
 
     fd = gamin_connect_unix_socket(socket_name);
 
     free(socket_name);
     if (fd < 0) {
+        FAMErrno = FAM_CONNECT;
         return (-1);
     }
     ret = gamin_write_credential_byte(fd);
     if (ret != 0) {
+        FAMErrno = FAM_CONNECT;
         close(fd);
         return (-1);
     }
     fc->fd = fd;
     fc->client = (void *) gamin_data_new();
     if (fc->client == NULL) {
+        FAMErrno = FAM_MEM;
         close(fd);
         return (-1);
     }
@@ -905,8 +946,10 @@ FAMClose(FAMConnection * fc)
 {
     int ret;
 
-    if (fc == NULL)
+    if (fc == NULL) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     GAM_DEBUG(DEBUG_INFO, "FAMClose()\n");
 
@@ -931,15 +974,21 @@ int
 FAMMonitorDirectory(FAMConnection * fc, const char *filename,
                     FAMRequest * fr, void *userData)
 {
-    if ((fc == NULL) || (filename == NULL) || (fr == NULL))
+    if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     GAM_DEBUG(DEBUG_INFO, "FAMMonitorDirectory(%s)\n", filename);
 
-    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN))
+    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN)) {
+        FAMErrno = FAM_FILE;
         return (-1);
-    if ((fc->fd < 0) || (fc->client == NULL))
+    }
+    if ((fc->fd < 0) || (fc->client == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
     return (gamin_send_request(GAM_REQ_DIR, fc->fd, filename,
                                fr, userData, fc->client, 0));
 }
@@ -958,16 +1007,22 @@ int
 FAMMonitorDirectory2(FAMConnection * fc, const char *filename,
                      FAMRequest * fr)
 {
-    if ((fc == NULL) || (filename == NULL) || (fr == NULL))
+    if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     GAM_DEBUG(DEBUG_INFO, "FAMMonitorDirectory2(%s, %d)\n",
               filename, fr->reqnum);
 
-    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN))
+    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN)) {
+        FAMErrno = FAM_FILE;
         return (-1);
-    if ((fc->fd < 0) || (fc->client == NULL))
+    }
+    if ((fc->fd < 0) || (fc->client == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     return (gamin_send_request(GAM_REQ_DIR, fc->fd, filename,
                                fr, NULL, fc->client, 1));
@@ -988,15 +1043,21 @@ int
 FAMMonitorFile(FAMConnection * fc, const char *filename,
                FAMRequest * fr, void *userData)
 {
-    if ((fc == NULL) || (filename == NULL) || (fr == NULL))
+    if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     GAM_DEBUG(DEBUG_INFO, "FAMMonitorFile(%s)\n", filename);
 
-    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN))
+    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN)) {
+        FAMErrno = FAM_FILE;
         return (-1);
-    if ((fc->fd < 0) || (fc->client == NULL))
+    }
+    if ((fc->fd < 0) || (fc->client == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
     return (gamin_send_request(GAM_REQ_FILE, fc->fd, filename,
                                fr, userData, fc->client, 0));
 }
@@ -1014,15 +1075,21 @@ FAMMonitorFile(FAMConnection * fc, const char *filename,
 int
 FAMMonitorFile2(FAMConnection * fc, const char *filename, FAMRequest * fr)
 {
-    if ((fc == NULL) || (filename == NULL) || (fr == NULL))
+    if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     GAM_DEBUG(DEBUG_INFO, "FAMMonitorFile2(%s, %d)\n", filename, fr->reqnum);
 
-    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN))
+    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN)) {
+        FAMErrno = FAM_FILE;
         return (-1);
-    if ((fc->fd < 0) || (fc->client == NULL))
+    }
+    if ((fc->fd < 0) || (fc->client == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
     return (gamin_send_request(GAM_REQ_FILE, fc->fd, filename,
                                fr, NULL, fc->client, 1));
 }
@@ -1053,6 +1120,7 @@ FAMMonitorCollection(FAMConnection * fc, const char *filename,
     gam_error(DEBUG_INFO,
               "Unsupported call filename %s, depth %d, mask %s\n",
               filename, depth, mask);
+    FAMErrno = FAM_UNIMPLEM;
     return (-1);
 }
 
@@ -1073,11 +1141,15 @@ FAMNextEvent(FAMConnection * fc, FAMEvent * fe)
     int fd;
     GAMDataPtr conn;
 
-    if ((fc == NULL) || (fe == NULL))
+    if ((fc == NULL) || (fe == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
     conn = fc->client;
-    if (conn == NULL)
+    if (conn == NULL) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     GAM_DEBUG(DEBUG_INFO, "FAMNextEvent(fd = %d)\n", fc->fd);
 
@@ -1089,12 +1161,15 @@ FAMNextEvent(FAMConnection * fc, FAMEvent * fe)
     if (!gamin_data_event_ready(conn)) {
         if (gamin_read_data(conn, fc->fd) < 0) {
 	    gamin_try_reconnect(conn, fc->fd);
+	    FAMErrno = FAM_CONNECT;
 	    return (-1);
 	}
     }
     ret = gamin_data_read_event(conn, fe);
-    if (ret < 0)
+    if (ret < 0) {
+        FAMErrno = FAM_CONNECT;
         return (ret);
+    }
     fe->fc = fc;
 #ifdef TEST_DEBUG
     GAM_DEBUG(DEBUG_INFO, "FAMNextEvent : %s\n", gamin_dump_event(fe));
@@ -1116,11 +1191,15 @@ FAMPending(FAMConnection * fc)
     int ret;
     GAMDataPtr conn;
 
-    if (fc == NULL)
+    if (fc == NULL) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
     conn = fc->client;
-    if (conn == NULL)
+    if (conn == NULL) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     GAM_DEBUG(DEBUG_INFO, "FAMPending(fd = %d)\n", fc->fd);
 
@@ -1154,10 +1233,14 @@ FAMCancelMonitor(FAMConnection * fc, FAMRequest * fr)
     GAMDataPtr conn;
     int ret;
 
-    if ((fc == NULL) || (fr == NULL))
+    if ((fc == NULL) || (fr == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
-    if ((fc->fd < 0) || (fc->client == NULL))
+    }
+    if ((fc->fd < 0) || (fc->client == NULL)) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     GAM_DEBUG(DEBUG_INFO, "FAMCancelMonitor(%d)\n", fr->reqnum);
 
@@ -1166,8 +1249,10 @@ FAMCancelMonitor(FAMConnection * fc, FAMRequest * fr)
      */
     conn = fc->client;
     ret = gamin_data_del_req(conn, fr->reqnum);
-    if (ret < 0)
+    if (ret < 0) {
+        FAMErrno = FAM_ARG;
         return (-1);
+    }
 
     /*
      * send destruction message to the server
@@ -1175,5 +1260,8 @@ FAMCancelMonitor(FAMConnection * fc, FAMRequest * fr)
     ret = gamin_send_request(GAM_REQ_CANCEL, fc->fd, NULL,
                              fr, NULL, fc->client, 0);
 
+    if (ret != 0) {
+        FAMErrno = FAM_CONNECT;
+    }
     return (ret);
 }

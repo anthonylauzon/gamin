@@ -1,5 +1,6 @@
 /*
     Copyright (C) 1999 Silicon Graphics, Inc.  All Rights Reserved.
+    Copyright (C) 2004 Red Hat, Inc.
 
     This program is free software; you can redistribute it and/or modify it
     under the terms of version 2.1 of the GNU Lesser General Public License
@@ -175,6 +176,24 @@ extern int FAMCancelMonitor	(FAMConnection *fc,
 extern int FAMNextEvent		(FAMConnection *fc,
 				 FAMEvent *fe);
 extern int FAMPending		(FAMConnection* fc);
+
+/**
+ * FAMErrno:
+ *
+ * If an error occurs within libgamin FAMErrno should be set to a
+ * non-zero value.
+ */
+extern int FAMErrno;
+
+/**
+ * FamErrList:
+ *
+ * In case FAMErrno is set, FAMErrlist is a global string array indexed
+ * by FAMErrno that describes the last error that happened.
+ * NOTE: this is not a good mechanism, it's present here only to provide
+ *       API and ABI compatibility with FAM.
+ */
+extern const char *FamErrlist[];
 
 #ifdef __cplusplus
 }

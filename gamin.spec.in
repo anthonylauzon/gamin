@@ -74,6 +74,11 @@ rm -fr %{buildroot}
 * @RELDATE@ Daniel Veillard <veillard@redhat.com>
 - upstream release @VERSION@
 
+* Tue Sep 21 2004 Daniel Veillard <veillard@redhat.com> 0.0.10-1
+- more documentation
+- Added support for a configuration file $HOME/.gaminrc
+- fixes FAM compatibility issues with FAMErrno and FamErrlist #132944
+
 * Wed Sep  1 2004 Daniel Veillard <veillard@redhat.com> 0.0.9-1
 - fix crash with konqueror #130967
 - exclude kernel (dnotify) monitoring for /mnt//* /media//*

@@ -5,6 +5,14 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.10: Sep 21 2004:
+   - fixed API/ABI incompatibility between FAM and gamin about FAMErrno and
+    FamErrlist
+   - added support for a per-user configuration file $HOME/.gaminrc
+   - applied a portability patch from Michael Banck
+   - extended the documentation
+
+
 0.0.9: Sep 1 2004:
    - fix konqueror crash Red Hat bug #130967
    - statically excludes /mnt//* /media//* from kernel monitoring to avoid
