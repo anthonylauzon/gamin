@@ -10,8 +10,6 @@ URL: http://www.gnome.org/~veillard/gamin/
 Obsoletes: fam
 Provides: fam
 Provides: libfam.so.0
-Prefix: %{_prefix}
-Docdir: %{_docdir}
 
 %description
 This C library provides an API and ABI compatible file alteration
@@ -56,14 +54,13 @@ rm -fr %{buildroot}
 
 %doc AUTHORS ChangeLog NEWS README Copyright TODO
 %doc doc/*.html
+%doc doc/*.txt
 %{_libdir}/lib*.so.*
 %{_libexecdir}/gam_server
 
 %files devel
 %defattr(-, root, root)
 
-%doc AUTHORS ChangeLog NEWS README Copyright TODO
-%doc doc/*.txt
 %{_libdir}/lib*.so
 %{_libdir}/*a
 %{_includedir}/fam.h
@@ -71,8 +68,8 @@ rm -fr %{buildroot}
 
 
 %changelog
-* @RELDATE@ Daniel Veillard <veillard@redhat.com>
-- upstream release @VERSION@
+* Thu Sep 30 2004 Daniel Veillard <veillard@redhat.com> 0.0.12-1
+- potential fix for a hard to reproduce looping problem.
 
 * Mon Sep 27 2004 Daniel Veillard <veillard@redhat.com> 0.0.11-1
 - update to the latest version of inotify

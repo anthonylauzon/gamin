@@ -1,3 +1,7 @@
+Thu Sep 30 15:34:19 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: release 0.0.12
+
 Tue Sep 28 01:31:52 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: adding missing locks around a list
