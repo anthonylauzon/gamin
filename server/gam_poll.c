@@ -1096,6 +1096,8 @@ gam_poll_first_scan_dir(GamSubscription *sub, GamNode *dir_node,
         g_free(path);
     }
 
+    g_dir_close(dir);
+
 done:
     if (with_exists)
 	gam_server_emit_event(dpath, 1, GAMIN_EVENT_ENDEXISTS, subs, 1);

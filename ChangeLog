@@ -1,3 +1,8 @@
+Tue Mar  1 16:42:41 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: found out the bug blocking unmounting 
+	  of temporary media filesystems in 0.0.24, it wasn't dnotify.
+
 Wed Feb 23 23:28:18 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in: small patch about debugging being always enabled
