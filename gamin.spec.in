@@ -74,6 +74,10 @@ rm -fr %{buildroot}
 * @RELDATE@ Daniel Veillard <veillard@redhat.com>
 - upstream release @VERSION@
 
+* Wed Sep  1 2004 Daniel Veillard <veillard@redhat.com> 0.0.9-1
+- fix crash with konqueror #130967
+- exclude kernel (dnotify) monitoring for /mnt//* /media//*
+
 * Thu Aug 26 2004 Daniel Veillard <veillard@redhat.com> 0.0.8-1
 - Fixes crashes of the gam_server
 - try to correct the kernel/poll switching mode
