@@ -559,9 +559,11 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 
 	if (!gam_node_get_subscriptions(child) && remove_dir) {
 	    if (missing_resources != NULL) {
-		    gam_poll_remove_missing (child);
+		gam_poll_remove_missing (child);
 	    }
-	    gam_tree_remove(tree, child);
+	    if (!gam_tree_has_children(tree, child)) {
+		gam_tree_remove(tree, child);
+	    }
 	} else {
 	    remove_dir = FALSE;
 	}
@@ -660,7 +662,7 @@ prune_tree(GamNode * node)
         if (all_resources != NULL) {
                 all_resources = g_list_remove (all_resources, node);
         }
-        gam_tree_remove(tree, node);
+	gam_tree_remove(tree, node);
         prune_tree(parent);
     }
 }
@@ -915,7 +917,9 @@ gam_poll_remove_subscription_real(GamSubscription * sub)
                     all_resources = g_list_remove(all_resources, node);
                 }
                 parent = gam_node_parent(node);
-                gam_tree_remove(tree, node);
+		if (!gam_tree_has_children(tree, node)) {
+		    gam_tree_remove(tree, node);
+		}
 
                 prune_tree(parent);
             }
