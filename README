@@ -15,7 +15,11 @@ see the following URL for subscription informations:
 
 and the on-line archives:
   http://mail.gnome.org/archives/gamin-list/
-                                                                                
+
+The CVS base is in the GNOME project CVS base at cvs.gnome.org, the
+module name is 'gamin'. See 
+  http://developer.gnome.org/tools/cvs.html
+										
 From an historical point of view, gamin builds from the marmot project
 authored by James Willcox and Corey Bowers and then heavilly modified
 to turn it into a minimalist FAM replacement (French litterate will
