@@ -329,6 +329,8 @@ main(int argc, const char *argv[])
 	}
     }
 
+    signal(SIGPIPE, SIG_IGN);
+
     if (!gam_init_subscriptions()) {
 	gam_debug(DEBUG_INFO, "Could not initialize the subscription system.\n");
         exit(0);

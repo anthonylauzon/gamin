@@ -1,3 +1,10 @@
+Mon Aug 23 14:48:51 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* TODO: updated with fixed stuff and new problems
+	* server/gam_poll.c server/gam_server.c: handling of initially
+	  missing directories. Try to improve detection of modifications.
+	* tests/scenario/8.tst tests/result/8: added a new test
+
 Fri Aug 20 23:31:04 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: monitoring of files appearing and disapearing

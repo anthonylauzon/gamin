@@ -181,9 +181,10 @@ poll_file(GamNode * node)
     GaminEventType event;
     struct stat sbuf;
     int stat_ret;
+    const char *path;
 
-    gam_debug(DEBUG_INFO, "Poll: poll_file for %s called\n",
-              gam_node_get_path(node));
+    path = gam_node_get_path(node);
+    gam_debug(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
 
     data = gam_node_get_data(node);
     if (data == NULL) {
@@ -221,10 +222,24 @@ poll_file(GamNode * node)
         /* created */
         data->exists = TRUE;
         event = GAMIN_EVENT_CREATED;
+#ifdef linux
+    } else if ((data->sbuf.st_mtim.tv_sec != sbuf.st_mtim.tv_sec) ||
+               (data->sbuf.st_mtim.tv_nsec != sbuf.st_mtim.tv_nsec) ||
+               (data->sbuf.st_size != sbuf.st_size) ||
+               (data->sbuf.st_ctim.tv_sec != sbuf.st_ctim.tv_sec) ||
+               (data->sbuf.st_ctim.tv_nsec != sbuf.st_ctim.tv_nsec)) {
+        event = GAMIN_EVENT_CHANGED;
+#else
     } else if ((data->sbuf.st_mtime != sbuf.st_mtime) ||
                (data->sbuf.st_size != sbuf.st_size) ||
                (data->sbuf.st_ctime != sbuf.st_ctime)) {
         event = GAMIN_EVENT_CHANGED;
+#endif
+    } else {
+	gam_debug(DEBUG_INFO, "Poll: poll_file %s unchanged\n", path);
+	gam_debug(DEBUG_INFO, "%d %d : %d %d\n", data->sbuf.st_mtim.tv_sec,
+	          data->sbuf.st_mtim.tv_nsec, sbuf.st_mtim.tv_sec,
+		  sbuf.st_mtim.tv_nsec);
     }
 
     data->sbuf = sbuf;
@@ -251,7 +266,7 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
                                  gboolean scan_for_new)
 {
     GDir *dir;
-    const char *name;
+    const char *name, *dpath;
     char *path;
     GamNode *node;
     GaminEventType event = 0, fevent;
@@ -277,13 +292,15 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
 
     gam_poll_emit_event(dir_node, event, dir_exist_subs);
 
-    dir = g_dir_open(gam_node_get_path(dir_node), 0, NULL);
+    dpath = gam_node_get_path(dir_node);
+    dir = g_dir_open(dpath, 0, NULL);
 
     if (dir == NULL)
         goto scan_files;
 
     exists = 1;
 
+    gam_debug(DEBUG_INFO, "Poll: scanning directory %s\n", dpath);
     while ((name = g_dir_read_name(dir)) != NULL) {
         path = g_build_filename(gam_node_get_path(dir_node), name, NULL);
 
@@ -312,11 +329,9 @@ scan_files:
 
     if (scan_for_new) {
         if (exists)
-            gam_server_emit_event(gam_node_get_path(dir_node),
-                                  GAMIN_EVENT_EXISTS, exist_subs);
+            gam_server_emit_event(dpath, GAMIN_EVENT_EXISTS, exist_subs);
         else {
-            gam_server_emit_event(gam_node_get_path(dir_node),
-                                  GAMIN_EVENT_DELETED, exist_subs);
+            gam_server_emit_event(dpath, GAMIN_EVENT_DELETED, exist_subs);
 	}
     }
     children = gam_tree_get_children(tree, dir_node);
@@ -352,8 +367,7 @@ scan_files:
     }
 
     if (scan_for_new) {
-        gam_server_emit_event(gam_node_get_path(dir_node),
-                              GAMIN_EVENT_ENDEXISTS, exist_subs);
+        gam_server_emit_event(dpath, GAMIN_EVENT_ENDEXISTS, exist_subs);
     }
 
     g_list_free(children);
@@ -406,8 +420,13 @@ gam_poll_scan_callback(gpointer data) {
 
 	next = l->next;
 	gam_poll_scan_directory_internal(node, NULL, TRUE);
-	if (data->exists)
+	if (data->exists) {
 	    gam_poll_remove_missing(node);
+	    if (gam_node_is_dir(node))
+		trigger_dir_handler(gam_node_get_path(node), TRUE);
+	    else
+		trigger_file_handler(gam_node_get_path(node), TRUE);
+	}
 	l = next;
     }
     return(TRUE);
@@ -648,7 +667,8 @@ gam_poll_scan_directory(const char *path, GList * exist_subs)
 {
     GamNode *node;
 
-    gam_debug(DEBUG_INFO, "Poll: scanning %s\n", path);
+    gam_debug(DEBUG_INFO, "Poll: scanning %s: subs %d\n",
+              path, exist_subs != NULL);
     node = gam_tree_get_at_path(tree, path);
     if (node == NULL)
         node = gam_tree_add_at_path(tree, path, TRUE);
@@ -695,14 +715,18 @@ gam_poll_consume_subscriptions(void)
             node_add_subscription(node, sub);
 
             if (gam_node_is_dir(node)) {
+		GamPollData *data;
+
                 gam_debug(DEBUG_INFO,
                           "Looking for existing files in: %s...\n",
-                          gam_node_get_path(node));
+                          path);
 
                 gam_poll_scan_directory_internal(node, subs, TRUE);
 
-                gam_debug(DEBUG_INFO, "Done scanning %s\n",
-                          gam_node_get_path(node));
+                gam_debug(DEBUG_INFO, "Done scanning %s\n", path);
+		data = gam_node_get_data(node);
+		if (!data->exists)
+		    gam_poll_add_missing(node);
             } else {
 		GaminEventType event;
 
