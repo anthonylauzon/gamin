@@ -2,7 +2,7 @@ INCLUDES =						\
 	$(default_includes)				\
 	-I$(top_builddir) 				\
 	-I$(top_srcdir)/lib				\
-	-DBINDIR=\""$(bindir)"\"			\
+	-DBINDIR=\""$(libexecdir)"\"			\
 	-DBUILDDIR=\""$(top_builddir)"\"		
 
 

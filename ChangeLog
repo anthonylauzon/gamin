@@ -1,3 +1,11 @@
+Wed Aug 18 13:07:03 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* TODO: updated
+	* doc/debugging.txt: added doc on how to debug gamin
+	* libgamin/Makefile.am libgamin/gam_fork.c server/Makefile.am:
+	  moved gam_server to /usr/libexec instead of /usr/bin following
+	  Mark suggestion
+
 Tue Aug 17 17:48:05 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c: working on fixing file checking notification

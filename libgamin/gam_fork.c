@@ -82,7 +82,7 @@ gamin_fork_server(const char *fam_client_id)
     /*
      * do a waitpid on the intermediate process to avoid zombies.
      */
-  retry_wait:
+retry_wait:
     ret = waitpid(pid, &status, 0);
     if (ret < 0) {
         if (errno == EINTR)

@@ -2,12 +2,14 @@
  - try to use getlogin and $USER to get the user name
  - doc extraction and reformatting of comments in gtk-doc style
  - handling of missing monitored resources where dnotify() won't work
+ - "make valgrind" regression tests for both client and server.
                                                                                 
 Regression tests:
  - try all the file length on the client till error.
  - try the fragmented/multirequests tests on the client side
 
 Done:
+ - <markmc> DV, gam_server should prolly be in /usr/libexec
  - path flexibility for the remote server in gam_fork.c (needed for
    make tests)
  - code merge between client and server, e.g. libgamin/gam_error.[ch]

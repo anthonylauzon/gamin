@@ -5,7 +5,7 @@ INCLUDES =						\
 	-I$(top_builddir)/protocol			\
 	-I$(top_srcdir)/lib				\
 	$(LIBGAMIN_CFLAGS)				\
-	-DBINDIR=\""$(bindir)"\"			\
+	-DBINDIR=\""$(libexecdir)"\"			\
 	-DG_DISABLE_DEPRECATED				
 
 if GAMIN_DEBUG
@@ -13,7 +13,7 @@ INCLUDES += -DGAM_DEBUG_ENABLED
 endif
 
 
-bin_PROGRAMS= gam_server
+libexec_PROGRAMS= gam_server
 
 gam_server_SOURCES =					\
 	gam_subscription.c				\
