@@ -87,6 +87,10 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
+* Tue Mar 15 2005 Daniel Veillard <veillard@redhat.com> 0.0.26-1
+- Fix an include problem showing up with gcc4</li>
+- Fix the crash on failed tree assert bug #150471 based on patch from Dean Brettle
+- removed an incompatibility with SGI FAM #149822
 * Tue Mar  1 2005 Daniel Veillard <veillard@redhat.com> 0.0.25-1
 - Fix a configure problem reported by Martin Schlemmer
 - Fix the /media/* and /mnt/* mount blocking problems from 0.0.24 e.g. #142637

@@ -1,3 +1,8 @@
+Tue Mar 15 13:46:44 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS configure.in gamin.spec.in doc/gamin.html doc/news.html:
+	  preparing release of 0.0.26
+
 Tue Mar 15 13:05:54 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* doc/gamin.html doc/news.html: typo

@@ -5,6 +5,14 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.26: Mar 15 2005:
+   - Fixed an include problem showing up with gcc4
+   - A couple of documentation typo fixes
+   - fixed the crash on failed tree assert bug #150471 based on patch from
+      Dean Brettle
+   - removed an incompatibility with SGI FAM #149822
+
+
 0.0.25: Mar  1 2005:
    - Fix a configure problem reported by Martin Schlemmer
    - Fix the /media/* and /mnt/* mount blocking problems from 0.0.24
