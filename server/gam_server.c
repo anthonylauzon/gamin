@@ -164,6 +164,60 @@ static GHashTable *listeners = NULL;
 static GIOChannel *socket = NULL;
 
 /**
+ * gam_server_emit_one_event:
+ * @path: the file/directory path
+ * @event: the event type
+ * @sub: the subscription for this event
+ *
+ * Checks which subscriptions are interested in this event and
+ * make sure the event are sent to the associated clients.
+ */
+void
+gam_server_emit_one_event(const char *path, GaminEventType event, 
+                          GamSubscription *sub)
+{
+    int pathlen, len;
+    const char *subpath;
+    GamListener *listener;
+    GamConnDataPtr conn;
+    int reqno;
+
+
+    pathlen = strlen(path);
+
+    if (!gam_subscription_wants_event(sub, path, event))
+	return;
+    listener = gam_subscription_get_listener(sub);
+    if (listener == NULL)
+	return;
+    conn = (GamConnDataPtr) gam_listener_get_service(listener);
+    if (conn == NULL)
+	return;
+
+    /*
+     * When sending directory related entries, for items in the
+     * directory the FAM protocol removes the common direcory part.
+     */
+    subpath = path;
+    len = pathlen;
+    if (gam_subscription_is_dir(sub)) {
+	int dlen = gam_subscription_pathlen(sub);
+
+	if ((pathlen > dlen + 1) && (path[dlen] == '/')) {
+	    subpath += dlen + 1;
+	    len -= dlen + 1;
+	}
+    }
+
+    reqno = gam_subscription_get_reqno(sub);
+
+    if (gam_send_event(conn, reqno, event, subpath, len) < 0) {
+	gam_debug(DEBUG_INFO, "Failed to send event to PID %d\n",
+		  gam_connection_get_pid(conn));
+    }
+}
+
+/**
  * gam_server_emit_event:
  * @path: the file/directory path
  * @event: the event type

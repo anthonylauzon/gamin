@@ -75,7 +75,7 @@ gam_subscription_new(const char *path,
     sub->pathlen = strlen(path);
 
     /* everyone accepts this */
-    gam_subscription_set_event(sub, GAMIN_EVENT_EXISTS);
+    gam_subscription_set_event(sub, GAMIN_EVENT_EXISTS | GAMIN_EVENT_ENDEXISTS);
 
     sub->is_dir = is_dir;
 

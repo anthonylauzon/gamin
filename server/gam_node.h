@@ -16,13 +16,13 @@ struct _GamNode {
 	char *path;
 
 	GList *subs;
-	gboolean is_dir;
 	gpointer data;
 	GDestroyNotify data_destroy;
 
 	int flags;
 
 	GNode *node;
+	gboolean is_dir;
 };
 
 

@@ -1,3 +1,9 @@
+Thu Aug 19 13:54:36 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_node.h server/gam_server.c
+	  server/gam_server.h server/gam_subscription.c: work toward fixing the
+	  file dnotify back-end and FAM like-processing
+
 Wed Aug 18 14:48:33 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in: fix path

@@ -13,6 +13,9 @@ gboolean        gam_init_subscriptions          (void);
 gboolean        gam_add_subscription            (GamSubscription *sub);
 gboolean        gam_remove_subscription         (GamSubscription *sub);
 int             gam_server_num_listeners        (void);
+void		gam_server_emit_one_event	(const char *path,
+						 GaminEventType event,
+						 GamSubscription *sub);
 void            gam_server_emit_event           (const char *path,
 						 GaminEventType event,
 						 GList *subs);

@@ -134,7 +134,7 @@ gam_dnotify_file_handler(const char *path, gboolean added)
 {
     char *dir;
 
-    gam_debug(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path);
+    gam_debug(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path, added);
     dir = g_path_get_dirname(path);
     gam_dnotify_directory_handler(dir, added);
     gam_poll_scan_directory(path, NULL);
@@ -306,9 +306,7 @@ gam_dnotify_add_subscription(GamSubscription * sub)
         return FALSE;
     }
 
-    if (gam_subscription_is_dir(sub)) {
-        gam_dnotify_consume_subscriptions();
-    }
+    gam_dnotify_consume_subscriptions();
 
     gam_debug(DEBUG_INFO, "gam_dnotify_add_subscription: done\n");
     return TRUE;
