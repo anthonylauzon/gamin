@@ -66,6 +66,8 @@ G_LOCK_DEFINE_STATIC(removed_subs);
 
 static GList *missing_resources = NULL;
 
+G_LOCK_DEFINE_STATIC(missing_resources);
+
 static GamPollHandler dir_handler = NULL;
 static GamPollHandler file_handler = NULL;
 
@@ -518,7 +520,9 @@ gam_poll_scan_callback(gpointer data) {
 	/*
 	 * do not simply walk the list as it may be modified in the callback
 	 */
+	G_LOCK(missing_resources);
 	node = (GamNode *) g_list_nth_data(missing_resources, idx);
+	G_UNLOCK(missing_resources);
 	
 	if (node == NULL) {
 	    break;
@@ -592,7 +596,9 @@ gam_poll_add_missing(GamNode *node) {
 #endif
     gam_debug(DEBUG_INFO, "Poll adding missing node %s\n",
               gam_node_get_path(node));
+    G_LOCK(missing_resources);
     missing_resources = g_list_prepend(missing_resources, node);
+    G_UNLOCK(missing_resources);
 }
 
 /**
@@ -608,7 +614,9 @@ gam_poll_remove_missing(GamNode *node) {
 #endif
     gam_debug(DEBUG_INFO, "Poll removing missing node %s\n",
               gam_node_get_path(node));
+    G_LOCK(missing_resources);
     missing_resources = g_list_remove_all(missing_resources, node);
+    G_UNLOCK(missing_resources);
 }
 
 /**

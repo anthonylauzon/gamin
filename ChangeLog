@@ -1,3 +1,9 @@
+Tue Sep 28 01:31:52 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: adding missing locks around a list
+	  update. Though gam_server is single threaded maybe this
+	  is the cause of a list corruption generating a loop.
+
 Mon Sep 27 12:47:20 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in server/Makefile.am: release 0.0.11
