@@ -579,7 +579,7 @@ gam_connections_debug(void) {
     while (cur != NULL) {
         conn = (GamConnDataPtr) cur->data;
 	if (conn == NULL) {
-	    GAM_DEBUG(DEBUG_INFO, "   Error: connection with no data\n");
+	    GAM_DEBUG(DEBUG_INFO, "Error: connection with no data\n");
 	} else {
 	    const char *state = "unknown";
 
@@ -598,8 +598,9 @@ gam_connections_debug(void) {
 		    break;
 	    }
 	    GAM_DEBUG(DEBUG_INFO, 
-	              "   Connection fd %d to pid %d: state %s, %d read\n",
+	              "Connection fd %d to pid %d: state %s, %d read\n",
 		      conn->fd, conn->pid, state, conn->req_read);
+	    gam_listener_debug(conn->listener);
 	}
         cur = g_list_next(cur);
     }

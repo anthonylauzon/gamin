@@ -294,4 +294,22 @@ gam_subscription_wants_event(GamSubscription * sub,
     return TRUE;
 }
 
+/**
+ * gam_subscription_debug:
+ * @sub: the subscription
+ *
+ * Provide debug output for that subscription node/state
+ */
+void
+gam_subscription_debug(GamSubscription *sub) {
+    if (sub == NULL) {
+	GAM_DEBUG(DEBUG_INFO, "    Subscription is NULL\n");
+        return;
+    }
+    GAM_DEBUG(DEBUG_INFO,
+              "    Subscription %d reqno %d events %d dir %d: %s\n",
+              sub->reqno, sub->events, sub->events, sub->is_dir, sub->path);
+}
+
+
 /** @} */

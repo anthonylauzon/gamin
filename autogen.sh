@@ -9,7 +9,7 @@ cd $srcdir
 PROJECT=gamin
 
 #include our own macros
-ACLOCAL_FLAGS="$ACLOCAL_FLAGS -I m4"
+ACLOCAL_FLAGS="$ACLOCAL_FLAGS"
 
 DIE=0
 

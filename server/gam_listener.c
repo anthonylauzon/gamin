@@ -227,4 +227,30 @@ gam_listener_get_subscriptions(GamListener * listener)
     return g_list_copy(listener->subs);
 }
 
+/**
+ * gam_listener_debug:
+ * @listener: the listener
+ *
+ * Show debug informations about the listener data
+ */
+void
+gam_listener_debug(GamListener * listener) {
+    GList *cur;
+    GamSubscription *sub;
+
+    if (listener == NULL) {
+	GAM_DEBUG(DEBUG_INFO, "  Listener is NULL\n");
+        return;
+    }
+    GAM_DEBUG(DEBUG_INFO, "  Listener has %d subscriptions registered\n",
+              g_list_length(listener->subs));
+    cur = listener->subs;
+    while (cur != NULL) {
+        sub = (GamSubscription *) cur->data;
+	gam_subscription_debug(sub);
+        
+	cur = g_list_next(cur);
+    }
+}
+
 /** @} */
