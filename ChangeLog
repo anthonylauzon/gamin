@@ -1,3 +1,10 @@
+Tue Mar  1 18:17:06 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: fixed a problem with monitoring directories
+	  without using the kernel
+	* python/tests/Makefile.am python/tests/nokernel.py: adding a specific
+	  regression test
+
 Tue Mar  1 16:42:41 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: found out the bug blocking unmounting 

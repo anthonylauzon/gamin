@@ -71,6 +71,8 @@ static int poll_mode = 0;
 
 static time_t current_time = 0;	/* a cache for time() informations */
 
+static GaminEventType poll_file(GamNode * node);
+
 static int
 gam_errno(void) {
     return(errno);
@@ -104,6 +106,10 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
 
     if (gam_exclude_check(node->path)) {
 	GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
+	if (gam_node_get_data(node) == NULL)
+	    poll_file(node);
+	    
+	gam_poll_add_missing(node);
         return(0);
     }
 

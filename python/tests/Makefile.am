@@ -16,7 +16,8 @@ PYTESTS=        		\
 		level.py	\
 		multiple.py	\
 		multiple2.py	\
-		multiple3.py
+		multiple3.py	\
+		nokernel.py
 
 EXTRA_DIST = $(PYTESTS)
 
