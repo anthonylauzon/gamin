@@ -1,3 +1,8 @@
+Mon Mar  7 11:16:10 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/fam.h: gcc4 now breaks with #include "limits.h" from
+	  FAM include, fixing #150169.
+
 Tue Mar  1 18:53:58 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS configure.in gamin.spec.in doc/gamin.html doc/news.html:

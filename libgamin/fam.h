@@ -31,7 +31,7 @@ extern "C" {
 #endif
 
 /* For NAME_MAX - maximum # of chars in a filename */
-#include "limits.h"
+#include <limits.h>
 
 /* PATH_MAX is not defined in limits.h on some platforms */
 #ifndef PATH_MAX
