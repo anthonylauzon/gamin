@@ -1,5 +1,6 @@
-/* Marmot
+/* Gamin
  * Copyright (C) 2003 James Willcox, Corey Bowers
+ * Copyright (C) 2004 Daniel Veillard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,7 +33,6 @@ struct _GamTree {
                                  * representing /
                                  */
     GHashTable *node_hash;      /* a hash table that maps path->node */
-
 };
 
 typedef struct {
@@ -237,55 +237,32 @@ gam_tree_add_at_path(GamTree * tree, const char *path, gboolean is_dir)
     return node;
 }
 
-static gboolean
-gam_tree_get_dir_traverse_func(GNode * node, gpointer user_data)
-{
-    GList **list = user_data;
-
-    if (gam_node_is_dir(NODE_DATA(node)))
-        *list = g_list_prepend(*list, NODE_DATA(node));
-
-
-    return FALSE;
-}
-
-/**
- * Gets all directories below a given node
- *
- * @param tree the tree
- * @param root where to start from, NULL if you want to start from the root
- * @returns a list of #GamNode
- */
-GList *
-gam_tree_get_directories(GamTree * tree, GamNode * root)
-{
-    GList *list = NULL;
-
-    g_node_traverse(root ? root->node : tree->root,
-                    G_LEVEL_ORDER, G_TRAVERSE_ALL,
-                    -1, gam_tree_get_dir_traverse_func, &list);
-
-    return list;
-}
-
 /**
  * Gets the immediate children below a given node
  *
  * @param tree the tree
  * @param root where to start from, NULL if you want to start from the root
- * @returns a list of #GamNode
+ * @returns a new list of #GamNode
  */
 GList *
 gam_tree_get_children(GamTree * tree, GamNode * root)
 {
     GList *list = NULL;
-    GNode *node;
-    unsigned int i;
+    GNode *node, *child;
+    unsigned int i, n;
+    void *data;
 
     node = root ? root->node : tree->root;
+    if (node == NULL)
+        return(NULL);
+    n = g_node_n_children(node);
 
-    for (i = 0; i < g_node_n_children(node); i++) {
-        list = g_list_prepend(list, NODE_DATA(g_node_nth_child(node, i)));
+    for (i = 0; i < n; i++) {
+        child = g_node_nth_child(node, i);
+	if (child == NULL) break;
+        data = NODE_DATA(child);
+	if (data == NULL) break;
+        list = g_list_append(list, data);
     }
 
     return list;
@@ -302,58 +279,6 @@ gboolean
 gam_tree_has_children(GamTree * tree, GamNode * node)
 {
     return g_node_n_children(node->node) > 0;
-}
-
-/**
- * Gets the files immediately below a given node
- *
- * @param tree the tree
- * @param dir_node where to start from, NULL if you want to start from the root
- * @returns a list of #GamNode
- */
-GList *
-gam_tree_get_files(GamTree * tree, GamNode * dir_node)
-{
-    GList *list = NULL;
-    GNode *node;
-    unsigned int i;
-
-    node = dir_node ? dir_node->node : tree->root;
-
-    for (i = 0; i < g_node_n_children(node); i++) {
-        GamNode *child = NODE_DATA(g_node_nth_child(node, i));
-
-        if (!gam_node_is_dir(child))
-            list = g_list_prepend(list, child);
-    }
-
-    return list;
-}
-
-static gboolean
-gam_tree_dump_traverse_func(GNode * node, gpointer data)
-{
-    g_print("%s: %d listeners, %d children\n",
-            gam_node_get_path(NODE_DATA(node)), g_list_length((GList *)
-                                                              gam_node_get_subscriptions
-                                                              (NODE_DATA
-                                                               (node))),
-            g_node_n_children(node));
-
-    return FALSE;
-}
-
-/**
- * Prints the contents of the tree
- *
- * @param tree the tree
- * @param node the node to start from, NULL if root
- */
-void
-gam_tree_dump(GamTree * tree, GamNode * node)
-{
-    g_node_traverse(node ? node->node : tree->root, G_LEVEL_ORDER,
-                    G_TRAVERSE_ALL, -1, gam_tree_dump_traverse_func, NULL);
 }
 
 /**

@@ -51,10 +51,6 @@ gboolean              gam_node_remove_subscription (GamNode         *node,
 
 gboolean              gam_node_has_dir_subscriptions(GamNode * node);
 
-int                   gam_node_copy_subscriptions  (GamNode         *src,
-						   GamNode         *dest,
-						   GamSubFilterFunc filter);
-
 void                  gam_node_set_node            (GamNode         *node,
 						   GNode          *gnode);
 GNode                *gam_node_get_node            (GamNode         *node);

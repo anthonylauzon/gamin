@@ -46,6 +46,14 @@ void	gam_error(const char *file, int line, const char* function,
                   const char* format, ...);
 
 #ifdef GAM_DEBUG_ENABLED
+
+/**
+ * gam_debug_active:
+ *
+ * global variable indicating if debugging is activated.
+ */
+extern int gam_debug_active;
+
 /**
  * GAM_DEBUG:
  *
@@ -53,7 +61,7 @@ void	gam_error(const char *file, int line, const char* function,
  */
 void	gam_debug(const char *file, int line, const char* function,
                   const char* format, ...);
-#define GAM_DEBUG gam_debug
+#define GAM_DEBUG if (gam_debug_active) gam_debug
 
 void	gam_error_init(void);
 

@@ -212,40 +212,9 @@ gam_node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
     if (!node)
         return(FALSE);
-    node->subs = g_list_remove(node->subs, sub);
+    node->subs = g_list_remove_all(node->subs, sub);
 
     return TRUE;
-}
-
-/**
- * Copys subscriptions from one node to another
- *
- * @param src the source node
- * @param dest the destination node
- * @param filter a function which evaluates whether a subscription should be
- * copied or not.
- * @returns the number of subscriptions copied
- */
-int
-gam_node_copy_subscriptions(GamNode * src,
-                            GamNode * dest, GamSubFilterFunc filter)
-{
-    GList *l;
-    GamSubscription *sub;
-    int i = 0;
-
-
-    if ((!src) || (!dest))
-        return(0);
-    for (l = gam_node_get_subscriptions(src); l; l = l->next) {
-        sub = (GamSubscription *) l->data;
-        if (!filter || (filter && (*filter) (sub))) {
-            gam_node_add_subscription(dest, sub);
-            i++;
-        }
-    }
-
-    return i;
 }
 
 /**

@@ -1,3 +1,15 @@
+Thu Nov 25 13:59:34 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in TODO gamin.pc.in gamin.spec.in: updated, will 
+	  release a 0.1.0 RC1 today
+	* lib/gam_error.c lib/gam_error.h: first step toward avoiding
+	  debug handling costs when not debugging
+	* server/gam_connection.c server/gam_listener.c server/gam_node.[ch]
+	  server/gam_poll.c server/gam_tree.[ch]: checked all GList uses
+	  in the server, try to make 100% sure there is no double free of
+	  list items or reuse of freed list item which could explain the
+	  loops found in bug #132354 , cleanups, remove use of g_list_foreach.
+
 Thu Oct 28 15:32:16 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in: fixed a packaging bug Red Hat #135417

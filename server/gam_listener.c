@@ -88,11 +88,15 @@ gam_listener_free_subscription(GamSubscription * sub,
 void
 gam_listener_free(GamListener * listener)
 {
+    GList *cur;
+
     g_return_if_fail(listener != NULL);
     gam_debug(DEBUG_INFO, "Freeing listener for %d\n", listener->pid);
-    g_list_foreach(listener->subs, (GFunc) gam_listener_free_subscription,
-                   listener);
-    g_list_free(listener->subs);
+    while ((cur = g_list_first(listener->subs)) != NULL) {
+        GamSubscription * sub = cur->data;
+	listener->subs = g_list_remove_all(listener->subs, sub);
+	gam_listener_free_subscription(sub, listener);
+    }
     g_free(listener);
 }
 
@@ -188,6 +192,9 @@ gam_listener_add_subscription(GamListener * listener,
 {
     g_assert(sub != NULL);
 
+    if (g_list_find(listener->subs, sub) != NULL)
+        return;
+
     listener->subs = g_list_prepend(listener->subs, sub);
 }
 
@@ -202,7 +209,7 @@ gboolean
 gam_listener_remove_subscription(GamListener * listener,
                                  GamSubscription * sub)
 {
-    listener->subs = g_list_remove(listener->subs, sub);
+    listener->subs = g_list_remove_all(listener->subs, sub);
 
     return TRUE;
 }

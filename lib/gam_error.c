@@ -7,6 +7,7 @@
 
 typedef void (*signal_handler)(int);
 
+int gam_debug_active;
 static int initialized = 0;
 static int do_debug = 0;
 static int got_signal = 0;
@@ -22,11 +23,14 @@ gam_error_handle_signal(void) {
        int fd = mkstemp(path);
        if (fd >= 0) {
 	   debug_out = fdopen(fd, "a");
-	   if (debug_out != NULL) 
+	   if (debug_out != NULL) {
 	       do_debug = 1;
+	       gam_debug_active = 1;
+	   }
        }
     } else {
        do_debug = 0;
+       gam_debug_active = 0;
        if (debug_out != NULL) {
            fclose(debug_out);
 	   debug_out = NULL;
@@ -38,6 +42,7 @@ gam_error_handle_signal(void) {
 static void 
 gam_error_signal(int no) {
     got_signal = !got_signal;
+    gam_debug_active = -1; /* force going into gam_debug() */
 }
 
 void
@@ -47,8 +52,10 @@ gam_error_init(void) {
 	signal_handler prev;
 
         initialized = 1;
-        if (getenv("GAM_DEBUG") != NULL)
+        if (getenv("GAM_DEBUG") != NULL) {
             do_debug = 1;
+	    gam_debug_active = 1;
+	}
 	prev = signal(SIGUSR2, gam_error_signal);
 	/* if there is already an handler switch back to the original
 	   to avoid disturbing the application behaviour */
@@ -110,7 +117,7 @@ gam_debug(const char *file, int line, const char *function,
     if (got_signal)
         gam_error_handle_signal();
 
-    if (do_debug == 0)
+    if ((do_debug == 0) || (gam_debug_active == 0))
         return;
     if ((file == NULL) || (function == NULL) || (format == NULL))
         return;

@@ -5,7 +5,7 @@ includedir=@includedir@
 
 Name: gamin
 Description: The gamin file monitoring system.
-Version: @VERSION@
+Version: @GAMIN_VERSION@
 Requires: glib-2.0 gthread-2.0
-Libs: -L${libdir} -lgamin-@MAJOR_VERSION@
-Cflags: -I${includedir}/gamin/@MAJOR_VERSION@
+Libs: -L${libdir} -lgamin-1
+Cflags: -I${includedir}/fam

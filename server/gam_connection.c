@@ -125,8 +125,13 @@ int
 gam_connections_close(void)
 {
     int ret = 0;
+    int tmp = 0;
+    GList *cur;
 
-    g_list_foreach(gamConnList, (GFunc) gam_close_a_connection, &ret);
+    while ((cur = g_list_first(gamConnList)) != NULL) {
+        gam_close_a_connection((GamConnDataPtr) cur->data, &tmp);
+        if (tmp < 0) ret = -1;
+    }
     return (ret);
 }
 

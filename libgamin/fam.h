@@ -163,10 +163,9 @@ extern int FAMResumeMonitor	(FAMConnection *fc,
  * FAMCancelMonitor:
  *
  * This function is used to permanently stop a monitoring request.
- * the routine will free the FAMRequest structure provided.
  */
 extern int FAMCancelMonitor	(FAMConnection *fc,
-				 FAMRequest *fr);
+				 const FAMRequest *fr);
 
 /**
  * FAMNextEvent/FAMPending:

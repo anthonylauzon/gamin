@@ -57,19 +57,9 @@ typedef struct {
 } GamPollData;
 
 static GamTree *tree = NULL;
-
 static GList *new_subs = NULL;
-
-G_LOCK_DEFINE_STATIC(new_subs);
-
 static GList *removed_subs = NULL;
-
-G_LOCK_DEFINE_STATIC(removed_subs);
-
 static GList *missing_resources = NULL;
-
-G_LOCK_DEFINE_STATIC(missing_resources);
-
 static GamPollHandler dir_handler = NULL;
 static GamPollHandler file_handler = NULL;
 
@@ -96,13 +86,16 @@ trigger_file_handler(const char *path, gboolean added)
         (*file_handler) (path, added);
 }
 
-static void
+static int
 node_add_subscription(GamNode * node, GamSubscription * sub)
 {
     const char *path;
 
     if ((node == NULL) || (sub == NULL))
-        return;
+        return(-1);
+
+    if ((node->path == NULL) || (node->path[0] != '/'))
+        return(-1);
 
     gam_debug(DEBUG_INFO, "node_add_subscription(%s)\n", node->path);
     gam_node_add_subscription(node, sub);
@@ -110,7 +103,7 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
     path = gam_node_get_path(node);
     if (gam_exclude_check(path)) {
 	gam_debug(DEBUG_INFO, "  gam_exclude_check: true\n");
-        return;
+        return(0);
     }
 
     if (gam_node_is_dir(node))
@@ -118,15 +111,19 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
     else
         trigger_file_handler(gam_node_get_path(node), TRUE);
 
+    return(0);
 }
 
-static void
+static int
 node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
     const char *path;
 
     if ((node == NULL) || (sub == NULL))
-        return;
+        return(-1);
+
+    if ((node->path == NULL) || (node->path[0] != '/'))
+        return(-1);
 
     gam_debug(DEBUG_INFO, "node_remove_subscription(%s)\n", node->path);
 
@@ -135,13 +132,15 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
     path = gam_node_get_path(node);
     if (gam_exclude_check(path)) {
 	gam_debug(DEBUG_INFO, "  gam_exclude_check: true\n");
-        return;
+        return(0);
     }
 
     if (gam_node_is_dir(node))
         trigger_dir_handler(gam_node_get_path(node), FALSE);
     else
         trigger_file_handler(gam_node_get_path(node), FALSE);
+
+    return(0);
 }
 
 static GamPollData *
@@ -149,6 +148,8 @@ gam_poll_data_new(const char *path)
 {
     GamPollData *data;
 
+    if ((path == NULL) || (path[0] != '/'))
+        return(NULL);
     data = g_new(GamPollData, 1);
     if (data == NULL)
         return(NULL);
@@ -159,8 +160,6 @@ gam_poll_data_new(const char *path)
     if (current_time == 0)
         current_time = time(NULL);
     data->lasttime = current_time;
-#ifdef ST_MTIM_NSEC
-#endif
     data->sbuf.st_mtim.tv_sec = current_time;
     data->sbuf.st_mtime = current_time;
     data->checks = 0;
@@ -201,6 +200,7 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
         for (l = subs; l; l = l->next) {
             GamSubscription *sub = l->data;
             GaminEventType new_event = event;
+	    GList *tmp;
 
             if (g_list_find(exist_subs, sub)) {
                 if ((data) && (!(data->flags & MON_MISSING)))
@@ -209,8 +209,11 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
                     continue;
             }
 
+            tmp = g_list_append(NULL, sub);
             gam_server_emit_event(gam_node_get_path(node), is_dir_node,
-                                  new_event, g_list_append(NULL, sub), 0);
+                                  new_event, tmp, 0);
+	    g_list_free(tmp);
+
         }
     } else {
         
@@ -487,6 +490,12 @@ scan_files:
 	}
         if (l2)
 	    l2 = l2->next;
+	if (l2 == l) {
+	    gam_error(DEBUG_INFO,
+	              "gam_poll_scan_directory_internal(%s) loop detected\n",
+		      dpath);
+	    break;
+	}
         /*
 	 * end of trick
 	 */
@@ -535,6 +544,12 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 {
     GList *children, *l;
     gboolean remove_dir;
+    /*
+     * For a yet unknow reason sometimes gam_tree_get_children()
+     * returned list seems to contain a loop. The l2 is a trick to
+     * detect the loop and at least not block on looping.
+     */
+    GList *l2;
     
 
     node_remove_subscription(node, sub);
@@ -542,8 +557,29 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
     remove_dir = gam_node_get_subscriptions(node) == NULL;
 
     children = gam_tree_get_children(tree, node);
+    l2 = children;
     for (l = children; l; l = l->next) {
         GamNode *child = (GamNode *) l->data;
+        /*
+	 * loop in list usual detection trick code.
+	 */
+        if (l2)
+	    l2 = l2->next;
+	if (l2 == l) {
+	    gam_error(DEBUG_INFO,
+	              "remove_directory_subscription() loop detected\n");
+	    return FALSE; /* we leak children but freeing may loop too */
+	}
+        if (l2)
+	    l2 = l2->next;
+	if (l2 == l) {
+	    gam_error(DEBUG_INFO,
+	              "remove_directory_subscription() loop detected\n");
+	    return FALSE; /* we leak children but freeing may loop too */
+	}
+        /*
+	 * end of trick
+	 */
 
         if (gam_node_is_dir(child)) {
             if (remove_directory_subscription(child, sub) && remove_dir) {
@@ -586,9 +622,7 @@ gam_poll_scan_callback(gpointer data) {
 	/*
 	 * do not simply walk the list as it may be modified in the callback
 	 */
-	G_LOCK(missing_resources);
 	node = (GamNode *) g_list_nth_data(missing_resources, idx);
-	G_UNLOCK(missing_resources);
 	
 	if (node == NULL) {
 	    break;
@@ -640,7 +674,7 @@ prune_tree(GamNode * node)
  * @ingroup Backends
  * @brief Polling backend API
  *
- * This is the default backend used in Marmot.  It basically just calls
+ * This is the default backend used in Gamin.  It basically just calls
  * stat() on files/directories every so often to see when things change.  The
  * statting happens in a separate thread, controllable with arguments to
  * #gam_poll_init_full().
@@ -662,9 +696,8 @@ gam_poll_add_missing(GamNode *node) {
 #endif
     gam_debug(DEBUG_INFO, "Poll adding missing node %s\n",
               gam_node_get_path(node));
-    G_LOCK(missing_resources);
-    missing_resources = g_list_prepend(missing_resources, node);
-    G_UNLOCK(missing_resources);
+    if (g_list_find(missing_resources, node) == NULL)
+	missing_resources = g_list_append(missing_resources, node);
 }
 
 /**
@@ -680,9 +713,7 @@ gam_poll_remove_missing(GamNode *node) {
 #endif
     gam_debug(DEBUG_INFO, "Poll removing missing node %s\n",
               gam_node_get_path(node));
-    G_LOCK(missing_resources);
     missing_resources = g_list_remove_all(missing_resources, node);
-    G_UNLOCK(missing_resources);
 }
 
 /**
@@ -741,22 +772,15 @@ gam_poll_add_subscription(GamSubscription * sub)
     const char *path;
     gboolean is_dir;
 
+    if (g_list_find(new_subs, sub))
+        return FALSE;
+
     path = gam_subscription_get_path(sub);
     is_dir = gam_subscription_is_dir(sub);
 
-/***
-    node = gam_tree_get_at_path(tree, path);
-
-    if (!node) {
-        node = gam_tree_add_at_path(tree, path, is_dir);
-    }
- ***/
-
     gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
 
-    G_LOCK(new_subs);
     new_subs = g_list_prepend(new_subs, sub);
-    G_UNLOCK(new_subs);
 
     gam_debug(DEBUG_INFO, "Poll: added subscription\n");
     return TRUE;
@@ -776,12 +800,10 @@ gam_poll_remove_subscription(GamSubscription * sub)
     /*
      * make sure the subscription still isn't in the new subscription queue
      */
-    G_LOCK(new_subs);
     if (g_list_find(new_subs, sub)) {
         gam_debug(DEBUG_INFO, "new subscriptions is removed\n");
         new_subs = g_list_remove_all(new_subs, sub);
     }
-    G_UNLOCK(new_subs);
 
     node = gam_tree_get_at_path(tree, gam_subscription_get_path(sub));
     if (node == NULL) {
@@ -794,9 +816,7 @@ gam_poll_remove_subscription(GamSubscription * sub)
     gam_listener_remove_subscription(gam_subscription_get_listener(sub),
                                      sub);
 
-    G_LOCK(removed_subs);
     removed_subs = g_list_prepend(removed_subs, sub);
-    G_UNLOCK(removed_subs);
 
     gam_debug(DEBUG_INFO, "Poll: removed subscription\n");
     return TRUE;
@@ -872,12 +892,10 @@ gam_poll_consume_subscriptions(void)
      * (specifically, sending them the EXIST event)
      */
     current_time = time(NULL);
-    G_LOCK(new_subs);
     if (new_subs != NULL) {
         /* we don't want to block the main loop */
         subs = new_subs;
         new_subs = NULL;
-        G_UNLOCK(new_subs);
 
         gam_debug(DEBUG_INFO,
                   "%d new subscriptions.\n", g_list_length(subs));
@@ -896,7 +914,11 @@ gam_poll_consume_subscriptions(void)
                                             gam_subscription_is_dir(sub));
             }
 
-            node_add_subscription(node, sub);
+            if (node_add_subscription(node, sub) < 0) {
+                gam_error(DEBUG_INFO,
+                          "Failed to add subscription for: %s\n", path);
+	        return;
+	    }
 
             node_is_dir = gam_node_is_dir(node);
             if (node_is_dir) {
@@ -934,16 +956,12 @@ gam_poll_consume_subscriptions(void)
         }
 
         g_list_free(subs);
-    } else {
-        G_UNLOCK(new_subs);
     }
 
     /* check for things that have been removed, and remove them */
-    G_LOCK(removed_subs);
     if (removed_subs != NULL) {
         subs = removed_subs;
         removed_subs = NULL;
-        G_UNLOCK(removed_subs);
 
         gam_debug(DEBUG_INFO, "Tree has %d nodes\n",
                   gam_tree_get_size(tree));
@@ -998,8 +1016,6 @@ gam_poll_consume_subscriptions(void)
         gam_debug(DEBUG_INFO, "Tree has %d nodes\n",
                   gam_tree_get_size(tree));
 
-    } else {
-        G_UNLOCK(removed_subs);
     }
 }
 

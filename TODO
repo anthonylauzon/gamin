@@ -7,6 +7,8 @@
    on ext2/ext3, especially for directories.
  - check handling of mismatched resources i.e. mondir on file
    and monfile on directories and what happen when file type change.
+ - mount --bind will certainly create infinitely deep directory trees
+   surely you are doing loop detection for this, for NFS and the like ? (Alan)
                                                                                 
 Regression tests:
  - try all the file length on the client till error.

@@ -505,7 +505,7 @@ gamin_write_byte(int fd, const char *data, size_t len)
  */
 static int
 gamin_send_request(GAMReqType type, int fd, const char *filename,
-                   FAMRequest * fr, void *userData, GAMDataPtr data,
+                   const FAMRequest * fr, void *userData, GAMDataPtr data,
 		   int has_reqnum)
 {
     int reqnum;
@@ -1247,7 +1247,7 @@ FAMPending(FAMConnection * fc)
  * Returns 0 in case of success and -1 in case of error.
  */
 int
-FAMCancelMonitor(FAMConnection * fc, FAMRequest * fr)
+FAMCancelMonitor(FAMConnection * fc, const FAMRequest * fr)
 {
     GAMDataPtr conn;
     int ret;
