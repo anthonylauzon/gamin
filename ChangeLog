@@ -1,3 +1,10 @@
+Fri Feb 11 14:39:16 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.spec.in python/Makefile.am python/gamin.c python/gamin.py:
+	  fixed #167064 renaming gaminmod to _gamin
+	* python/tests/Makefile.am: make sure the PYTHONPATH includes
+	  libgamin subdirs
+
 Fri Feb 11 12:34:39 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* python/gamin.py: fixing a bug in the bindings

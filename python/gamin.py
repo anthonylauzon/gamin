@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import gaminmod
+import _gamin
 import os.path
 
 #
@@ -28,11 +28,11 @@ GAM_UNIMPLEM=6 # Unimplemented
 GAM_INTR=    7 # Interrupted system call
 
 def GaminErrno():
-    return gaminmod.Errno()
+    return _gamin.Errno()
 
 def GaminErrmsg(err = None):
     if err == None:
-	err = gaminmod.Errno()
+	err = _gamin.Errno()
     if err == GAM_ARG:
         msg = "bad argument error"
     elif err == GAM_FILE:
@@ -79,12 +79,12 @@ class WatchMonitor:
 	    self.path = path
 	    self.__mon_no = mon_no
 	    if dir:
-		ret = gaminmod.MonitorDirectory(self.__mon_no, path, self);
+		ret = _gamin.MonitorDirectory(self.__mon_no, path, self);
 		if ret < 0:
 		    raise(GaminException("Failed to monitor directory %s" %
 					 (path)))
 	    else:
-		ret = gaminmod.MonitorFile(self.__mon_no, path, self);
+		ret = _gamin.MonitorFile(self.__mon_no, path, self);
 		if ret < 0:
 		    raise(GaminException("Failed to monitor file %s" %
 					 (path)))
@@ -97,19 +97,19 @@ class WatchMonitor:
 		self.callback (path, event)
 
 	def cancel(self):
-	    ret = gaminmod.MonitorCancel(self.__mon_no, self.__req_no);
+	    ret = _gamin.MonitorCancel(self.__mon_no, self.__req_no);
 	    if ret < 0:
 		raise(GaminException("Failed to stop monitor on %s" %
 				     (path)))
 	    
     def __init__ (self):
-        self.__no = gaminmod.MonitorConnect()
+        self.__no = _gamin.MonitorConnect()
 	if self.__no < 0:
 	    raise(GaminException("Failed to connect to gam_server"))
 	self.objects = {}
-	self.__fd = gaminmod.GetFd(self.__no)
+	self.__fd = _gamin.GetFd(self.__no)
 	if self.__fd < 0:
-	    gaminmod.MonitorClose(self.__no)
+	    _gamin.MonitorClose(self.__no)
 	    raise(GaminException("Failed to get file descriptor"))
 
     def __del__ (self):
@@ -120,7 +120,7 @@ class WatchMonitor:
         
     def disconnect(self):
         if (self.__no >= 0):
-	    gaminmod.MonitorClose(self.__no)
+	    _gamin.MonitorClose(self.__no)
 	self.__no = -1;
 
     def watch_directory(self, directory, callback, data = None):
@@ -148,7 +148,7 @@ class WatchMonitor:
     def no_exists(self):
         if (self.__no < 0):
 	    return
-	ret = gaminmod.MonitorNoExists(self.__no)
+	ret = _gamin.MonitorNoExists(self.__no)
 	return ret
 
     def stop_watch(self, path):
@@ -170,7 +170,7 @@ class WatchMonitor:
     def event_pending(self):
         if (self.__no < 0):
 	    __raise_disconnected();
-        ret = gaminmod.EventPending(self.__no);
+        ret = _gamin.EventPending(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to check pending events"))
 	return ret
@@ -178,7 +178,7 @@ class WatchMonitor:
     def handle_one_event(self):
         if (self.__no < 0):
 	    __raise_disconnected();
-        ret = gaminmod.ProcessOneEvent(self.__no);
+        ret = _gamin.ProcessOneEvent(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to process one event"))
 	return ret
@@ -186,7 +186,7 @@ class WatchMonitor:
     def handle_events(self):
         if (self.__no < 0):
 	    __raise_disconnected();
-        ret = gaminmod.ProcessEvents(self.__no);
+        ret = _gamin.ProcessEvents(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to process events"))
 	return ret

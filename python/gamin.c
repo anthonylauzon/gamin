@@ -9,7 +9,7 @@
 #include <Python.h>
 #include <fam.h>
 
-void initgaminmod(void);
+void init_gamin(void);
 
 static FAMConnection **connections = NULL;
 static int nb_connections = 0;
@@ -399,7 +399,7 @@ static PyMethodDef gaminMethods[] = {
 };
 
 void
-initgaminmod(void)
+init_gamin(void)
 {
     static int initialized = 0;
 
@@ -407,7 +407,7 @@ initgaminmod(void)
         return;
 
     /* intialize the python extension module */
-    Py_InitModule((char *) "gaminmod", gaminMethods);
+    Py_InitModule((char *) "_gamin", gaminMethods);
 
     initialized = 1;
 }

@@ -8,8 +8,9 @@ EXTRA_DIST = $(PYTESTS)
 
 if WITH_PYTHON
 tests: $(PYTESTS)
-	@(PYTHONPATH="..:../.libs:$(srcdir)/..:$$PYTHONPATH" ; \
+	@(PYTHONPATH="..:../.libs:../libgamin:../libgamin/.libs:$(srcdir)/..:$$PYTHONPATH" ; \
 	  export PYTHONPATH; \
+	  echo $$PYTHONPATH ; \
 	  unset GAM_CLIENT_ID ; unset GAM_DEBUG; \
 	  GAMIN_DEBUG_SERVER="../../server/gam_server" ;\
 	  export GAMIN_DEBUG_SERVER ;\

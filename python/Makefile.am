@@ -10,7 +10,7 @@ EXTRA_DIST =			\
 	gamin.c			\
 	gamin.py
 
-gaminmod_la_LDFLAGS = -module -avoid-version -L$(top_builddir)/libgamin/.libs
+_gamin_la_LDFLAGS = -module -avoid-version -L$(top_builddir)/libgamin/.libs
 
 if WITH_PYTHON
 mylibs =			\
@@ -18,10 +18,10 @@ mylibs =			\
 
 all-local: gamin.py
 
-python_LTLIBRARIES = gaminmod.la
+python_LTLIBRARIES = _gamin.la
 
-gaminmod_la_SOURCES = gamin.c
-gaminmod_la_LIBADD = $(mylibs) 
+_gamin_la_SOURCES = gamin.c
+_gamin_la_LIBADD = $(mylibs) 
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pythondir)

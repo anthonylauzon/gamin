@@ -82,7 +82,7 @@ rm -fr %{buildroot}
 %defattr(-, root, root)
 %doc AUTHORS ChangeLog NEWS README Copyright TODO
 %{_libdir}/python*/site-packages/gamin.py
-%{_libdir}/python*/site-packages/gaminmod*
+%{_libdir}/python*/site-packages/_gamin*
 %doc python/tests/*.py
 %doc doc/python.html
 
