@@ -101,6 +101,10 @@ class WatchMonitor:
 	    if ret < 0:
 		raise(GaminException("Failed to stop monitor on %s" %
 				     (path)))
+	    try:
+	        self.monitor.objects[self.path].remove(self)
+	    except:
+	        pass
 	    
     def __init__ (self):
         self.__no = _gamin.MonitorConnect()
@@ -127,22 +131,24 @@ class WatchMonitor:
         if (self.__no < 0):
 	    __raise_disconnected();
         directory = os.path.abspath(directory)
-        if self.objects.has_key(directory):
-	    raise(GaminException("Resource %s already monitored" % (directory)))
 
         obj = self.WatchObject(self, self.__no, directory, 1, callback, data)
-	self.objects[directory] = obj
+        if self.objects.has_key(directory):
+	    self.objects[directory].append(obj)
+	else:
+	    self.objects[directory] = [obj]
 	return obj
 
     def watch_file(self, file, callback, data = None):
         if (self.__no < 0):
 	    __raise_disconnected();
         file = os.path.abspath(file)
-        if self.objects.has_key(file):
-	    raise(GaminException("Resource %s already monitored" % (file)))
 
         obj = self.WatchObject(self, self.__no, file, 0, callback, data)
-	self.objects[file] = obj
+        if self.objects.has_key(file):
+	    self.objects[file].append(obj)
+	else:
+	    self.objects[file] = [obj]
 	return obj
 
     def no_exists(self):
@@ -156,11 +162,12 @@ class WatchMonitor:
 	    return
         path = os.path.abspath(path)
 	try:
-	    obj = self.objects[path]
+	    list = self.objects[path]
 	except:
 	    raise(GaminException("Resource %s is not monitored" % (path)))
 	del self.objects[path]
-	obj.cancel()
+	for obj in list:
+	    obj.cancel()
 	
     def get_fd(self):
         if (self.__no < 0):

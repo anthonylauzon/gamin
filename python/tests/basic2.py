@@ -4,7 +4,8 @@ import gamin
 import time
 
 def callback(path, event):
-    print "Got callback: %s, %s" % (path, event)
+    #print "Got callback: %s, %s" % (path, event)
+    pass
 
 mon = gamin.WatchMonitor()
 mon.watch_directory(".", callback)

@@ -6,8 +6,10 @@ PYTESTS=        		\
 		basic5.py	\
 		basic6.py	\
 		noexists.py	\
+		level.py	\
 		multiple.py	\
-		multiple2.py
+		multiple2.py	\
+		multiple3.py
 
 EXTRA_DIST = $(PYTESTS)
 
@@ -23,7 +25,8 @@ tests: $(PYTESTS)
 	  GAM_CLIENT_ID=test; \
 	  export GAM_CLIENT_ID; \
 	  for test in $(PYTESTS) ; \
-	  do log=`$(PYTHON) $(srcdir)/$$test` ; \
+	  do echo -n . ; \
+	  log=`$(PYTHON) $(srcdir)/$$test` ; \
 	  if [ "`echo $$log | grep OK`" = "" ] ; then \
 	  echo "-- $$test" ; echo "$$log" ; fi ; done)
 else

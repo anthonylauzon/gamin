@@ -1,3 +1,10 @@
+Tue Feb 15 15:40:31 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* python/gamin.py: allow multiple monitoring of the same
+	  file or dir in a given monitor
+	* python/tests/Makefile.am python/tests/level.py
+	  python/tests/multiple3.py: more tests
+
 Tue Feb 15 12:57:05 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c server/gam_subscription.[ch]: cleaning up
