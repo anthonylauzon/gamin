@@ -349,16 +349,20 @@ gam_poll_emit_event(GamNode * node, GaminEventType event)
 static void
 gam_poll_delist_node(GamNode * node) {
     GList *subs;
+    const char *path;
 
-    GAM_DEBUG(DEBUG_INFO, "gam_poll_delist_node %s\n",
-              gam_node_get_path(node));
+    path = gam_node_get_path(node);
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_delist_node %s\n", path);
+
+    if (gam_exclude_check(path))
+        return;
     subs = gam_node_get_subscriptions(node);
 
     while (subs != NULL) {
 	if (gam_node_is_dir(node))
-	    trigger_dir_handler(gam_node_get_path(node), GAMIN_DESACTIVATE);
+	    trigger_dir_handler(path, GAMIN_DESACTIVATE);
 	else
-	    trigger_file_handler(gam_node_get_path(node), GAMIN_DESACTIVATE);
+	    trigger_file_handler(path, GAMIN_DESACTIVATE);
 	subs = subs->next;
     }
 }
@@ -373,16 +377,20 @@ gam_poll_delist_node(GamNode * node) {
 static void
 gam_poll_relist_node(GamNode * node) {
     GList *subs;
+    const char *path;
 
-    GAM_DEBUG(DEBUG_INFO, "gam_poll_relist_node %s\n",
-              gam_node_get_path(node));
+    path = gam_node_get_path(node);
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_relist_node %s\n", path);
+
+    if (gam_exclude_check(path))
+        return;
     subs = gam_node_get_subscriptions(node);
 
     while (subs != NULL) {
 	if (gam_node_is_dir(node))
-	    trigger_dir_handler(gam_node_get_path(node), GAMIN_ACTIVATE);
+	    trigger_dir_handler(path, GAMIN_ACTIVATE);
 	else
-	    trigger_file_handler(gam_node_get_path(node), GAMIN_ACTIVATE);
+	    trigger_file_handler(path, GAMIN_ACTIVATE);
 	subs = subs->next;
     }
 }
@@ -396,12 +404,18 @@ gam_poll_relist_node(GamNode * node) {
  */
 static void
 gam_poll_flowon_node(GamNode * node) {
-    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowon_node %s\n",
-              gam_node_get_path(node));
+    const char *path;
+
+    path = gam_node_get_path(node);
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowon_node %s\n",path);
+
+    if (gam_exclude_check(path))
+        return;
+
     if (gam_node_is_dir(node))
-	trigger_dir_handler(gam_node_get_path(node), GAMIN_FLOWCONTROLSTART);
+	trigger_dir_handler(path, GAMIN_FLOWCONTROLSTART);
     else
-	trigger_file_handler(gam_node_get_path(node), GAMIN_FLOWCONTROLSTART);
+	trigger_file_handler(path, GAMIN_FLOWCONTROLSTART);
 }
 
 /**
@@ -413,12 +427,17 @@ gam_poll_flowon_node(GamNode * node) {
  */
 static void
 gam_poll_flowoff_node(GamNode * node) {
-    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowoff_node %s\n",
-              gam_node_get_path(node));
+    const char *path;
+
+    path = gam_node_get_path(node);
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowoff_node %s\n", path);
+    if (gam_exclude_check(path))
+        return;
+
     if (gam_node_is_dir(node))
-	trigger_dir_handler(gam_node_get_path(node), GAMIN_FLOWCONTROLSTOP);
+	trigger_dir_handler(path, GAMIN_FLOWCONTROLSTOP);
     else
-	trigger_file_handler(gam_node_get_path(node), GAMIN_FLOWCONTROLSTOP);
+	trigger_file_handler(path, GAMIN_FLOWCONTROLSTOP);
 }
 
 static GaminEventType
@@ -536,7 +555,8 @@ poll_file(GamNode * node)
     }
 
     if ((data->checks >= 4) && (!(data->flags & MON_BUSY))) {
-	if (gam_node_get_subscriptions(node) != NULL) {
+	if ((gam_node_get_subscriptions(node) != NULL) &&
+	    (!gam_exclude_check(data->path))) {
 	    GAM_DEBUG(DEBUG_INFO, "switching %s back to polling\n", path);
 	    data->flags |= MON_BUSY;
 	    data->checks = 0;

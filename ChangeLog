@@ -1,9 +1,16 @@
+Wed Mar 23 11:59:20 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: make 100% sure we will not use kernel monitoring
+	  for excluded resources, c.f. bug #151774
+	* python/tests/Makefile.am python/tests/flood3.py: added a third flood
+	  regression test
+
 Wed Mar 23 10:45:20 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c server/gam_poll.c: more work on the flow
 	  control especially when multiple monitors use the same dnotify
 	  watcher
-	* python/tests/Makefile.am python/tests/flood.py: added a
+	* python/tests/Makefile.am python/tests/flood2.py: added a
 	  second regression test for it.
 
 Tue Mar 22 17:21:01 CET 2005 Daniel Veillard <veillard@redhat.com>
