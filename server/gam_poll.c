@@ -142,29 +142,29 @@ gam_poll_remove_busy(GamNode *node) {
 /**
  * trigger_dir_handler:
  * @path: path to the directory
- * @added: type of kernel monitoring action
+ * @mode: type of kernel monitoring action
  *
  * Interface to the kernel monitoring layer for directories
  */
 static void
-trigger_dir_handler(const char *path, gboolean added)
+trigger_dir_handler(const char *path, pollHandlerMode mode)
 {
     if (dir_handler != NULL)
-        (*dir_handler) (path, added);
+        (*dir_handler) (path, mode);
 }
 
 /**
  * trigger_file_handler:
  * @path: path to the file
- * @added: type of kernel monitoring action
+ * @mode: type of kernel monitoring action
  *
  * Interface to the kernel monitoring layer for files
  */
 static void
-trigger_file_handler(const char *path, gboolean added)
+trigger_file_handler(const char *path, pollHandlerMode mode)
 {
     if (file_handler != NULL)
-        (*file_handler) (path, added);
+        (*file_handler) (path, mode);
 }
 
 /**
@@ -199,9 +199,9 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
     }
 
     if (gam_node_is_dir(node))
-        trigger_dir_handler(node->path, TRUE);
+        trigger_dir_handler(node->path, GAMIN_ACTIVATE);
     else
-        trigger_file_handler(node->path, TRUE);
+        trigger_file_handler(node->path, GAMIN_ACTIVATE);
 
     return(0);
 }
@@ -240,19 +240,19 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
     /* DNotify makes our life miserable here */
     if (gam_subscription_is_dir(sub)) {
 	if (gam_node_is_dir(node))
-	    trigger_dir_handler(path, FALSE);
+	    trigger_dir_handler(path, GAMIN_DESACTIVATE);
 	else {
 	    char *dir;
 
 	    dir = g_path_get_dirname(path);
-	    trigger_file_handler(dir, FALSE);
+	    trigger_file_handler(dir, GAMIN_DESACTIVATE);
 	    g_free(dir);
 	}
     } else {
 	if (gam_node_is_dir(node))
-	    trigger_dir_handler(path, FALSE);
+	    trigger_dir_handler(path, GAMIN_DESACTIVATE);
 	else
-	    trigger_file_handler(path, FALSE);
+	    trigger_file_handler(path, GAMIN_DESACTIVATE);
     }
 
     return(0);
@@ -311,12 +311,10 @@ gam_poll_data_destroy(GamPollData * data)
 }
 
 static void
-gam_poll_emit_event(GamNode * node, GaminEventType event,
-                    GList * exist_subs)
+gam_poll_emit_event(GamNode * node, GaminEventType event)
 {
     GList *l;
     GamNode *parent;
-    GamPollData *data;
     GList *subs;
     int is_dir_node = gam_node_is_dir(node);
 
@@ -336,33 +334,7 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
         }
     }
 
-    if (exist_subs) {
-
-        data = gam_node_get_data(node);
-
-        for (l = subs; l; l = l->next) {
-            GamSubscription *sub = l->data;
-            GaminEventType new_event = event;
-	    GList *tmp;
-
-            if (g_list_find(exist_subs, sub)) {
-                if ((data) && (!(data->flags & MON_MISSING)))
-                    new_event = GAMIN_EVENT_EXISTS;
-                else
-                    continue;
-            }
-
-            tmp = g_list_prepend(NULL, sub);
-            gam_server_emit_event(gam_node_get_path(node), is_dir_node,
-                                  new_event, tmp, 0);
-	    g_list_free(tmp);
-
-        }
-    } else {
-        
-        gam_server_emit_event(gam_node_get_path(node), is_dir_node, event,
-	                      subs, 0);
-    }
+    gam_server_emit_event(gam_node_get_path(node), is_dir_node, event, subs, 0);
 
     g_list_free(subs);
 }
@@ -384,9 +356,9 @@ gam_poll_delist_node(GamNode * node) {
 
     while (subs != NULL) {
 	if (gam_node_is_dir(node))
-	    trigger_dir_handler(gam_node_get_path(node), FALSE);
+	    trigger_dir_handler(gam_node_get_path(node), GAMIN_DESACTIVATE);
 	else
-	    trigger_file_handler(gam_node_get_path(node), FALSE);
+	    trigger_file_handler(gam_node_get_path(node), GAMIN_DESACTIVATE);
 	subs = subs->next;
     }
 }
@@ -408,9 +380,9 @@ gam_poll_relist_node(GamNode * node) {
 
     while (subs != NULL) {
 	if (gam_node_is_dir(node))
-	    trigger_dir_handler(gam_node_get_path(node), TRUE);
+	    trigger_dir_handler(gam_node_get_path(node), GAMIN_ACTIVATE);
 	else
-	    trigger_file_handler(gam_node_get_path(node), TRUE);
+	    trigger_file_handler(gam_node_get_path(node), GAMIN_ACTIVATE);
 	subs = subs->next;
     }
 }
@@ -580,7 +552,7 @@ gam_poll_scan_directory_internal(GamNode * dir_node)
     event = poll_file(dir_node);
 
     if (event != 0)
-	gam_poll_emit_event(dir_node, event, NULL);
+	gam_poll_emit_event(dir_node, event);
 
     dir = g_dir_open(dpath, 0, NULL);
 
@@ -637,7 +609,7 @@ scan_files:
 	}
 
         if (fevent != 0) {
-            gam_poll_emit_event(node, fevent, NULL);
+            gam_poll_emit_event(node, fevent);
         } else {
 	    GamPollData *data;
 
@@ -738,7 +710,7 @@ gam_poll_scan_callback(gpointer data) {
 	    GaminEventType event;
 
 	    event = poll_file(node);
-	    gam_poll_emit_event(node, event, NULL);
+	    gam_poll_emit_event(node, event);
 	}
 
 	/*
@@ -786,7 +758,7 @@ gam_poll_scan_callback(gpointer data) {
 	    GaminEventType event;
 
 	    event = poll_file(node);
-	    gam_poll_emit_event(node, event, NULL);
+	    gam_poll_emit_event(node, event);
 	}
 
 	/*

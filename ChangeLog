@@ -1,3 +1,10 @@
+Tue Mar 22 15:22:05 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c server/gam_poll.h: more cleanup, prepare for
+	  mode usage in kernel backend instead of just an added boolean.
+	* server/gam_dnotify.c server/gam_inotify.c: converting the 
+	  backends to the new modes
+
 Tue Mar 22 14:39:38 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c server/gam_poll.c server/gam_poll.h: cleanups,

@@ -78,20 +78,33 @@ gam_dnotify_data_free(DNotifyData * data)
 }
 
 static void
-gam_dnotify_directory_handler_internal(const char *path, gboolean added)
+gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 {
     DNotifyData *data;
     int fd;
 
-    if (added) {
-	GAM_DEBUG(DEBUG_INFO, "Adding %s to dnotify\n", path);
-    } else {
-        GAM_DEBUG(DEBUG_INFO, "Removing %s from dnotify\n", path);
+    switch (mode) {
+        case GAMIN_ACTIVATE:
+	    GAM_DEBUG(DEBUG_INFO, "Adding %s to dnotify\n", path);
+	    break;
+        case GAMIN_DESACTIVATE:
+	    GAM_DEBUG(DEBUG_INFO, "Removing %s from dnotify\n", path);
+	    break;
+	case GAMIN_FLOWCONTROLSTART:
+	    GAM_DEBUG(DEBUG_INFO, "Start flow control for %s\n", path);
+	    break;
+	case GAMIN_FLOWCONTROLSTOP:
+	    GAM_DEBUG(DEBUG_INFO, "Stop flow control for %s\n", path);
+	    break;
+	default:
+	    gam_error(DEBUG_INFO, "Unknown DNotify operation %d for %s\n",
+	              mode, path);
+	    return;
     }
 
     G_LOCK(dnotify);
 
-    if (added) {
+    if (mode == GAMIN_ACTIVATE) {
 
         if ((data = g_hash_table_lookup(path_hash, path)) != NULL) {
             data->refcount++;
@@ -123,7 +136,7 @@ gam_dnotify_directory_handler_internal(const char *path, gboolean added)
 #ifdef GAMIN_DEBUG_API
         gam_debug_report(GAMDnotifyCreate, path, 0);
 #endif
-    } else {
+    } else if (mode == GAMIN_DESACTIVATE) {
 	char *dir = (char *) path;
 
         data = g_hash_table_lookup(path_hash, path);
@@ -165,42 +178,45 @@ gam_dnotify_directory_handler_internal(const char *path, gboolean added)
 	}
 	if ((dir != path) && (dir != NULL))
 	    g_free(dir);
+    } else {
+	GAM_DEBUG(DEBUG_INFO, "Unimplemented operation\n");
     }
 
     G_UNLOCK(dnotify);
 }
 
 static void
-gam_dnotify_directory_handler(const char *path, gboolean added)
+gam_dnotify_directory_handler(const char *path, pollHandlerMode mode)
 {
     GAM_DEBUG(DEBUG_INFO, "gam_dnotify_directory_handler %s : %d\n",
-              path, added);
+              path, mode);
 
-    if ((!added) || (g_file_test(path, G_FILE_TEST_IS_DIR))) {
-	gam_dnotify_directory_handler_internal(path, added);
+    if ((mode == GAMIN_DESACTIVATE) ||
+        (g_file_test(path, G_FILE_TEST_IS_DIR))) {
+	gam_dnotify_directory_handler_internal(path, mode);
     } else {
 	char *dir;
 
 	dir = g_path_get_dirname(path);
 	GAM_DEBUG(DEBUG_INFO, " not a dir using parent %s\n", dir);
-	gam_dnotify_directory_handler_internal(dir, added);
+	gam_dnotify_directory_handler_internal(dir, mode);
 	g_free(dir);
     }
 }
 
 static void
-gam_dnotify_file_handler(const char *path, gboolean added)
+gam_dnotify_file_handler(const char *path, pollHandlerMode mode)
 {
-    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path, added);
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path, mode);
     
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-	gam_dnotify_directory_handler_internal(path, added);
+	gam_dnotify_directory_handler_internal(path, mode);
     } else {
 	char *dir;
 
 	dir = g_path_get_dirname(path);
 	GAM_DEBUG(DEBUG_INFO, " not a dir using parent %s\n", dir);
-	gam_dnotify_directory_handler_internal(dir, added);
+	gam_dnotify_directory_handler_internal(dir, mode);
 	g_free(dir);
     }
 }

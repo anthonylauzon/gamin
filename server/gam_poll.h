@@ -8,13 +8,16 @@
 
 G_BEGIN_DECLS
 
-enum pollHandlerModes {
+enum pollHandlerMode {
     GAMIN_ACTIVATE = 1,		/* Activate kernel monitoring */
     GAMIN_DESACTIVATE = 2,	/* Desactivate kernel monitoring */
-    GAMIN_FLOWCONTROL = 3	/* Request flow control */
+    GAMIN_FLOWCONTROLSTART = 3,	/* Request flow control start */
+    GAMIN_FLOWCONTROLSTOP = 4	/* Request flow control stop */
 };
+typedef enum pollHandlerMode pollHandlerMode;
 
-typedef void (*GamPollHandler) (const char *path, gboolean added);
+typedef void (*GamPollHandler) (const char *path,
+				pollHandlerMode mode);
 
 gboolean   gam_poll_init_full             (gboolean start_scan_thread);
 

@@ -88,7 +88,8 @@ gam_inotify_data_free(INotifyData * data)
 }
 
 static void
-gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean added)
+gam_inotify_add_rm_handler(const char *path, GamSubscription *sub,
+                           pollHandlerMode mode)
 {
     INotifyData *data;
     struct inotify_watch_request iwr;
@@ -96,7 +97,7 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
 
     G_LOCK(inotify);
 
-    if (added) {
+    if (mode == GAMIN_ACTIVATE) {
 	GList *subs;
 
 	subs = NULL;
@@ -144,7 +145,7 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
 
 	gam_server_emit_event (path, 0, GAMIN_EVENT_EXISTS, subs, 1);
 	gam_server_emit_event (path, 0, GAMIN_EVENT_ENDEXISTS, subs, 1);
-    } else {
+    } else if (mode == GAMIN_DESACTIVATE) {
         data = g_hash_table_lookup(path_hash, path);
 
         if (!data) {
@@ -168,6 +169,8 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
             g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
             gam_inotify_data_free(data);
         }
+    } else {
+        GAM_DEBUG(DEBUG_INFO, "Inotify: unimplemented mode request %d\n", mode);
     }
     G_UNLOCK(inotify);
 }
