@@ -1,3 +1,9 @@
+Wed Jun 16 11:55:59 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* TODO libgamin/Makefile.am libgamin/gamin_sym.version: block
+	  non-FAM symbols export from shared lib
+	* Copyright: reference the AUTHORS and COPYING files.
+
 Tue Jun 15 23:45:50 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* AUTHORS COPYING README: update to reflect the LGPL licence

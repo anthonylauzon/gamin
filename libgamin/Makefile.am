@@ -4,6 +4,9 @@ INCLUDES =						\
 	-DBINDIR=\""$(bindir)"\"			\
 	-DGAM_DEBUG_ENABLED
 
+EXTRA_DIST = 						\
+	gamin_sym.version
+
 lib_LTLIBRARIES = libgamin-1.la
 
 gaminincludedir = $(includedir)/
@@ -25,7 +28,8 @@ libgamin_1_la_SOURCES =					\
 
 libgamin_1_la_LIBADD = 
 
-libgamin_1_la_LDFLAGS = -version-info @GAMIN_VERSION_INFO@
+libgamin_1_la_LDFLAGS = -Wl,--version-script=gamin_sym.version \
+                        -version-info @GAMIN_VERSION_INFO@
 
 noinst_PROGRAMS= gamin testgam # testfam
 

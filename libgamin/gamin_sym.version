@@ -1,0 +1,20 @@
+{
+   global:
+       FAMCancelMonitor;
+       FAMClose;
+       FAMDebugLevel;
+       FamErrlist;
+       FAMErrno;
+       FAMMonitorCollection;
+       FAMMonitorDirectory;
+       FAMMonitorDirectory2;
+       FAMMonitorFile;
+       FAMMonitorFile2;
+       FAMNextEvent;
+       FAMOpen;
+       FAMOpen2;
+       FAMPending;
+       FAMResumeMonitor;
+       FAMSuspendMonitor;
+   local: *;
+};
