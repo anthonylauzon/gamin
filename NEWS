@@ -5,6 +5,16 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.24: Feb 18 2005:
+   -  more documentation
+   -  lot of serious bug fixes including Gnome Desktop refresh bug
+   -  extending the framework for more debug (configure --enable-debug-api)
+   -  extending the python bindings for watching the same resource multiple times and adding debug framework support
+   -  growing the regression tests a lot based on python bindings
+   -  inotify-0.19 patch from John McCutchan
+   -  renamed python private module to _gamin to follow Python PEP 8
+
+
 0.0.23: Feb  8 2005:
    -  memory corruption fix from Mark on the client side.
    -  extending the protocol and API to allow skipping Exists and EndExists
