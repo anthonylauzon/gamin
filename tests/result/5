@@ -1,0 +1,11 @@
+mkdir test1
+mkfile test1/foo
+connected to test
+monfile test1/foo 0
+1: /u/veillard/gamin/tests/test1/foo Exists: NULL
+1: /u/veillard/gamin/tests/test1/foo EndExist: NULL
+append test1/foo
+1: /u/veillard/gamin/tests/test1/foo Changed: NULL
+disconnected
+rmfile test1/foo
+rmdir test1

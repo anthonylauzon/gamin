@@ -1,3 +1,10 @@
+Thu Aug 19 14:40:58 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: fixing dnotify and FAM events sequences when
+	  monitoring an existing file.
+	* tests/result/5 tests/scenario/5.tst: added a specific test
+	* TODO: tests need fixing to avoid paths problems
+
 Thu Aug 19 13:54:36 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c server/gam_node.h server/gam_server.c

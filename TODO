@@ -3,6 +3,7 @@
  - doc extraction and reformatting of comments in gtk-doc style
  - handling of missing monitored resources where dnotify() won't work
  - "make valgrind" regression tests for both client and server.
+ - fix "make tests" to use /tmp to avoid $pwd in the paths of the output
                                                                                 
 Regression tests:
  - try all the file length on the client till error.

@@ -706,12 +706,11 @@ gam_poll_consume_subscriptions(void)
         for (l = subs; l; l = l->next) {
             GamSubscription *sub = l->data;
             GamNode *node;
+	    const char *path = gam_subscription_get_path(sub);
 
-            node = gam_tree_get_at_path(tree,
-                                        gam_subscription_get_path(sub));
+            node = gam_tree_get_at_path(tree, path);
             if (!node) {
-                node = gam_tree_add_at_path(tree,
-                                            gam_subscription_get_path(sub),
+                node = gam_tree_add_at_path(tree, path,
                                             gam_subscription_is_dir(sub));
             }
 
@@ -726,7 +725,21 @@ gam_poll_consume_subscriptions(void)
 
                 gam_debug(DEBUG_INFO, "Done scanning %s\n",
                           gam_node_get_path(node));
-            }
+            } else {
+		GaminEventType event;
+
+                event = poll_file(node);
+                gam_debug(DEBUG_INFO,
+                          "New file subscription: %s event %d\n", path, event);
+		if ((event == 0) || (event == GAMIN_EVENT_EXISTS) ||
+		    (event == GAMIN_EVENT_CHANGED) ||
+		    (event == GAMIN_EVENT_CREATED)) {
+		    gam_server_emit_one_event(path, GAMIN_EVENT_EXISTS, sub);
+		} else if (event != 0) {
+		    gam_server_emit_one_event(path, GAMIN_EVENT_DELETED, sub);
+		}
+		gam_server_emit_one_event(path, GAMIN_EVENT_ENDEXISTS, sub);
+	    }
         }
 
         g_list_free(subs);
