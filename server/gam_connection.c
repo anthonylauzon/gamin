@@ -161,7 +161,7 @@ gam_connection_new(GMainLoop * loop, GIOChannel * source)
     ret->loop = loop;
     ret->source = source;
     ret->req_read = 0;
-    gamConnList = g_list_append(gamConnList, ret);
+    gamConnList = g_list_prepend(gamConnList, ret);
     GAM_DEBUG(DEBUG_INFO, "Created connection %d\n", ret->fd);
     return (ret);
 }

@@ -1,3 +1,8 @@
+Fri Dec  3 12:10:50 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_connection.c server/gam_node.c server/gam_poll.c
+	  server/gam_tree.c: avoid gam_node_append as it is O(n)
+
 Thu Dec  2 18:46:09 CET 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_connection.c server/gam_listener.c server/gam_server.c

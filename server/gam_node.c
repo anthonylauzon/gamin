@@ -50,7 +50,7 @@ gam_node_new(const char *path, GamSubscription * sub, gboolean is_dir)
 
     node->path = g_strdup(path);
     if (sub)
-        node->subs = g_list_append(NULL, sub);
+        node->subs = g_list_prepend(NULL, sub);
     else
         node->subs = NULL;
 

@@ -262,7 +262,7 @@ gam_tree_get_children(GamTree * tree, GamNode * root)
 	if (child == NULL) break;
         data = NODE_DATA(child);
 	if (data == NULL) break;
-        list = g_list_append(list, data);
+        list = g_list_prepend(list, data);
     }
 
     return list;

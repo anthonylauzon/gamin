@@ -209,7 +209,7 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
                     continue;
             }
 
-            tmp = g_list_append(NULL, sub);
+            tmp = g_list_prepend(NULL, sub);
             gam_server_emit_event(gam_node_get_path(node), is_dir_node,
                                   new_event, tmp, 0);
 	    g_list_free(tmp);
@@ -697,7 +697,7 @@ gam_poll_add_missing(GamNode *node) {
     GAM_DEBUG(DEBUG_INFO, "Poll adding missing node %s\n",
               gam_node_get_path(node));
     if (g_list_find(missing_resources, node) == NULL)
-	missing_resources = g_list_append(missing_resources, node);
+	missing_resources = g_list_prepend(missing_resources, node);
 }
 
 /**
