@@ -1,3 +1,7 @@
+Tue Aug 17 16:55:16 CEST 2004 Daniel Veillard <veillard@redhat.com
+
+	* gam_tree.c: cleanup while chasing regression in make tests
+
 Thu Aug 12 19:44:02 EDT 2004 Daniel Veillard <veillard@redhat.com>
 
 	* tests/Makefile.am: use $GAMIN_DEBUG_SERVER so that regression

@@ -110,7 +110,7 @@ gam_tree_add(GamTree * tree, GamNode * parent, GamNode * child)
 
 
     if (g_hash_table_lookup(tree->node_hash, gam_node_get_path(child)))
-        return FALSE; /* lock ??? */
+        return FALSE;           /* lock ??? */
 
     /*
      * g_message ("Adding child: %s to %s, %d : %s",
@@ -236,122 +236,6 @@ gam_tree_add_at_path(GamTree * tree, const char *path, gboolean is_dir)
 
     return node;
 }
-
-
-/*
-GList *
-gam_tree_get_all_above (GamTree *tree, GamNode *node)
-{
-	GList *ret = NULL;
-	GNode *gnode;
-
-	for (gnode = node->node; gnode; gnode = gnode->parent) {
-		ret = g_list_prepend (ret, NODE_DATA (gnode));
-	}
-
-	return ret;
-}
-
-gboolean
-gam_tree_has_parent_subscription (GamTree *tree, GamNode *node)
-{
-	GNode *gnode;
-
-	if (gam_node_get_subscriptions (NODE_DATA (node->node->parent)))
-		return TRUE;
-
-	for (gnode = node->node; gnode; gnode = gnode->parent) {
-		GList *l;
-
-		for (l = gam_node_get_subscriptions (NODE_DATA (gnode)); l; l = l->next) {
-			GamSubscription *sub = (GamSubscription *)l->data;
-
-			if (gam_subscription_is_recursive (sub))
-				return TRUE;
-		}
-	}
-
-	return FALSE;
-}
-*/
-
-/*
-static gboolean
-gam_tree_find_subs_traverse_func (GNode *node, gpointer user_data)
-{
-	SubSearchData *data = user_data;
-	GList *l;
-
-	for (l = gam_node_get_subscriptions (NODE_DATA (node)); l; l = l->next) {
-		GamSubscription *sub = (GamSubscription *)l->data;
-
-		if (gam_subscription_get_listener (sub) == data->listener)
-			data->list = g_list_prepend (data->list, sub);
-	}
-
-	return FALSE;
-}
-
-GList *
-gam_tree_find_subscriptions (GamTree        *tree,
-			    GamListener    *listener)
-{
-	GList *ret;
-	SubSearchData *data;
-
-	data = g_new0 (SubSearchData, 1);
-	data->listener = listener;
-	data->list = NULL;
-
-	g_mutex_lock (tree->lock);
-	g_node_traverse (tree->root, G_LEVEL_ORDER, G_TRAVERSE_ALL,
-			 -1, gam_tree_find_subs_traverse_func, data);
-	g_mutex_unlock (tree->lock);
-
-	ret = data->list;
-	g_free (data);
-
-	return ret;
-}
-
-static gboolean
-gam_tree_foreach_dir_traverse_func (GNode *node, gpointer user_data)
-{
-	GamTreeForeachFunc func = (GamTreeForeachFunc)user_data;
-
-	if (gam_node_is_dir (NODE_DATA (node)))
-		return (*func)(NODE_DATA (node));
-	else
-		return FALSE;
-}
-
-void
-gam_tree_foreach_directory (GamTree            *tree,
-			   GamTreeForeachFunc  func)
-{
-	g_node_traverse (tree->root, G_LEVEL_ORDER, G_TRAVERSE_ALL,
-			 -1, gam_tree_foreach_dir_traverse_func, func);
-}
-
-static void
-gam_tree_foreach_file_foreach_func (GNode *node, gpointer user_data)
-{
-	GamTreeForeachFunc func = (GamTreeForeachFunc)user_data;
-
-	if (!gam_node_is_dir (NODE_DATA (node)))
-		(*func)(NODE_DATA (node));
-}
-
-void
-gam_tree_foreach_file (GamTree            *tree,
-		      GamNode            *dir,
-		      GamTreeForeachFunc  func)
-{
-	g_node_children_foreach (dir->node, G_TRAVERSE_ALL,
-				 gam_tree_foreach_file_foreach_func, func);
-
-}
-*/
 
 static gboolean
 gam_tree_get_dir_traverse_func(GNode * node, gpointer user_data)
