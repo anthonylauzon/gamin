@@ -47,6 +47,13 @@ LICENSE</a>, and a <a
 href="http://www.opensource.org/licenses/lgpl-license.php">copy</a> of it
 should be found in the source under the COPYING file.</p>
 
+<h2><a name="Using">Using gamin</a></h2>
+
+<p>Basically it is exactly like for using the fam interface. From a
+programmer point of view this is the same API, and one can make use of <a
+href="http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=0650&amp;db=bks&amp;fname=/SGI_Developer/books/IIDsktp_IG/sgi_html/ch08.html">the
+existing FAM documentation</a>. </p>
+
 <h2><a name="News">News</a></h2>
 
 <h3>0.0.9: Sep 1 2004</h3>
@@ -122,6 +129,161 @@ href="http://mail.gnome.org/mailman/listinfo/gamin-list">gamin-list@gnome.org</a
 <p>Then the best way is to log the bug in one of the bugzilla or <a
 href="http://mail.gnome.org/mailman/listinfo/gamin-list">join the list</a>
 and post there if you think that some of gamin design or code should be
-changed.</p>
+changed. If you can provide a <a href="debug.html">testgam</a> scenario
+reproducing the problem this would really help getting it debugged and fixed,
+see examples in tests/scenario/ .</p>
+
+<h2><a name="FAQ">FAQ</a></h2>
+
+<p>This will be created as user feedback is provided.</p>
+
+<h2><a name="Debug">Debugging Gamin</a></h2>
+
+<h3>Debugging support in gamin:</h3>
+
+<p>Both the client and server side, if compiled with debug support accept an
+environment variable <strong>GAM_DEBUG</strong> which is set will make them
+report debugging informations to stdout.</p>
+
+<p>Usually for debugging you also want to use a dedicated server process so
+setting the <strong>GAM_CLIENT_ID</strong> environment allows to ensure this.
+Usually one also want to keep control over the server lifetime and not have
+it exit automatically after 30 seconds without connection, there is a command
+line flag <strong>--notimeout</strong> to <strong>gam_server</strong> for
+this.</p>
+
+<p>A typical example of a debugging session using 2 shells would be:</p>
+<pre>shell1: export GAM_DEBUG=
+shell1: gam_server --notimeout test</pre>
+
+<p>to run the server in debug mode using the ID "test"</p>
+<pre>shell2: export GAM_DEBUG=
+shell2: export GAM_CLIENT_ID=test
+shell2: gamin_client</pre>
+
+<p>to run the client in a verbose session. It is perfectly possible to also
+run the client under a debugger, for the server it works too except the
+dnotify kernel interface uses a signal SIG33 which is trapped by gdb. To
+avoid this use the handle gdb instruction:</p>
+<pre>(gdb) handle SIG33 nostop
+Signal        Stop      Print   Pass to program Description
+SIG33         No        Yes     Yes             Real-time event 33
+(gdb)</pre>
+
+<p>even better add it to your <strong>$HOME/.gdbinit</strong> .</p>
+
+<h3>Debugging and testing program:</h3>
+
+<p>A debugging client program called <strong>testgam</strong> is also
+available in the tests subdirectory. It allow to use the interface and
+monitor the flow of event received. Here is an example of a session:</p>
+<pre>paphio:~/gamin/tests -&gt; export GAMIN_DEBUG_SERVER="../server/gam_server"
+paphio:~/gamin/tests -&gt; ./testgam -
+&gt; connect test
+connected to test
+&gt;</pre>
+
+<p>The environment variable can be used to specify the path to the server to
+run, then <strong>testgam</strong> is launched in interactive mode (argument
+<strong>-</strong> ) and the program is asked to connect to the server for
+session test (the server will be started on-demand by the library if
+needed).</p>
+<pre>&gt; mkdir temp
+mkdir temp
+&gt; mkfile temp/foo
+mkfile temp/foo
+&gt; mondir temp
+mondir temp 0
+&gt;
+1: /u/veillard/gamin/tests/temp Exists: NULL
+1: foo Exists: NULL
+1: /u/veillard/gamin/tests/temp EndExist: NULL
+&gt; mkfile temp/bar
+mkfile temp/bar
+&gt;
+1: bar Created: NULL
+&gt; rmfile temp/foo
+rmfile temp/foo
+&gt;
+1: foo Deleted: NULL
+&gt;</pre>
+
+<p>In this example a new directory is created with a file in it and then
+monitored, then the directory content is modified. The
+<strong>testgam</strong> program also poll and report events coming from the
+server as they arrive.</p>
+
+<h2><a name="Security">Security</a></h2>
+
+<p>While gamin still use a server to provide the service (ideally if the
+kernel had a proper interface a library only implementation should be doable
+and probably better), it tries to avoid security hazard associated to
+contacting an external server process:</p>
+<ul>
+  <li>the server runs under the same privilege level as the client, by
+    running under the uid, no root or superuser access is involved, this is
+    checked by both side using kernel support for the checking</li>
+  <li>when possible (e.g. on Linux) the socket used to communicate is not
+    mapped at the filesystem level to avoid risks related to opening a real
+    file, if the kernel doesn't allow this a per user directory holding the
+    socket is used and appropriate rights are checked.</li>
+  <li>to limit DoS attacks done by continuously modifying a monitored
+    resource, the daemon will switch back monitoring of very busy resources
+    to polling with generation of events only once per second.</li>
+</ul>
+
+<p>Here is the process used to acquire and create the sockets:</p>
+
+<h3>If there is abstract socket support:</h3>
+
+<p>Use the filename "\0/tmp/fam-$USER-$GAM_CLIENT_ID". They are not mapped on
+the filesystem, no attack is possible that way. The client and the server
+checks on the first '\0' byte received from the socket that the other side is
+running under the same UID.</p>
+
+<h3>If there is no abstract socket support: </h3>
+
+<p>On the server side:</p>
+<pre> start:
+  try to create /tmp/fam-$USER using mkdir('/tmp/fam-$USER', 007)
+  if error:
+      make a stat() on it
+      if doesn't exist:
+          return failure to create
+      if user is not getuid() or mode is not 007 or type is not dir:
+          try to unlink()
+          if error:
+              exit with error.
+          if success:
+              goto start:
+                                                                                
+  do the socket()/bind() on /tmp/fam-$USER/fam-$GAM_CLIENT_ID</pre>
+
+<p>On the client side:</p>
+<pre>  make a stat on /tmp/fam-$USER
+  if doesn't exist:
+      return failure to create should start the server
+  if user is not getuid() or mode is not 007 or type is not dir:
+      try to unlink()
+      if error:
+          exit with error.
+      if success:
+          return failure should start the server
+  make a stat on /tmp/fam-$USER/fam-$GAM_CLIENT_ID
+  if doesn't exist:
+      return failure to create should start the server
+  if user is not getuid() or type is not socket:
+      try to unlink()
+      if error:
+          exit with error.
+      if success:
+          return failure should start the server
+                                                                                
+  do the socket()/connect() on /tmp/fam-$USER/fam-$GAM_CLIENT_ID</pre>
+
+<p>The client and the server checks on the first '\0' byte received that the
+other side is of the same UID.</p>
+
+<p></p>
 </body>
 </html>

@@ -1,3 +1,7 @@
+Fri Sep  3 23:33:57 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* doc/*.html: providing more documentation.
+
 Fri Sep  3 15:29:47 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS TODO doc/gamin.html doc/news.html: updating for the recent

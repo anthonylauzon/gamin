@@ -27,6 +27,18 @@
       <xsl:when test="$name = '#Contacts'">
         <xsl:text>contacts.html</xsl:text>
       </xsl:when>
+      <xsl:when test="$name = '#FAQ'">
+        <xsl:text>FAQ.html</xsl:text>
+      </xsl:when>
+      <xsl:when test="$name = '#Debug'">
+        <xsl:text>debug.html</xsl:text>
+      </xsl:when>
+      <xsl:when test="$name = '#Using'">
+        <xsl:text>using.html</xsl:text>
+      </xsl:when>
+      <xsl:when test="$name = '#Security'">
+        <xsl:text>security.html</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="$name"/>
       </xsl:otherwise>
