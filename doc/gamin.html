@@ -89,6 +89,38 @@ tabs.</em></p>
 
 <h2><a name="News">News</a></h2>
 
+<h3>0.0.19: Dec  3 2004</h3>
+<ul>
+  <li> still chasing the loop bug, made another pass at checking GList,
+  added own copy with memory poisonning of GList implementation.</li>
+  <li> fixed a compile issue when compiling without debug</li>
+</ul>
+
+<h3>0.0.18: Nov 26 2004</h3>
+<ul>
+  <li> still chasing the loop bug, checked and cleaned up all GList use</li>
+  <li> patch from markmc to minimize load on busy apps</li>
+</ul>
+
+<h3>0.0.16: Oct 20 2004</h3>
+<ul>
+  <li> chasing #132354, lot of debugging, checking and testing and a bit
+  of refactoring</li>
+</ul>
+
+<h3>0.0.15: Oct 16 2004</h3>
+<ul>
+  <li> workaround to detect loops and avoid the nasty effects, see RedHat bug #132354</li>
+</ul>
+
+<h3>0.0.14: Oct  3 2004</h3>
+<ul>
+  <li> Found and fixed the annoying bug where update were not received
+  should fix bugs ##132429, #133665 and #134413</li>
+  <li> new mechanism to debug on-the-fly by sending SIGUSR2 to client or server</li>
+  <li> Added documentation about internals</li>
+</ul>
+
 <h3>0.0.14: Oct  3 2004</h3>
 <ul>
   <li>Found and fixed the annoying bug where update were not received should

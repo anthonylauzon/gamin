@@ -5,6 +5,33 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.19: Dec  3 2004:
+   -  still chasing the loop bug, made another pass at checking GList,
+  added own copy with memory poisonning of GList implementation.
+   -  fixed a compile issue when compiling without debug
+
+
+0.0.18: Nov 26 2004:
+   -  still chasing the loop bug, checked and cleaned up all GList use
+   -  patch from markmc to minimize load on busy apps
+
+
+0.0.16: Oct 20 2004:
+   -  chasing #132354, lot of debugging, checking and testing and a bit
+  of refactoring
+
+
+0.0.15: Oct 16 2004:
+   -  workaround to detect loops and avoid the nasty effects, see RedHat bug #132354
+
+
+0.0.14: Oct  3 2004:
+   -  Found and fixed the annoying bug where update were not received
+  should fix bugs ##132429, #133665 and #134413
+   -  new mechanism to debug on-the-fly by sending SIGUSR2 to client or server
+   -  Added documentation about internals
+
+
 0.0.14: Oct  3 2004:
    - Found and fixed the annoying bug where update were not received should
     fix bugs ##132429, #133665 and #134413 in Red Hat bugzilla
