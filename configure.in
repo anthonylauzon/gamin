@@ -269,6 +269,7 @@ if test x$enable_abstract_sockets = xyes; then
 fi
 
 if test x$enable_abstract_sockets = xno; then
+   AC_MSG_ERROR([Abstract sockets are required, and support not detected.])
    have_abstract_sockets=no;
 fi
 

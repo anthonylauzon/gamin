@@ -125,6 +125,11 @@ gamin_connect_unix_socket(const char *path)
     addr.sun_path[0] = '\0';
     strncpy(&addr.sun_path[1], path, (sizeof(addr) - 4) - 2);
 #else
+    /*
+     * disabled, until a solution based on a tmp subdir is implemented
+     * http://mail.gnome.org/archives/gamin-list/2004-July/msg00017.html
+     */
+#error "Code really to be fixed for abstract socket"
     strncpy(&addr.sun_path[0], path, (sizeof(addr) - 4) - 1);
 #endif
 

@@ -1,3 +1,9 @@
+Wed Jul 28 22:29:57 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in libgamin/gam_api.c server/gam_channel.c: desactivating
+	  code if abstract sockets are not found following security problem
+	  http://mail.gnome.org/archives/gamin-list/2004-July/msg00017.html
+
 Tue Jul 27 12:23:52 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in server/Makefile.am server/gam_inotify.c
