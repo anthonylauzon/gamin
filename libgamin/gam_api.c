@@ -952,6 +952,7 @@ FAMClose(FAMConnection * fc)
 
     if (fc == NULL) {
         FAMErrno = FAM_ARG;
+	GAM_DEBUG(DEBUG_INFO, "FAMClose() arg error\n");
         return (-1);
     }
 
@@ -979,6 +980,7 @@ FAMMonitorDirectory(FAMConnection * fc, const char *filename,
                     FAMRequest * fr, void *userData)
 {
     if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMMonitorDirectory() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
@@ -1012,6 +1014,7 @@ FAMMonitorDirectory2(FAMConnection * fc, const char *filename,
                      FAMRequest * fr)
 {
     if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMMonitorDirectory2() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
@@ -1048,6 +1051,7 @@ FAMMonitorFile(FAMConnection * fc, const char *filename,
                FAMRequest * fr, void *userData)
 {
     if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMMonitorFile() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
@@ -1080,6 +1084,7 @@ int
 FAMMonitorFile2(FAMConnection * fc, const char *filename, FAMRequest * fr)
 {
     if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMMonitorFile2() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
@@ -1146,11 +1151,13 @@ FAMNextEvent(FAMConnection * fc, FAMEvent * fe)
     GAMDataPtr conn;
 
     if ((fc == NULL) || (fe == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMNextEvent() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
     conn = fc->client;
     if (conn == NULL) {
+	GAM_DEBUG(DEBUG_INFO, "FAMNextEvent() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
@@ -1196,11 +1203,13 @@ FAMPending(FAMConnection * fc)
     GAMDataPtr conn;
 
     if (fc == NULL) {
+	GAM_DEBUG(DEBUG_INFO, "FAMPending() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
     conn = fc->client;
     if (conn == NULL) {
+	GAM_DEBUG(DEBUG_INFO, "FAMPending() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
@@ -1238,10 +1247,12 @@ FAMCancelMonitor(FAMConnection * fc, FAMRequest * fr)
     int ret;
 
     if ((fc == NULL) || (fr == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMCancelMonitor() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
     if ((fc->fd < 0) || (fc->client == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMCancelMonitor() arg error\n");
         FAMErrno = FAM_ARG;
         return (-1);
     }
