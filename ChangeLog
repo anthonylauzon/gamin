@@ -1,3 +1,11 @@
+Sat Jul 17 19:40:25 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* doc/apibuild.py doc/gamin-api.xml doc/gamin-refs.xml: some
+	  doc extraction processing based on libxml2 tool
+	* libgamin/fam.h libgamin/gam_api.c libgamin/gam_data.c
+	  libgamin/gam_error.h libgamin/gam_protocol.h: cleanup in the
+	  process of generating the XML description.
+
 Fri Jul 16 13:42:37 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in configure.in: preparing 0.0.2 release

@@ -44,12 +44,16 @@ struct FAMConnection {
 };
 
 /**
+ * FAMCONNECTION_GETFD:
+ *
  * The only field available from the connection is the file
  * descriptor and it should be accessed though the macro
  */
 #define FAMCONNECTION_GETFD(fc) ((fc)->fd)
 
-/**
+/***
+ * FAMRequest:
+ *
  * Structure associated to a FAM request
  * it should not be public but unfortunately it is included int the
  * FAMEvent structure.
@@ -62,6 +66,8 @@ struct FAMRequest {
 };
 
 /**
+ * FAMREQUEST_GETREQNUM:
+ *
  * The only field available from the request is the request
  * number and it should be accessed though the macro
  */
@@ -74,7 +80,7 @@ int gamin_request_get_num(FAMRequestPtr fr);
  * The FAMCodes indicates what kind of event happened that raised
  * the callback at the application level.
  */
-enum FAMCodes {
+enum {
     FAMChanged=1,
     FAMDeleted=2,
     FAMStartExecuting=3,
@@ -84,7 +90,7 @@ enum FAMCodes {
     FAMAcknowledge=7,
     FAMExists=8,
     FAMEndExist=9
-};
+} FAMCodes;
 
 typedef struct  FAMEvent {
     FAMConnection* fc;         /* The fam connection that event occurred on */
@@ -92,7 +98,7 @@ typedef struct  FAMEvent {
     char *hostname;            /* host and filename - pointer to which */
     char filename[PATH_MAX];   /* file changed */
     void *userdata;            /* userdata associated with this monitor req. */
-    enum FAMCodes code;        /* What happened to file - see above */
+    FAMCodes code;             /* What happened to file - see above */
 } FAMEvent;
 
 /**

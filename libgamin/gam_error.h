@@ -34,13 +34,21 @@ extern "C" {
 #ifndef __GNUC__
 #define __FUNCTION__   ""
 #endif
+
+/**
+ * DEBUG_INFO:
+ *
+ * convenience macro providing informations
+ */
 #define DEBUG_INFO __FILE__, __LINE__, __FUNCTION__
 
 void	gam_error(char *file, int line, char* function, char* format, ...);
 
 #ifdef GAM_DEBUG_ENABLED
-/*
- * debug activated
+/**
+ * GAM_DEBUG:
+ *
+ * debugging macro when debug is activated
  */
 void	gam_debug(char *file, int line, char* function, char* format, ...);
 #define GAM_DEBUG gam_debug
@@ -50,6 +58,11 @@ void	gam_debug(char *file, int line, char* function, char* format, ...);
  * no debug, redefine the macro empty content
  */
 #ifdef HAVE_ISO_VARARGS
+/**
+ * GAM_DEBUG:
+ *
+ * debugging macro when debug is not activated
+ */
 #define GAM_DEBUG(...)
 #elif defined (HAVE_GNUC_VARARGS)
 #define GAM_DEBUG(format...)

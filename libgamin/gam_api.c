@@ -829,6 +829,8 @@ FAMMonitorFile2(FAMConnection * fc, const char *filename, FAMRequest * fr)
  * @filename: the file filename, it must not be relative.
  * @fr: pointer to the request structure.
  * @userData: user data associated to this request
+ * @depth:  supposedly a limit in the recursion depth
+ * @mask:  unknown !
  *
  * Register a extended monitoring request for a given directory.
  * NOT SUPPORTED

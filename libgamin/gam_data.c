@@ -15,7 +15,7 @@
 
 #define FAM_EVENT_SIZE (sizeof(FAMEvent))
 
-typedef enum GAMReqState {
+typedef enum {
     REQ_NONE = 0,               /* not set */
     REQ_INIT = 1,               /* set but no event yet */
     REQ_CONFIRMED = 2,          /* already got an event */
@@ -692,6 +692,7 @@ gamin_data_event_ready(GAMDataPtr conn)
 /**
  * gamin_data_get_reqnum:
  * @conn:  a connection data structure
+ * @filename:  the filename associated to the request
  * @type:  the request type
  * @userData:  user data associated to the request
  *
@@ -716,6 +717,7 @@ gamin_data_get_reqnum(GAMDataPtr conn, const char *filename, int type,
 /**
  * gamin_data_get_request:
  * @conn:  a connection data structure
+ * @filename:  the filename associated to the request
  * @type:  the request type
  * @userData:  user data associated to the request
  * @reqno:  the request number provided by the user

@@ -31,13 +31,25 @@
 extern "C" {
 #endif
 
+/**
+ * MAXPATHLEN:
+ *
+ * Needed to check length of paths
+ */
 #ifndef MAXPATHLEN
 #define MAXPATHLEN FILENAME_MAX
 #endif
 
+/**
+ * GAM_PROTO_VERSION:
+ *
+ * versionning at the protocol level
+ */
 #define GAM_PROTO_VERSION 1
 
 /**
+ * GAMReqType:
+ *
  * Type of FAM requests
  */
 typedef enum {
@@ -47,6 +59,8 @@ typedef enum {
 } GAMReqType;
 
 /**
+ * GAMPacket:
+ *
  * Structure associated to a FAM survey request
  * propagates from client to server
  */
@@ -64,6 +78,11 @@ struct GAMPacket {
     char path[MAXPATHLEN];	/* the path to the file */
 };
 
+/**
+ * GAM_PACKET_HEADER_LEN:
+ *
+ * convenience macro to provide the length of the packet header.
+ */
 #define GAM_PACKET_HEADER_LEN (sizeof(GAMPacket) - MAXPATHLEN)
 
 #ifdef __cplusplus
