@@ -55,6 +55,7 @@ rm -fr %{buildroot}
 %defattr(-, root, root)
 
 %doc AUTHORS ChangeLog NEWS README Copyright TODO
+%doc doc/*.html
 %{_libdir}/lib*.so.*
 %{_libexecdir}/gam_server
 
@@ -72,6 +73,10 @@ rm -fr %{buildroot}
 %changelog
 * @RELDATE@ Daniel Veillard <veillard@redhat.com>
 - upstream release @VERSION@
+
+* Thu Aug 26 2004 Daniel Veillard <veillard@redhat.com> 0.0.8-1
+- Fixes crashes of the gam_server
+- try to correct the kernel/poll switching mode
 
 * Tue Aug 24 2004 Daniel Veillard <veillard@redhat.com> 0.0.7-1
 - add support for both polling and dnotify simultaneously
