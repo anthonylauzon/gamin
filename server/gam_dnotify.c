@@ -137,7 +137,6 @@ gam_dnotify_file_handler(const char *path, gboolean added)
     gam_debug(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path, added);
     dir = g_path_get_dirname(path);
     gam_dnotify_directory_handler(dir, added);
-    gam_poll_scan_directory(path, NULL);
     g_free(dir);
 }
 

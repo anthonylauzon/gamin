@@ -1,3 +1,10 @@
+Thu Aug 19 23:46:13 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c: fix a problem for monitoring missing
+	  files
+	* tests/result/6 tests/scenario/6.tst: added a regression test
+	  for it.
+
 Thu Aug 19 15:38:55 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* Makefile.am configure.in gamin.spec.in: release of 0.0.6

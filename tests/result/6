@@ -1,0 +1,5 @@
+connected to test
+monfile test1/missing 0
+1: /u/veillard/gamin/tests/test1/missing Deleted: NULL
+1: /u/veillard/gamin/tests/test1/missing EndExist: NULL
+disconnected
