@@ -1,3 +1,13 @@
+Wed Aug  4 13:14:02 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/fam.h: fix a bug compiling KDE reported by than
+	* server/gam_poll.c: some code cleanup
+	* tests/testing.c: adding an expect command way better than wait
+	* tests/result/[1-3] tests/scenario/[1-3].tst tests/Makefile.am:
+	  started setting up reliable regression testing, discovered a 
+	  strange timeout problem with gam_server to be investigated
+	  left as a comment on 3.tst
+
 Tue Aug  3 14:55:49 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* tests/testing.c: do not exit on parse if interactive

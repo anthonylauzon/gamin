@@ -17,23 +17,16 @@ dist-hook:
 
 check-local: tests
 
-testfam: testing.c
-	@(if [ -f libfam.a ] ; then					\
-	      $(CC) $(CFLAGS) -o testfam testing.c libfam.a -lstdc++;	\
-	  else 								\
-	      echo Need libfam.a to build testfam ;			\
-	  fi )
-
-tests: testgam testfam
+tests: testgam
 	-@(for i in $(top_srcdir)/tests/scenario/*.tst ; do		\
 	   name=`basename $$i .tst`;					\
 	   if [ ! -f $(top_srcdir)/tests/result/$$name ] ; then		\
 	       echo New test file $$name ; 				\
 	       if [ -x ./testfam ] ; then 				\
-	       ./testfam $$i > $(top_srcdir)/tests/result/$$name ;	\
+	       ./testgam $$i > $(top_srcdir)/tests/result/$$name ;	\
 	       fi							\
 	   else								\
-	       echo $$name ;						\
+	       echo running test $$name ;						\
 	       ./testgam $$i > result.$$name ;				\
 	       diff -c $(top_srcdir)/tests/result/$$name result.$$name ;\
 	   fi ; done )

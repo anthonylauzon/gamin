@@ -71,8 +71,7 @@ struct FAMRequest {
  * The only field available from the request is the request
  * number and it should be accessed though the macro
  */
-#define FAMREQUEST_GETREQNUM(fr) gamin_request_get_num(fr)
-int gamin_request_get_num(FAMRequestPtr fr);
+#define FAMREQUEST_GETREQNUM(fr) ((fr)->reqnum)
 
 /**
  * FAMEvent Structure, it is a public structure provided back to the

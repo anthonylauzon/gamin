@@ -19,11 +19,13 @@
 
 char pwd[250];
 char filename[MAXPATHLEN + 250];
+int interactive = 0;
 
 struct testState {
     int connected;
     FAMConnection fc;
     int nb_requests;
+    int nb_events;
     FAMRequest fr[MAX_REQUESTS];
 } testState;
 
@@ -119,6 +121,8 @@ printEvent(int no)
         fprintf(stderr, "event(s) line %d: FAMNextEvent failed\n", no);
         return (-1);
     }
+    testState.nb_events++;
+    
     if (fe.userdata == NULL)
         data = "NULL";
     else
@@ -153,6 +157,63 @@ printEvents(int no)
         }
     }
     return (0);
+}
+
+static void
+debugPrompt(void) {
+    printf("> ");
+    fflush(stdout);
+}
+
+static int
+debugLoop(int timeoutms) {
+    fd_set read_set;
+    struct timeval tv;
+    int avail;
+    int fd;
+
+    if (interactive)
+	debugPrompt();
+
+retry:
+    FD_ZERO(&read_set);
+    FD_SET(0, &read_set);
+    fd = 0;
+    if (testState.connected) {
+        FD_SET(testState.fc.fd, &read_set);
+	fd = testState.fc.fd;
+    }
+    if (timeoutms >= 0) {
+        tv.tv_sec = timeoutms / 1000;
+        tv.tv_usec = (timeoutms % 1000) * 1000;
+	avail = select(fd + 1, &read_set, NULL, NULL, &tv);
+	if (avail == 0)
+	    return(0);
+    } else {
+	avail = select(fd + 1, &read_set, NULL, NULL, NULL);
+    }
+    if (avail < 0) {
+        if (errno == EINTR)
+	    goto retry;
+	fprintf(stderr, "debugLoop: select() failed \n");
+	return (-1);
+    }
+    if (testState.connected) {
+        if (FD_ISSET(testState.fc.fd, &read_set)) {
+	    if (FAMPending(&(testState.fc)) > 0) {
+		if (interactive)
+		    printf("\n");
+	        printEvents(0);
+		if (interactive)
+		    debugPrompt();
+	    }
+	}
+    }
+    if (timeoutms >= 0)
+        return(0);
+    if (!(FD_ISSET(0, &read_set)))
+        goto retry;
+    return(0);
 }
 
 static int
@@ -327,6 +388,33 @@ processCommand(char *line, int no)
         printEvent(no);
     } else if (!strcmp(command, "events")) {
         printEvents(no);
+    } else if (!strcmp(command, "expect")) {
+	int count;
+	int delay = 0;
+	int nb_events = testState.nb_events;
+
+        if (args != 2) {
+            fprintf(stderr, "expect line %d: lacks number\n", no);
+            return (-1);
+        }
+
+	if (sscanf(arg, "%d", &count) <= 0) {
+	    fprintf(stderr, "expect line %d: invalid number value %s\n",
+		    no, arg);
+	    return (-1);
+	}
+	/*
+	 * wait at most 3 secs before declaring failure
+	 */
+	while ((delay < 30) && (testState.nb_events < nb_events + count)) {
+	    debugLoop(100);
+	    delay++;
+	}
+	if (testState.nb_events < nb_events + count) {
+	    printf("expect line %d: got %d of %d expected events\n",
+		   no, testState.nb_events - nb_events, count);
+	    return(-1);
+	}
     } else if (!strcmp(command, "sleep")) {
         int i;
 
@@ -341,48 +429,6 @@ processCommand(char *line, int no)
     return (0);
 }
 
-static void
-debugPrompt(void) {
-    printf("> ");
-    fflush(stdout);
-}
-
-static int
-debugLoop(void) {
-    fd_set read_set;
-    int avail;
-    int fd;
-
-    debugPrompt();
-
-retry:
-    FD_ZERO(&read_set);
-    FD_SET(0, &read_set);
-    fd = 0;
-    if (testState.connected) {
-        FD_SET(testState.fc.fd, &read_set);
-	fd = testState.fc.fd;
-    }
-    avail = select(fd + 1, &read_set, NULL, NULL, NULL);
-    if (avail < 0) {
-        if (errno == EINTR)
-	    goto retry;
-	fprintf(stderr, "debugLoop: select() failed \n");
-	return (-1);
-    }
-    if (testState.connected) {
-        if (FD_ISSET(testState.fc.fd, &read_set)) {
-	    if (FAMPending(&(testState.fc)) > 0) {
-	        printf("\n");
-	        printEvents(0);
-		debugPrompt();
-	    }
-	}
-    }
-    if (!(FD_ISSET(0, &read_set))) goto retry;
-    return(0);
-}
-
 static int
 playTest(const char *filename)
 {
@@ -390,7 +436,6 @@ playTest(const char *filename)
     char command[MAXPATHLEN + 201];
     int clen = 0, ret;
     int no = 0;
-    int interactive = 0;
 
     testState.connected = 0;
     testState.nb_requests = 0;
@@ -405,7 +450,7 @@ playTest(const char *filename)
         return (-1);
     }
     if (interactive) {
-        while (debugLoop() == 0) {
+        while (debugLoop(-1) == 0) {
 	    ret = read(0, &command[clen], MAXPATHLEN + 200 - clen);
 	    if (ret < 0)
 	        break;

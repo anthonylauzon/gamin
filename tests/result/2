@@ -1,0 +1,8 @@
+mkdir test1
+connected to test
+pending 0
+mondir test1 0
+1: /u/veillard/gamin/tests/test1 Exists: NULL
+1: /u/veillard/gamin/tests/test1 EndExist: NULL
+disconnected
+rmdir test1

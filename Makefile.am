@@ -23,3 +23,6 @@ EXTRA_DIST =			\
 
 rpm: clean
 	@(unset CDPATH ; $(MAKE) dist && rpmbuild -ta $(distdir).tar.gz)
+
+tests: all
+	(cd tests ; $(MAKE) tests)

@@ -245,7 +245,6 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
     GaminEventType event = 0, fevent;
     GList *dir_exist_subs = NULL;
     GList *children, *l;
-    gboolean recursive;
     unsigned int i, exists = 0;
 
     g_return_if_fail(dir_node != NULL);
@@ -260,11 +259,6 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
     dir_exist_subs =
         list_intersection(exist_subs,
                           gam_node_get_subscriptions(dir_node));
-#ifdef WITH_RECURSIVE
-    recursive = gam_node_has_recursive_sub(dir_node);
-#else
-    recursive = FALSE;
-#endif
 
     if (event == 0 && !dir_exist_subs)
         goto scan_files;
@@ -291,20 +285,6 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
             } else {
                 node = gam_node_new(path, NULL, TRUE);
                 gam_tree_add(tree, dir_node, node);
-
-                if (recursive) {
-                    gam_node_copy_subscriptions(dir_node,
-                                                node,
-                                                gam_subscription_is_recursive);
-
-                    /* FIXME: this is totally crappy */
-                    for (i = 0;
-                         i <
-                         g_list_length(gam_node_get_subscriptions(node));
-                         i++) {
-                        trigger_dir_handler(gam_node_get_path(node), TRUE);
-                    }
-                }
 
                 gam_node_set_flag(node, FLAG_NEW_NODE);
             }
@@ -367,38 +347,15 @@ scan_files:
     g_list_free(dir_exist_subs);
 }
 
-/*
-static gboolean
-gam_poll_needs_scanned (GamNode *node)
-{
-	GaminEventType event;
-	
-	g_return_val_if_fail (gam_node_is_dir (node), FALSE);
-
-	if (!gam_node_get_subscriptions (node))
-		return FALSE;
-
-	event = poll_file (node);
-
-	if (event != GAMIN_EVENT_DELETED &&
-	    event != 0) {
-		return TRUE;
-	} else
-		return FALSE;
-}
-*/
-
 static gboolean
 remove_directory_subscription(GamNode * node, GamSubscription * sub)
 {
     GList *children, *l;
-    gboolean recursive;
     gboolean remove_dir;
 
     node_remove_subscription(node, sub);
 
     remove_dir = gam_node_get_subscriptions(node) == NULL;
-    recursive = gam_subscription_is_recursive(sub);
 
     children = gam_tree_get_children(tree, node);
     for (l = children; l; l = l->next) {
