@@ -1,3 +1,8 @@
+Wed Jan  5 18:40:50 CET 2005 Frederic Crozat  <fcrozat@mandrakesoft.com>
+
+	* server/gam_poll.c: (remove_directory_subscription), (prune_tree):
+	Fix crash when removing files (bug #161902).
+
 Wed Jan  5 18:32:45 CET 2005 Frederic Crozat  <fcrozat@mandrakesoft.com>
 
 	* server/gam_poll.c: (prune_tree), (gam_poll_scan_all_callback):
