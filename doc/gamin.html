@@ -89,6 +89,33 @@ tabs.</em></p>
 
 <h2><a name="News">News</a></h2>
 
+<h3>0.0.14: Oct  3 2004</h3>
+<ul>
+  <li>Found and fixed the annoying bug where update were not received should
+    fix bugs ##132429, #133665 and #134413 in Red Hat bugzilla</li>
+  <li>new mechanism to debug on-the-fly by sending SIGUSR2 to client or
+  server</li>
+  <li>Added documentation about internals</li>
+</ul>
+
+<h3>0.0.13: Oct  1 2004</h3>
+<ul>
+  <li>applied portability fixes</li>
+  <li>hardened the code while chasing a segfault</li>
+</ul>
+
+<h3>0.0.12: Sep 30 2004</h3>
+<ul>
+  <li>potential fix for a hard to reproduce looping problem.</li>
+</ul>
+
+<h3>0.0.11: Sep 27 2004</h3>
+<ul>
+  <li>inotify support compiled in by default</li>
+  <li>fix ABI FAM compatibility problems #133162</li>
+  <li>update to the latest version of inotify </li>
+</ul>
+
 <h3>0.0.10: Sep 21 2004</h3>
 <ul>
   <li>fixed API/ABI incompatibility between FAM and gamin about FAMErrno and
@@ -225,7 +252,7 @@ SIG33         No        Yes     Yes             Real-time event 33
 dynamically to a debug mode by sending them a signal SIGUSR2. In that case
 the program or library switches to verbose debugging and outputs the traces
 to a new file /tmp/gamin_debug_XXXXXX . Sending the signal again to the
-application or the server should switch off debugging. </p>
+application or the server should switch off debugging.</p>
 
 <h3><a name="Debugging2">Debugging and testing client</a>:</h3>
 

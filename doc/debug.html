@@ -30,7 +30,7 @@ SIG33         No        Yes     Yes             Real-time event 33
 dynamically to a debug mode by sending them a signal SIGUSR2. In that case
 the program or library switches to verbose debugging and outputs the traces
 to a new file /tmp/gamin_debug_XXXXXX . Sending the signal again to the
-application or the server should switch off debugging. </p><h3><a name="Debugging2" id="Debugging2">Debugging and testing client</a>:</h3><p>A debugging client program called <strong>testgam</strong> is also
+application or the server should switch off debugging.</p><h3><a name="Debugging2" id="Debugging2">Debugging and testing client</a>:</h3><p>A debugging client program called <strong>testgam</strong> is also
 available in the tests subdirectory. It allow to use the interface and
 monitor the flow of event received. Here is an example of a session:</p><pre>paphio:~/gamin/tests -&gt; export GAMIN_DEBUG_SERVER="../server/gam_server"
 paphio:~/gamin/tests -&gt; ./testgam -
