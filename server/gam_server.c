@@ -47,8 +47,9 @@
 gboolean
 gam_init_subscriptions(void)
 {
-
-#ifdef linux
+#ifdef USE_INOTIFY
+    return (gam_inotify_init());
+#elif linux
     return (gam_dnotify_init());
 #else
     return (gam_poll_init());

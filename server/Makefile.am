@@ -30,6 +30,8 @@ gam_server_SOURCES =					\
 	gam_error.h					\
 	gam_dnotify.c					\
 	gam_dnotify.h					\
+	gam_inotify.c					\
+	gam_inotify.h					\
 	gam_channel.c					\
 	gam_channel.h					\
 	gam_connection.c				\

@@ -1,3 +1,10 @@
+Tue Jul 27 12:23:52 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in server/Makefile.am server/gam_inotify.c
+	  server/gam_inotify.h server/gam_server.c: Applied patches
+	  from John McCutchan for inotify the potential dnotify
+	  kernel API replacement on Linux.
+
 Tue Jul 27 11:52:58 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/fam.h: fix a compilation problem with latest patch.
