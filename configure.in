@@ -144,8 +144,9 @@ esac],[debug=yes])
 
 if test x$debug = xyes ; then
     AC_DEFINE([GAMIN_DEBUG], [], [Enable debugging messages])
-    AM_CONDITIONAL(GAMIN_DEBUG, test x$debug = xyes)
 fi
+
+AM_CONDITIONAL(GAMIN_DEBUG, test x$debug = xyes)
 
 debug_api=no
 if test "`hostname`" == "paphio" -a "`pwd`" == "/u/veillard/gamin"

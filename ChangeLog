@@ -1,3 +1,8 @@
+Wed Feb 23 23:28:18 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: small patch about debugging being always enabled
+	  by Martin Schlemmer
+
 Wed Feb 23 17:44:54 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: try to avoid the /media/ mount problem
