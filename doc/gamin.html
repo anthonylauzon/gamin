@@ -204,6 +204,73 @@ href="http://www.gnome.org/~veillard/gamin/sources/">sources</a>, and <a
 href="http://www.gnome.org/~veillard/gamin/RPMS/">binaries</a> or <a
 href="http://www.gnome.org/~veillard/gamin/SRPMS/">source</a> RPMs.</p>
 
+<h2><a name="Python">Python bindings</a></h2>
+<p>Starting with release 0.0.21, gamin comes with Python bindings. Use "<span
+style="font-family: monospace;">import gamin</span>"
+to load the module. It exports the main class "<span
+style="font-family: monospace;">WatchMonitor</span>"
+which handle one connection to the gam_server. Once an instance of the
+class has been created you can use the watch_directory and watch_file
+methods to register objects to monitors, and provide the callback to be
+called when events are generated. Like the FAM API, the python binding
+API is passive, i.e. one need&nbsp; to&nbsp; monitor the file
+descriptor provided with the <span
+style="font-family: monospace;">get_fd()</span>
+method to detect events, and call <span
+style="font-family: monospace;">handle_one_event()</span>
+(blocking) or <span
+style="font-family: monospace;">handle_events()</span>
+(non-blocking) to process incoming events and get the callbacks
+appropriately. You can also use the <span
+style="font-family: monospace;">event_pending()</span>
+method to detect if <span
+style="font-family: monospace;">handle_one_event()</span>
+would block or not.<br>
+Since a short example is worth a thousand words, here is a small
+session from the python shell:</p>
+<pre>
+&gt;&gt;&gt; import gamin
+&gt;&gt;&gt;
+&gt;&gt;&gt; def callback(path, event):
+...     print "Got callback: %s, %s" % (path, event)
+...
+&gt;&gt;&gt; mon = gamin.WatchMonitor()
+&gt;&gt;&gt; mon.watch_directory(".", callback)
+&lt;gamin.WatchObject instance at 0xb7f7b56c&gt;
+&gt;&gt;&gt; mon.event_pending()
+1
+&gt;&gt;&gt; mon.handle_one_event()
+Got callback: /u/veillard/temp, 8
+1
+&gt;&gt;&gt; mon.handle_events()
+Got callback: bar1, 8
+Got callback: foo1, 8
+Got callback: /u/veillard/temp, 9
+3
+&gt;&gt;&gt; mon.stop_watch(".")
+&gt;&gt;&gt; del mon
+</pre>
+<p>The corresponding standalone code follows:</p>
+<pre>#!/usr/bin/env python
+
+import gamin
+import time
+
+def callback(path, event):
+    print "Got callback: %s, %s" % (path, event)
+
+mon = gamin.WatchMonitor()
+mon.watch_directory(".", callback)
+time.sleep(1)
+ret = mon.event_pending()
+if ret &gt; 0:
+    ret = mon.handle_one_event()
+    ret = mon.handle_events()
+mon.stop_watch(".")
+del mon
+</pre>
+<p>Note the addition of the sleep timeout, it is needed because due to the round trip between the client and the gam_server, events may not be immediately available after the monitor creation to the client.</p>
+
 <h2><a name="Developers">Developers</a> informations</h2>
 
 <p>The CVS base is in the <a href="http://www.gnome.org/">GNOME</a> project

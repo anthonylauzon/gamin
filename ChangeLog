@@ -1,3 +1,8 @@
+Wed Jan 26 11:59:11 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* doc/*: added a page for the python bindings, updated the 
+	  stylesheet and rebuilt the docs.
+
 Wed Jan 26 10:26:15 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c server/local_inotify.h: applied patch

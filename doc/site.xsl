@@ -42,6 +42,9 @@
       <xsl:when test="$name = '#Using'">
         <xsl:text>using.html</xsl:text>
       </xsl:when>
+      <xsl:when test="$name = '#Python'">
+        <xsl:text>python.html</xsl:text>
+      </xsl:when>
       <xsl:when test="$name = '#Security'">
         <xsl:text>security.html</xsl:text>
       </xsl:when>
