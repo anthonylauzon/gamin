@@ -252,6 +252,9 @@ gam_tree_get_children(GamTree * tree, GamNode * root)
     unsigned int i, n;
     void *data;
 
+    if ((tree == NULL) && (root == NULL))
+        return(NULL);
+
     node = root ? root->node : tree->root;
     if (node == NULL)
         return(NULL);

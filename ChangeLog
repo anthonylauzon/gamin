@@ -1,3 +1,8 @@
+Tue Dec 21 17:15:24 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_tree.c: try to fix #143342 in gam_tree_get_children if
+	  tree and root are NULL.
+
 Mon Dec  6 13:54:11 CET 2004 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS doc/gamin.html doc/news.html: updated and rebuilt pages.
