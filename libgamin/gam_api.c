@@ -25,7 +25,7 @@
 
 int FAMErrno = 0;
 
-enum FAMError {
+enum {
     FAM_OK = 0,
     FAM_ARG,	/* Bad arguments */
     FAM_FILE,	/* Bad filename */
@@ -33,7 +33,7 @@ enum FAMError {
     FAM_AUTH,	/* Authentication failure */
     FAM_MEM,	/* Memory allocation */
     FAM_UNIMPLEM/* Unimplemented */
-};
+} FAMError;
 
 const char *FamErrlist[] = {
     "Okay",
@@ -1264,4 +1264,37 @@ FAMCancelMonitor(FAMConnection * fc, FAMRequest * fr)
         FAMErrno = FAM_CONNECT;
     }
     return (ret);
+}
+
+/**
+ * FAMSuspendMonitor:
+ * @fc: pointer to a connection structure.
+ * @fr: pointer to a request structure.
+ *
+ * Unsupported call from the FAM API
+ *
+ * Returns 0 in case of success and -1 in case of error.
+ */
+int
+FAMSuspendMonitor(FAMConnection *fc, const FAMRequest *fr) {
+    gam_error(DEBUG_INFO,
+              "Unsupported call to FAMSuspendMonitor()\n");
+    FAMErrno = FAM_UNIMPLEM;
+    return (-1);
+}
+
+/**
+ * FAMResumeMonitor:
+ * @fc: pointer to a connection structure.
+ * @fr: pointer to a request structure.
+ *
+ * Unsupported call from the FAM API
+ *
+ * Returns 0 in case of success and -1 in case of error.
+ */
+int FAMResumeMonitor(FAMConnection *fc, const FAMRequest *fr) {
+    gam_error(DEBUG_INFO,
+              "Unsupported call to FAMResumeMonitor()\n");
+    FAMErrno = FAM_UNIMPLEM;
+    return (-1);
 }

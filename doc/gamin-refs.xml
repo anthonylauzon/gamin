@@ -12,6 +12,7 @@
     <reference name='FAMCreated' href='html/gamin-fam.html#FAMCreated'/>
     <reference name='FAMDeleted' href='html/gamin-fam.html#FAMDeleted'/>
     <reference name='FAMEndExist' href='html/gamin-fam.html#FAMEndExist'/>
+    <reference name='FAMErrno' href='html/gamin-fam.html#FAMErrno'/>
     <reference name='FAMEvent' href='html/gamin-fam.html#FAMEvent'/>
     <reference name='FAMExists' href='html/gamin-fam.html#FAMExists'/>
     <reference name='FAMMonitorCollection' href='html/gamin-fam.html#FAMMonitorCollection'/>
@@ -31,6 +32,7 @@
     <reference name='FAMStartExecuting' href='html/gamin-fam.html#FAMStartExecuting'/>
     <reference name='FAMStopExecuting' href='html/gamin-fam.html#FAMStopExecuting'/>
     <reference name='FAMSuspendMonitor' href='html/gamin-fam.html#FAMSuspendMonitor'/>
+    <reference name='FamErrlist' href='html/gamin-fam.html#FamErrlist'/>
     <reference name='GAMData' href='html/gamin-gam_data.html#GAMData'/>
     <reference name='GAMDataPtr' href='html/gamin-gam_data.html#GAMDataPtr'/>
     <reference name='GAMPacket' href='html/gamin-gam_protocol.html#GAMPacket'/>
@@ -71,6 +73,7 @@
       <ref name='FAMCreated'/>
       <ref name='FAMDeleted'/>
       <ref name='FAMEndExist'/>
+      <ref name='FAMErrno'/>
       <ref name='FAMEvent'/>
       <ref name='FAMExists'/>
       <ref name='FAMMonitorCollection'/>
@@ -90,6 +93,7 @@
       <ref name='FAMStartExecuting'/>
       <ref name='FAMStopExecuting'/>
       <ref name='FAMSuspendMonitor'/>
+      <ref name='FamErrlist'/>
     </letter>
     <letter name='G'>
       <ref name='GAMData'/>
@@ -204,6 +208,7 @@
       <ref name='FAMCreated'/>
       <ref name='FAMDeleted'/>
       <ref name='FAMEndExist'/>
+      <ref name='FAMErrno'/>
       <ref name='FAMEvent'/>
       <ref name='FAMExists'/>
       <ref name='FAMMonitorCollection'/>
@@ -223,6 +228,7 @@
       <ref name='FAMStartExecuting'/>
       <ref name='FAMStopExecuting'/>
       <ref name='FAMSuspendMonitor'/>
+      <ref name='FamErrlist'/>
     </file>
     <file name='gam_data'>
       <ref name='GAMData'/>
@@ -260,6 +266,10 @@
   <index>
     <chunk name='chunk0'>
       <letter name='A'>
+        <word name='API'>
+          <ref name='FAMResumeMonitor'/>
+          <ref name='FAMSuspendMonitor'/>
+        </word>
         <word name='Allocates'>
           <ref name='gamin_data_new'/>
         </word>
@@ -274,9 +284,8 @@
           <ref name='FAMClose'/>
           <ref name='FAMOpen'/>
           <ref name='FAMOpen2'/>
-        </word>
-        <word name='FAMRequest'>
-          <ref name='FAMCancelMonitor'/>
+          <ref name='FAMResumeMonitor'/>
+          <ref name='FAMSuspendMonitor'/>
         </word>
         <word name='Fills'>
           <ref name='gamin_data_read_event'/>
@@ -350,6 +359,12 @@
           <ref name='gamin_data_get_data'/>
         </word>
       </letter>
+      <letter name='U'>
+        <word name='Unsupported'>
+          <ref name='FAMResumeMonitor'/>
+          <ref name='FAMSuspendMonitor'/>
+        </word>
+      </letter>
       <letter name='a'>
         <word name='accessed'>
           <ref name='FAMCONNECTION_GETFD'/>
@@ -399,6 +414,10 @@
         </word>
       </letter>
       <letter name='c'>
+        <word name='call'>
+          <ref name='FAMResumeMonitor'/>
+          <ref name='FAMSuspendMonitor'/>
+        </word>
         <word name='called'>
           <ref name='gamin_data_get_data'/>
         </word>
@@ -477,6 +496,8 @@
           <ref name='FAMOpen'/>
           <ref name='FAMOpen2'/>
           <ref name='FAMPending'/>
+          <ref name='FAMResumeMonitor'/>
+          <ref name='FAMSuspendMonitor'/>
           <ref name='gamin_data_conn_data'/>
           <ref name='gamin_data_del_req'/>
           <ref name='gamin_data_event_ready'/>
@@ -552,12 +573,11 @@
           <ref name='gamin_data_reset'/>
           <ref name='gamin_fork_server'/>
         </word>
-        <word name='free'>
-          <ref name='FAMCancelMonitor'/>
-        </word>
         <word name='from'>
           <ref name='FAMCONNECTION_GETFD'/>
           <ref name='FAMREQUEST_GETREQNUM'/>
+          <ref name='FAMResumeMonitor'/>
+          <ref name='FAMSuspendMonitor'/>
           <ref name='gamin_data_del_req'/>
         </word>
         <word name='full'>
@@ -658,6 +678,8 @@
           <ref name='FAMMonitorFile2'/>
         </word>
       </letter>
+    </chunk>
+    <chunk name='chunk1'>
       <letter name='n'>
         <word name='name'>
           <ref name='FAMOpen2'/>
@@ -696,8 +718,6 @@
           <ref name='gamin_data_reset'/>
         </word>
       </letter>
-    </chunk>
-    <chunk name='chunk1'>
       <letter name='o'>
         <word name='only'>
           <ref name='FAMCONNECTION_GETFD'/>
@@ -745,6 +765,8 @@
           <ref name='FAMOpen'/>
           <ref name='FAMOpen2'/>
           <ref name='FAMPending'/>
+          <ref name='FAMResumeMonitor'/>
+          <ref name='FAMSuspendMonitor'/>
           <ref name='gamin_data_read_event'/>
         </word>
         <word name='possibly'>
@@ -767,7 +789,6 @@
           <ref name='GAM_PACKET_HEADER_LEN'/>
         </word>
         <word name='provided'>
-          <ref name='FAMCancelMonitor'/>
           <ref name='gamin_data_get_request'/>
         </word>
       </letter>
@@ -800,9 +821,6 @@
         </word>
         <word name='return'>
           <ref name='gamin_data_reset'/>
-        </word>
-        <word name='routine'>
-          <ref name='FAMCancelMonitor'/>
         </word>
       </letter>
       <letter name='s'>
@@ -851,6 +869,8 @@
           <ref name='FAMMonitorFile'/>
           <ref name='FAMMonitorFile2'/>
           <ref name='FAMNextEvent'/>
+          <ref name='FAMResumeMonitor'/>
+          <ref name='FAMSuspendMonitor'/>
           <ref name='gamin_data_conn_data'/>
           <ref name='gamin_data_del_req'/>
           <ref name='gamin_data_done_auth'/>
@@ -970,17 +990,14 @@
         <word name='whose'>
           <ref name='FAMOpen2'/>
         </word>
-        <word name='will'>
-          <ref name='FAMCancelMonitor'/>
-        </word>
         <word name='with'>
           <ref name='gamin_data_read_event'/>
         </word>
       </letter>
     </chunk>
     <chunks>
-      <chunk name='chunk0' start='A' end='n'/>
-      <chunk name='chunk1' start='o' end='w'/>
+      <chunk name='chunk0' start='A' end='m'/>
+      <chunk name='chunk1' start='n' end='w'/>
     </chunks>
   </index>
 </apirefs>

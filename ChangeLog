@@ -1,3 +1,9 @@
+Sun Sep 26 21:21:05 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c: added unimplemented entry points 
+	  FAMSuspendMonitor and FAMResumeMonitor, c.f. #133162
+	* doc/gamin-api.xml doc/gamin-refs.xml: rebuild 
+
 Fri Sep 24 15:15:08 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in server/gam_inotify.c server/local_inotify.h: always
