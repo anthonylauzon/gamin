@@ -1,3 +1,8 @@
+Tue Jun 15 21:45:20 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* README TODO: I was sure I updated the README before the
+	  import... updated the TODO to reflect the current state
+
 Tue Jun 15 21:33:55 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* m4/gthread-supported.m4: still needed for configure.in until
