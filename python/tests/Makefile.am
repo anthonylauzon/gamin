@@ -8,6 +8,8 @@ PYTESTS=        		\
 		noexists.py	\
 		dnotify.py	\
 		dnotify2.py	\
+		dnotify3.py	\
+		dnotify4.py	\
 		level.py	\
 		multiple.py	\
 		multiple2.py	\
@@ -27,7 +29,7 @@ tests: $(PYTESTS)
 	  GAM_CLIENT_ID=test; \
 	  export GAM_CLIENT_ID; \
 	  for test in $(PYTESTS) ; \
-	  do echo -n . ; \
+	  do echo $$test ; \
 	  log=`$(PYTHON) $(srcdir)/$$test` ; \
 	  if [ "`echo $$log | grep OK`" = "" ] ; then \
 	  echo "-- $$test" ; echo "$$log" ; fi ; done)

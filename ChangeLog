@@ -1,3 +1,10 @@
+Thu Feb 17 17:15:31 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_poll.c: removing bugs,
+	  did I say that I hate DNotify ?
+	* python/tests/Makefile.am python/tests/dnotify*.py: more
+	  tests and fixes
+
 Thu Feb 17 12:46:06 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in libgamin/gam_api.c libgamin/gam_data.c

@@ -48,6 +48,7 @@
 #define MON_MISSING	1 << 0	/* The resource is missing */
 #define MON_NOKERNEL	1 << 1  /* file(system) not monitored by the kernel */
 #define MON_BUSY	1 << 2  /* Too busy to be monitored by the kernel */
+#define MON_WRONG_TYPE	1 << 3  /* Expecting a directory and got a file */
 
 typedef struct {
     struct stat sbuf;		/* The stat() informations in last check */
@@ -59,7 +60,6 @@ typedef struct {
 
 static GamTree *tree = NULL;
 static GList *new_subs = NULL;
-static GList *removed_subs = NULL;
 static GList *missing_resources = NULL;
 static GList *all_resources = NULL;
 static GamPollHandler dir_handler = NULL;
@@ -68,8 +68,6 @@ static GamPollHandler file_handler = NULL;
 static int poll_mode = 0;
 
 static time_t current_time = 0;	/* a cache for time() informations */
-
-static void gam_poll_remove_subscriptions_real(GList *subs);
 
 static int
 gam_errno(void) {
@@ -139,10 +137,23 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
         return(0);
     }
 
-    if (gam_node_is_dir(node))
-        trigger_dir_handler(gam_node_get_path(node), FALSE);
-    else
-        trigger_file_handler(gam_node_get_path(node), FALSE);
+    /* DNotify makes our life miserable here */
+    if (gam_subscription_is_dir(sub)) {
+	if (gam_node_is_dir(node))
+	    trigger_dir_handler(path, FALSE);
+	else {
+	    char *dir;
+
+	    dir = g_path_get_dirname(path);
+	    trigger_file_handler(dir, FALSE);
+	    g_free(dir);
+	}
+    } else {
+	if (gam_node_is_dir(node))
+	    trigger_dir_handler(path, FALSE);
+	else
+	    trigger_file_handler(path, FALSE);
+    }
 
     return(0);
 }
@@ -653,17 +664,6 @@ gam_poll_scan_all_callback(gpointer data) {
 	g_list_free (subs);
     }
 
-    if (removed_subs) {
-        subs = removed_subs;
-        removed_subs = NULL;
-
-        GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n",
-                  gam_tree_get_size(tree));
-	gam_poll_remove_subscriptions_real(subs);
-        GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n",
-                  gam_tree_get_size(tree));
-    }
-
     current_time = time(NULL);
     for (idx = 0;;idx++) {
 	
@@ -806,6 +806,69 @@ gam_poll_add_subscription(GamSubscription * sub)
 }
 
 /**
+ * gam_poll_remove_subscription_real:
+ * @sub: a subscription
+ *
+ * Implements the removal of a subscription, including
+ * trimming the tree and deactivating the kernel back-end if needed.
+ */
+static void
+gam_poll_remove_subscription_real(GamSubscription * sub)
+{
+    GamNode *node;
+
+    node = gam_tree_get_at_path(tree, gam_subscription_get_path(sub));
+
+    if (node != NULL) {
+        if (!gam_node_is_dir(node)) {
+            GAM_DEBUG(DEBUG_INFO, "Removing node sub: %s\n",
+                      gam_subscription_get_path(sub));
+            node_remove_subscription(node, sub);
+
+            if (!gam_node_get_subscriptions(node)) {
+                GamNode *parent;
+
+                if (missing_resources != NULL) {
+                    gam_poll_remove_missing(node);
+                }
+                if (all_resources != NULL) {
+                    all_resources = g_list_remove(all_resources, node);
+                }
+                if (gam_tree_has_children(tree, node)) {
+                    fprintf(stderr,
+                            "node %s is not dir but has children\n",
+                            gam_node_get_path(node));
+                } else {
+                    parent = gam_node_parent(node);
+                    gam_tree_remove(tree, node);
+
+                    prune_tree(parent);
+                }
+            }
+        } else {
+            GAM_DEBUG(DEBUG_INFO, "Removing directory sub: %s\n",
+                      gam_subscription_get_path(sub));
+            if (remove_directory_subscription(node, sub)) {
+                GamNode *parent;
+
+                if (missing_resources != NULL) {
+                    gam_poll_remove_missing(node);
+                }
+                if (all_resources != NULL) {
+                    all_resources = g_list_remove(all_resources, node);
+                }
+                parent = gam_node_parent(node);
+                gam_tree_remove(tree, node);
+
+                prune_tree(parent);
+            }
+        }
+    }
+
+    gam_subscription_free(sub);
+}
+
+/**
  * Removes a subscription which was being polled.
  *
  * @param sub a #GamSubscription to remove
@@ -835,78 +898,14 @@ gam_poll_remove_subscription(GamSubscription * sub)
     gam_listener_remove_subscription(gam_subscription_get_listener(sub),
                                      sub);
 
-    removed_subs = g_list_prepend(removed_subs, sub);
+    GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n",
+	      gam_tree_get_size(tree));
+    gam_poll_remove_subscription_real(sub);
+    GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n",
+	      gam_tree_get_size(tree));
 
     GAM_DEBUG(DEBUG_INFO, "Poll: removed subscription\n");
     return TRUE;
-}
-
-/**
- * gam_poll_remove_subscriptions_real:
- * @subs: a list of subscriptions
- *
- * Implements the removal of all subscriptions in the lists, including
- * trimming the tree and deactivating the kernel back-end if needed.
- */
-static void
-gam_poll_remove_subscriptions_real(GList *subs) {
-    GList *l;
-
-    for (l = subs; l; l = l->next) {
-	GamSubscription *sub = l->data;
-	GamNode *node = gam_tree_get_at_path(tree,
-					     gam_subscription_get_path
-					     (sub));
-
-	if (node != NULL) {
-	    if (!gam_node_is_dir(node)) {
-		GAM_DEBUG(DEBUG_INFO, "Removing node sub: %s\n",
-			  gam_subscription_get_path(sub));
-		node_remove_subscription(node, sub);
-
-		if (!gam_node_get_subscriptions(node)) {
-		    GamNode *parent;
-
-		    if (missing_resources != NULL) {
-			gam_poll_remove_missing(node);
-		    }
-		    if (all_resources != NULL) {
-		        all_resources = g_list_remove (all_resources, node);
-		    }
-		    if (gam_tree_has_children(tree, node)) {
-			fprintf(stderr,
-				"node %s is not dir but has children\n",
-				gam_node_get_path(node));
-		    } else {
-			parent = gam_node_parent(node);
-			gam_tree_remove(tree, node);
-
-			prune_tree(parent);
-		    }
-		}
-	    } else {
-		GAM_DEBUG(DEBUG_INFO, "Removing directory sub: %s\n",
-			  gam_subscription_get_path(sub));
-		if (remove_directory_subscription(node, sub)) {
-		    GamNode *parent;
-
-		    if (missing_resources != NULL) {
-			gam_poll_remove_missing(node);
-		    }
-		    if (all_resources != NULL) {
-		        all_resources = g_list_remove (all_resources, node);
-		    }
-		    parent = gam_node_parent(node);
-		    gam_tree_remove(tree, node);
-
-		    prune_tree(parent);
-		}
-	    }
-	}
-
-	gam_subscription_free(sub);
-    }
-    g_list_free(subs);
 }
 
 /**
@@ -1004,8 +1003,13 @@ gam_poll_first_scan_dir(GamSubscription *sub, GamNode *dir_node,
 	gam_node_add_subscription(node, sub);
 	gam_node_set_data(node, data,
 			  (GDestroyNotify) gam_poll_data_destroy);
-	data->flags = MON_MISSING;
-	gam_poll_add_missing(node);
+	if (g_file_test(dpath, G_FILE_TEST_EXISTS)) {
+	    data->flags = MON_WRONG_TYPE;
+	    node->is_dir = 0;
+	} else {
+	    data->flags = MON_MISSING;
+	    gam_poll_add_missing(node);
+	}
 	goto done;
     } 
 
@@ -1122,19 +1126,6 @@ gam_poll_consume_subscriptions(void)
         }
 
         g_list_free(subs);
-    }
-
-    /* check for things that have been removed, and remove them */
-    if (removed_subs != NULL) {
-        subs = removed_subs;
-        removed_subs = NULL;
-
-        GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n",
-                  gam_tree_get_size(tree));
-	gam_poll_remove_subscriptions_real(subs);
-        GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n",
-                  gam_tree_get_size(tree));
-
     }
 }
 

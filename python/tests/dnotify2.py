@@ -1,5 +1,8 @@
 #!/usr/bin/env python
-
+#
+# Checking DNotify registration/dregistration when monitoring a
+# file as a file
+#
 import gamin
 import time
 import os
@@ -20,7 +23,7 @@ def debug(path, type, data):
         print "Error got debug path unexpected %s" % (path)
 	ok = 0
     if db_expect[dbg] != type:
-        print "Error got debug event %d expected %d" % (db_expect[dbg], type)
+        print "Error got debug event %d expected %d" % (type, db_expect[dbg])
 	ok = 0
     dbg = dbg + 1
 

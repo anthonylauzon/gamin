@@ -78,7 +78,7 @@ gam_dnotify_data_free(DNotifyData * data)
 }
 
 static void
-gam_dnotify_directory_handler(const char *path, gboolean added)
+gam_dnotify_directory_handler_internal(const char *path, gboolean added)
 {
     DNotifyData *data;
     int fd;
@@ -124,12 +124,24 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
         gam_debug_report(GAMDnotifyCreate, path, 0);
 #endif
     } else {
+	char *dir = path;
+
         data = g_hash_table_lookup(path_hash, path);
 
         if (!data) {
-	    GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
-            G_UNLOCK(dnotify);
-            return;
+
+	    dir = g_path_get_dirname(path);
+	    data = g_hash_table_lookup(path_hash, dir);
+
+            if (!data) {
+		GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
+
+		if (dir != NULL)
+		    g_free(dir);
+		G_UNLOCK(dnotify);
+		return;
+	    }
+	    GAM_DEBUG(DEBUG_INFO, "  not found using parent\n");
         }
 
         data->refcount--;
@@ -142,18 +154,38 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
             g_hash_table_remove(fd_hash, GINT_TO_POINTER(data->fd));
             gam_dnotify_data_free(data);
 #ifdef GAMIN_DEBUG_API
-	    gam_debug_report(GAMDnotifyDelete, path, 0);
+	    gam_debug_report(GAMDnotifyDelete, dir, 0);
 #endif
         } else {
 	    GAM_DEBUG(DEBUG_INFO, "  found decremented refcount: %d\n",
 	              data->refcount);
 #ifdef GAMIN_DEBUG_API
-            gam_debug_report(GAMDnotifyChange, path, data->refcount);
+            gam_debug_report(GAMDnotifyChange, dir, data->refcount);
 #endif
 	}
+	if ((dir != path) && (dir != NULL))
+	    g_free(dir);
     }
 
     G_UNLOCK(dnotify);
+}
+
+static void
+gam_dnotify_directory_handler(const char *path, gboolean added)
+{
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_directory_handler %s : %d\n",
+              path, added);
+
+    if ((!added) || (g_file_test(path, G_FILE_TEST_IS_DIR))) {
+	gam_dnotify_directory_handler_internal(path, added);
+    } else {
+	char *dir;
+
+	dir = g_path_get_dirname(path);
+	GAM_DEBUG(DEBUG_INFO, " not a dir using parent %s\n", dir);
+	gam_dnotify_directory_handler_internal(dir, added);
+	g_free(dir);
+    }
 }
 
 static void
@@ -162,12 +194,13 @@ gam_dnotify_file_handler(const char *path, gboolean added)
     GAM_DEBUG(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path, added);
     
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
-	gam_dnotify_directory_handler(path, added);
+	gam_dnotify_directory_handler_internal(path, added);
     } else {
 	char *dir;
 
 	dir = g_path_get_dirname(path);
-	gam_dnotify_directory_handler(dir, added);
+	GAM_DEBUG(DEBUG_INFO, " not a dir using parent %s\n", dir);
+	gam_dnotify_directory_handler_internal(dir, added);
 	g_free(dir);
     }
 }
