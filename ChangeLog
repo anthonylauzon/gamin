@@ -1,3 +1,8 @@
+Fri Feb  4 15:34:29 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* python/gamin.py: adding self.handle_events() in watch_file and
+	  watch_directory to avoid deadlocks.
+
 2005-02-01  Mark McLoughlin  <mark@skynet.ie>
 
 	* python/gamin.c: (get_connection), (get_request): memset
