@@ -1,3 +1,9 @@
+Wed Jan 26 10:26:15 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c server/local_inotify.h: applied patch
+	  from Philipp Zabel to follow the evolution of the inotify 
+	  protocol in 0.18
+
 Tue Jan 25 18:39:34 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in Makefile.am gamin.spec.in python/Makefile.am

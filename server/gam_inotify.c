@@ -223,24 +223,36 @@ static void gam_inotify_emit_event (INotifyData *data, struct inotify_event *eve
 static gboolean
 gam_inotify_read_handler(gpointer user_data)
 {
-    struct inotify_event event;
+    char buffer[sizeof(struct inotify_event) + INOTIFY_FILENAME_MAX];
+    struct inotify_event *event;
     INotifyData *data;
 
     GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler()\n");
     G_LOCK(inotify);
 
-    if (g_io_channel_read_chars(inotify_read_ioc, (char *)&event, sizeof(struct inotify_event), NULL, NULL) != G_IO_STATUS_NORMAL) {
+    if (g_io_channel_read_chars(inotify_read_ioc, buffer, sizeof(struct inotify_event), NULL, NULL) != G_IO_STATUS_NORMAL) {
 	G_UNLOCK(inotify);
         GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler failed\n");
 	return FALSE;
+    }
+    event = (struct inotify_event *)buffer;
+    if (event->len > 0) {
+        if ((event->len > INOTIFY_FILENAME_MAX) ||
+            (g_io_channel_read_chars(inotify_read_ioc, event->filename, event->len, NULL, NULL) != G_IO_STATUS_NORMAL)) {
+	    G_UNLOCK(inotify);
+            GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler failed\n");
+	    return FALSE;
+        }
+    } else {
+        event->filename[0] = '\0';
     }
 
     /* When we get an ignore event, we 
      * remove all the subscriptions for this wd
      */
-    if (event.mask == IN_IGNORED) {
+    if (event->mask == IN_IGNORED) {
 	    GList *l;
-	    data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event.wd));
+	    data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
 
 	    if (!data) {
 		    G_UNLOCK(inotify);
@@ -257,17 +269,17 @@ gam_inotify_read_handler(gpointer user_data)
 	    return TRUE;
     }
 
-    data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event.wd));
+    data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
 
     if (!data) {
-	GAM_DEBUG(DEBUG_INFO, "Could not find WD %d in hash\n", event.wd);
+	GAM_DEBUG(DEBUG_INFO, "Could not find WD %d in hash\n", event->wd);
         G_UNLOCK(inotify);
         return TRUE;
     }
 
-    gam_inotify_emit_event (data, &event);
+    gam_inotify_emit_event (data, event);
 
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify event for %s (%x) %s\n", data->path, event.mask, event.filename);
+    GAM_DEBUG(DEBUG_INFO, "gam_inotify event for %s (%x) %s\n", data->path, event->mask, event->filename);
 
     GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler() done\n");
 
@@ -382,9 +394,6 @@ gam_inotify_init(void)
     wd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
 
     GAM_DEBUG(DEBUG_INFO, "inotify initialized\n");
-
-    int i = 0; // INOTIFY_DEBUG_INODE|INOTIFY_DEBUG_ERRORS|INOTIFY_DEBUG_EVENTS;
-    ioctl(fd, INOTIFY_SETDEBUG, &i);
 
     gam_backend_add_subscription = gam_inotify_add_subscription;
     gam_backend_remove_subscription = gam_inotify_remove_subscription;
