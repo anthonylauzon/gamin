@@ -116,11 +116,19 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
             return;
         }
 
-	iwr.name = g_strdup(path);
-	iwr.mask = 0xffffffff; // all events
+	{
+	    int fd = open(path, O_RDONLY);
 
-        wd = ioctl(fd, INOTIFY_WATCH, &iwr);
-        g_free(iwr.name);
+	    if (fd < 0) {
+		G_UNLOCK(inotify);
+		return;
+	    }
+
+	    iwr.fd = fd;
+	    iwr.mask = 0xffffffff; // all events
+	    wd = ioctl(fd, INOTIFY_WATCH, &iwr);
+	    close (fd);
+	}
 
         if (wd < 0) {
             G_UNLOCK(inotify);

@@ -1,3 +1,9 @@
+Wed Mar 16 23:01:36 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c server/local_inotify.h: new patch from
+	  John McCutchan to adapt to the latest change in kernel interface
+	  hopefully the last one.
+
 Tue Mar 15 14:15:58 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c server/gam_channel.c: portability patch for
