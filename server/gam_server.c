@@ -39,6 +39,7 @@
 #ifdef linux
 #include "gam_dnotify.h"
 #endif
+#include "gam_excludes.h"
 
 static const char *session;
 
@@ -63,6 +64,8 @@ gam_shutdown(void) {
 gboolean
 gam_init_subscriptions(void)
 {
+    gam_exclude_init();
+
 #ifdef ENABLE_INOTIFY
     if (gam_inotify_init()) {
 	gam_debug(DEBUG_INFO, "Using INotify as backend\n");

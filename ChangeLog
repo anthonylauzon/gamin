@@ -1,3 +1,11 @@
+Wed Sep  1 15:50:49 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/Makefile.am server/gam_excludes.c server/gam_excludes.h
+	  server/gam_poll.c server/gam_server.c: starting to add exclude
+	  support where given path do no get kernel monitoring. Currently
+	  statically excludes /mnt//* /media//* . Something more dynamic
+	  might be needed.
+
 Wed Sep  1 10:27:49 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c libgamin/gam_data.c: try to fix crashes with

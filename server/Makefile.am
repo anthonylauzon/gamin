@@ -33,7 +33,9 @@ gam_server_SOURCES =					\
 	gam_channel.c					\
 	gam_channel.h					\
 	gam_connection.c				\
-	gam_connection.h
+	gam_connection.h				\
+	gam_excludes.c					\
+	gam_excludes.h
 
 if ENABLE_INOTIFY
 gam_server_SOURCES += gam_inotify.c gam_inotify.h

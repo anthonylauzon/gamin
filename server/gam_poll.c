@@ -32,6 +32,7 @@
 #include "gam_event.h"
 #include "gam_server.h"
 #include "gam_event.h"
+#include "gam_excludes.h"
 
 #define DEFAULT_POLL_TIMEOUT 3
 
@@ -89,7 +90,13 @@ trigger_file_handler(const char *path, gboolean added)
 static void
 node_add_subscription(GamNode * node, GamSubscription * sub)
 {
+    const char *path;
+
     gam_node_add_subscription(node, sub);
+
+    path = gam_node_get_path(node);
+    if (gam_exclude_check(path))
+        return;
 
     if (gam_node_is_dir(node))
         trigger_dir_handler(gam_node_get_path(node), TRUE);
@@ -101,7 +108,13 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
 static void
 node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
+    const char *path;
+
     gam_node_remove_subscription(node, sub);
+
+    path = gam_node_get_path(node);
+    if (gam_exclude_check(path))
+        return;
 
     if (gam_node_is_dir(node))
         trigger_dir_handler(gam_node_get_path(node), FALSE);
@@ -204,7 +217,7 @@ poll_file(GamNode * node)
         char real[PATH_MAX];
 
         gam_debug(DEBUG_INFO, "Poll: poll_file : new\n");
-        realpath(gam_node_get_path(node), real);
+        realpath(path, real);
         data = gam_poll_data_new(real);
 
         gam_node_set_data(node, data,
@@ -213,6 +226,8 @@ poll_file(GamNode * node)
         stat_ret = stat(data->path, &sbuf);
 	if (stat_ret != 0)
 	    data->flags |= MON_MISSING;
+	if (gam_exclude_check(path))
+	    data->flags |= MON_NOKERNEL;
         data->sbuf = sbuf;
 
         if (stat_ret == 0)
@@ -261,6 +276,12 @@ poll_file(GamNode * node)
     data->sbuf = sbuf;
 
     /*
+     * if kernel monitoring prohibited, stop here
+     */
+    if (data->flags & MON_NOKERNEL)
+        return(event);
+
+    /*
      * load control, switch back to poll on very busy resources
      * and back when no update has happened in 10 seconds
      */
@@ -307,7 +328,7 @@ poll_file(GamNode * node)
 	    trigger_file_handler(gam_node_get_path(node), TRUE);
     }
 
-    return event;
+    return(event);
 }
 
 static GList *
@@ -784,6 +805,7 @@ gam_poll_consume_subscriptions(void)
         for (l = subs; l; l = l->next) {
             GamSubscription *sub = l->data;
             GamNode *node;
+	    GamPollData *data;
 
 	    const char *path = gam_subscription_get_path(sub);
 
@@ -796,7 +818,6 @@ gam_poll_consume_subscriptions(void)
             node_add_subscription(node, sub);
 
             if (gam_node_is_dir(node)) {
-		GamPollData *data;
 
                 gam_debug(DEBUG_INFO,
                           "Looking for existing files in: %s...\n",
@@ -805,9 +826,6 @@ gam_poll_consume_subscriptions(void)
                 gam_poll_scan_directory_internal(node, subs, TRUE);
 
                 gam_debug(DEBUG_INFO, "Done scanning %s\n", path);
-		data = gam_node_get_data(node);
-		if (data->flags & MON_MISSING)
-		    gam_poll_add_missing(node);
             } else {
 		GaminEventType event;
 
@@ -820,9 +838,13 @@ gam_poll_consume_subscriptions(void)
 		    gam_server_emit_one_event(path, GAMIN_EVENT_EXISTS, sub);
 		} else if (event != 0) {
 		    gam_server_emit_one_event(path, GAMIN_EVENT_DELETED, sub);
-		    gam_poll_add_missing(node);
 		}
 		gam_server_emit_one_event(path, GAMIN_EVENT_ENDEXISTS, sub);
+	    }
+	    data = gam_node_get_data(node);
+	    if ((data) && ((data->flags & MON_MISSING) ||
+	                   (data->flags & MON_NOKERNEL))) {
+		gam_poll_add_missing(node);
 	    }
         }
 
