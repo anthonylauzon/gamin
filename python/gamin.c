@@ -276,6 +276,21 @@ gamin_EventPending(PyObject *self, PyObject * args) {
 }
 
 static PyObject *
+gamin_MonitorNoExists(PyObject *self, PyObject * args) {
+    int no;
+    FAMConnection *conn;
+
+    if (!PyArg_ParseTuple(args, (char *)"i:MonitorNoExists", &no))
+	return(NULL);
+
+    conn = check_connection(no);
+    if (conn == NULL) {
+	return(PyInt_FromLong(-1));
+    }
+    return(PyInt_FromLong(FAMNoExists(conn)));
+}
+
+static PyObject *
 gamin_MonitorDirectory(PyObject *self, PyObject * args) {
     PyObject *userdata;
     char * filename;
@@ -373,6 +388,7 @@ static PyMethodDef gaminMethods[] = {
     {(char *)"MonitorDirectory", gamin_MonitorDirectory, METH_VARARGS, NULL},
     {(char *)"MonitorFile", gamin_MonitorFile, METH_VARARGS, NULL},
     {(char *)"MonitorCancel", gamin_MonitorCancel, METH_VARARGS, NULL},
+    {(char *)"MonitorNoExists", gamin_MonitorNoExists, METH_VARARGS, NULL},
     {(char *)"EventPending", gamin_EventPending, METH_VARARGS, NULL},
     {(char *)"ProcessOneEvent", gamin_ProcessOneEvent, METH_VARARGS, NULL},
     {(char *)"ProcessEvents", gamin_ProcessEvents, METH_VARARGS, NULL},

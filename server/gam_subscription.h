@@ -11,7 +11,8 @@ G_BEGIN_DECLS
 GamSubscription     *gam_subscription_new          (const char *path,
 						    int         events,
 						    int         reqno,
-						    gboolean    is_dir);
+						    gboolean    is_dir,
+						    int         options);
 
 void                 gam_subscription_free         (GamSubscription *sub);
 

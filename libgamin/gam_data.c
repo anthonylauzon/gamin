@@ -33,6 +33,7 @@ struct GAMData {
     int reqno;                  /* counter for the requests */
     int auth;			/* did authentication took place */
     int restarted;		/* did authentication took place */
+    int noexist;		/* no EXISTS activated */
 
     int evn_ready;              /* do we have a full event ready */
     int evn_read;               /* how many bytes were read for the event */
@@ -756,4 +757,40 @@ gamin_data_get_request(GAMDataPtr conn, const char *filename, int type,
     if (req == NULL)
         return (-1);
     return (req->reqno);
+}
+
+/**
+ * gamin_data_no_exists:
+ * @conn:  a connection data structure
+ *
+ * Switch the connection to a mode where no exists are sent on directory
+ * monitoting startup.
+ *
+ * Returns 0 in case of success and -1 in case of error.
+ */
+int
+gamin_data_no_exists(GAMDataPtr conn)
+{
+    if (conn == NULL)
+        return (-1);
+    conn->noexist = 1;
+    return(0);
+}
+
+/**
+ * gamin_data_get_exists:
+ * @conn:  a connection data structure
+ *
+ * Get the EXISTS flag for the connection
+ *
+ * Returns 0 or 1 in case or -1 in case of error.
+ */
+int
+gamin_data_get_exists(GAMDataPtr conn)
+{
+    if (conn == NULL)
+        return (-1);
+    if (conn->noexist)
+        return(0);
+    return(1);
 }

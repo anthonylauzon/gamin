@@ -53,10 +53,19 @@ extern "C" {
  * Type of FAM requests
  */
 typedef enum {
-    GAM_REQ_FILE = 1,
-    GAM_REQ_DIR = 2,
-    GAM_REQ_CANCEL = 3
+    GAM_REQ_FILE = 1,	/* monitoring a file */
+    GAM_REQ_DIR = 2,	/* monitoring a directory */
+    GAM_REQ_CANCEL = 3 	/* cancelling a monitor */
 } GAMReqType;
+
+/**
+ * GAMReqOpts:
+ *
+ * Option for FAM requests
+ */
+typedef enum {
+    GAM_OPT_NOEXISTS=16	/* don't send Exists on directory monitoting */
+} GAMReqOpts;
 
 /**
  * GAMPacket:

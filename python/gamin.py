@@ -149,6 +149,12 @@ class WatchMonitor:
 	self.objects[file] = obj
 	return obj
 
+    def no_exists(self):
+        if (self.__no < 0):
+	    return
+	ret = gaminmod.MonitorNoExists(self.__no)
+	return ret
+
     def stop_watch(self, path):
         if (self.__no < 0):
 	    return

@@ -199,6 +199,18 @@ extern int FAMErrno;
  */
 extern const char *FamErrlist[];
 
+/**
+ * FAMNoExists:
+ *
+ * Specific extension for the core FAM API where Exists event are not
+ * propagated on directory monitory listing startup. This speeds up 
+ * watching large directories but can introduce a mismatch between the FAM
+ * view of the directory and the program own view.
+ *
+ * Returns 0 in case of success and -1 in case of error.
+ */
+extern int FAMNoExists		(FAMConnection *fc);
+
 #ifdef __cplusplus
 }
 #endif

@@ -79,6 +79,8 @@ int		gamin_data_done_auth	(GAMDataPtr conn);
 int		gamin_data_read_event	(GAMDataPtr conn,
 					 FAMEvent *event);
 int		gamin_data_event_ready	(GAMDataPtr conn);
+int		gamin_data_no_exists	(GAMDataPtr conn);
+int		gamin_data_get_exists	(GAMDataPtr conn);
 
 #ifdef __cplusplus
 }

@@ -556,6 +556,10 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
     req.version = GAM_PROTO_VERSION;
     req.seq = reqnum;
     req.type = (unsigned short) type;
+    if ((type == GAM_REQ_DIR) && (gamin_data_get_exists(data) == 0)) {
+        req.type |= GAM_OPT_NOEXISTS;
+    }
+        
     req.pathlen = len;
     if (len > 0)
         memcpy(&req.path[0], filename, len);
@@ -784,7 +788,10 @@ gamin_resend_request(int fd, GAMReqType type, const char *filename,
     req.len = (unsigned short) tlen;
     req.version = GAM_PROTO_VERSION;
     req.seq = reqnum;
-    req.type = (unsigned short) type;
+    /* GAM_OPT_NOEXISTS to avoid filling up the connection with
+       events we don't need and discard */
+    req.type = (unsigned short) (type | GAM_OPT_NOEXISTS);
+    /* req.type = (unsigned short) type; */
     req.pathlen = len;
     if (len > 0)
         memcpy(&req.path[0], filename, len);
@@ -1339,3 +1346,35 @@ int FAMResumeMonitor(FAMConnection *fc, const FAMRequest *fr) {
     FAMErrno = FAM_UNIMPLEM;
     return (-1);
 }
+
+/**
+ * FAMNoExists:
+ * @fc: pointer to a connection structure.
+ *
+ * Specific extension for the core FAM API where Exists event are not
+ * propagated on directory monitory listing startup. This speeds up
+ * watching large directories but can introduce a mismatch between the FAM
+ * view of the directory and the program own view.
+ *
+ * Returns 0 in case of success and -1 in case of error.
+ */
+int FAMNoExists(FAMConnection *fc) {
+    int ret;
+    GAMDataPtr conn;
+
+    if (fc == NULL) {
+	GAM_DEBUG(DEBUG_INFO, "FAMNoExists() arg error\n");
+        FAMErrno = FAM_ARG;
+        return (-1);
+    }
+    conn = fc->client;
+
+    ret = gamin_data_no_exists(conn);
+    if (ret < 0) {
+	GAM_DEBUG(DEBUG_INFO, "FAMNoExists() arg error\n");
+        FAMErrno = FAM_ARG;
+        return(-1);
+    }
+    return(0);
+}
+

@@ -16,5 +16,6 @@
        FAMPending;
        FAMResumeMonitor;
        FAMSuspendMonitor;
+       FAMNoExists;
    local: *;
 };

@@ -21,6 +21,8 @@ tests: testgam
 	-@(unset GAM_CLIENT_ID ; unset GAM_DEBUG;			\
 	   GAMIN_DEBUG_SERVER="../server/gam_server" ;			\
 	   export GAMIN_DEBUG_SERVER ;					\
+	   GAM_CLIENT_ID="regtests" ;					\
+	   export GAM_CLIENT_ID ;					\
 	   for i in $(top_srcdir)/tests/scenario/*.tst ; do		\
 	   rm -rf /tmp/test_gamin ; 					\
 	   name=`basename $$i .tst`;					\

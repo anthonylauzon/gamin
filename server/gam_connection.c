@@ -282,13 +282,17 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
     int events;
     gboolean is_dir = TRUE;
     char byte_save;
+    int type;
+    int options;
 
     if ((conn == NULL) || (req == NULL))
         return (-1);
     if ((conn->fd < 0) || (conn->listener == NULL))
         return (-1);
-    GAM_DEBUG(DEBUG_INFO, "Request: from %d, seq %d, type %d\n",
-              conn->pid, req->seq, req->type);
+    type = req->type & 0xF;
+    options = req->type & 0xFFF0;
+    GAM_DEBUG(DEBUG_INFO, "Request: from %d, seq %d, type %d options %d\n",
+              conn->pid, req->seq, type, options);
     if (req->pathlen >= MAXPATHLEN)
         return (-1);
 
@@ -299,19 +303,20 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
     byte_save = req->path[req->pathlen];
     req->path[req->pathlen] = 0;
 
-    switch (req->type) {
+    switch (type) {
         case GAM_REQ_FILE:
         case GAM_REQ_DIR:
             events = GAMIN_EVENT_CHANGED | GAMIN_EVENT_CREATED |
                 GAMIN_EVENT_DELETED | GAMIN_EVENT_MOVED |
                 GAMIN_EVENT_EXISTS;
-            if (req->type == GAM_REQ_DIR) {
+            if (type == GAM_REQ_DIR) {
                 is_dir = TRUE;
-                events |= GAMIN_EVENT_ENDEXISTS;
+		events |= GAMIN_EVENT_ENDEXISTS;
             } else {
                 is_dir = FALSE;
             }
-            sub = gam_subscription_new(&req->path[0], events, req->seq, is_dir);
+            sub = gam_subscription_new(&req->path[0], events, req->seq,
+	                               is_dir, options);
 
             gam_subscription_set_listener(sub, conn->listener);
             gam_add_subscription(sub);
@@ -333,7 +338,7 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
             break;
         default:
             GAM_DEBUG(DEBUG_INFO, "Unknown request type %d for %s\n",
-                      req->type, &req->path[0]);
+                      type, &req->path[0]);
             goto error;
     }
 

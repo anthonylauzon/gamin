@@ -24,6 +24,7 @@
 #include "gam_event.h"
 #include "gam_listener.h"
 #include "gam_subscription.h"
+#include "gam_protocol.h"
 #include "gam_event.h"
 #include "gam_error.h"
 
@@ -32,6 +33,7 @@ struct _GamSubscription {
     int events;
     int reqno;
     int pathlen;
+    int options;
 
     gboolean is_dir;
     gboolean cancelled;
@@ -62,7 +64,8 @@ GamSubscription *
 gam_subscription_new(const char *path,
                      int events,
                      int reqno,
-                     gboolean is_dir)
+                     gboolean is_dir,
+		     int options)
 {
     GamSubscription *sub;
 
@@ -76,6 +79,7 @@ gam_subscription_new(const char *path,
     gam_subscription_set_event(sub, GAMIN_EVENT_EXISTS | GAMIN_EVENT_ENDEXISTS);
 
     sub->is_dir = is_dir;
+    sub->options = options;
 
     GAM_DEBUG(DEBUG_INFO, "Created subscription for %s\n", path);
     return sub;
@@ -275,6 +279,11 @@ gam_subscription_wants_event(GamSubscription * sub,
     if (sub->cancelled)
         return FALSE;
 
+    if ((sub->options & GAM_OPT_NOEXISTS) &&
+        ((event == GAMIN_EVENT_EXISTS) ||
+	 (event == GAMIN_EVENT_ENDEXISTS)))
+	return FALSE;
+
     /* only directory listening cares for other files */
     if ((sub->is_dir == 0) && (strcmp(name, sub->path)))
         return(FALSE);
@@ -291,6 +300,7 @@ gam_subscription_wants_event(GamSubscription * sub,
 	    (event == GAMIN_EVENT_ENDEXISTS))
 	    return FALSE;
     }
+
     return TRUE;
 }
 
