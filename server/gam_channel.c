@@ -50,8 +50,10 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
     gid_t c_gid;
 
 #ifdef HAVE_CMSGCRED
-    char cmsgmem[CMSG_SPACE(sizeof(struct cmsgcred))];
-    struct cmsghdr *cmsg = (struct cmsghdr *) cmsgmem;
+    struct {
+	    struct cmsghdr hdr;
+	    struct cmsgcred cred;
+    } cmsg;
 #endif
 
     s_uid = getuid();
@@ -76,9 +78,9 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
     msg.msg_iovlen = 1;
 
 #ifdef HAVE_CMSGCRED
-    memset(cmsgmem, 0, sizeof(cmsgmem));
-    msg.msg_control = cmsgmem;
-    msg.msg_controllen = sizeof(cmsgmem);
+    memset(&cmsg, 0, sizeof(cmsg));
+    msg.msg_control = &cmsg;
+    msg.msg_controllen = sizeof(cmsg);
 #endif
 
   retry:
@@ -95,7 +97,7 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
         goto failed;
     }
 #ifdef HAVE_CMSGCRED
-    if (cmsg->cmsg_len < sizeof(cmsgmem) || cmsg->cmsg_type != SCM_CREDS) {
+    if (cmsg.hdr.cmsg_len < sizeof(cmsg) || cmsg.hdr.cmsg_type != SCM_CREDS) {
         GAM_DEBUG(DEBUG_INFO,
                   "Message from recvmsg() was not SCM_CREDS\n");
         goto failed;
@@ -121,13 +123,9 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
             goto failed;
         }
 #elif defined(HAVE_CMSGCRED)
-        struct cmsgcred *cred;
-
-        cred = (struct cmsgcred *) CMSG_DATA(cmsg);
-
-        c_pid = cred->cmcred_pid;
-        c_uid = cred->cmcred_euid;
-        c_gid = cred->cmcred_groups[0];
+	c_pid = cmsg.cred.cmcred_pid;
+	c_uid = cmsg.cred.cmcred_euid;
+	c_gid = cmsg.cred.cmcred_groups[0];
 #else /* !SO_PEERCRED && !HAVE_CMSGCRED */
         GAM_DEBUG(DEBUG_INFO,
                   "Socket credentials not supported on this OS\n");
@@ -306,6 +304,7 @@ gam_get_socket_path(const char *session)
         gam_client_id = g_getenv("GAM_CLIENT_ID");
         if (gam_client_id == NULL) {
             GAM_DEBUG(DEBUG_INFO, "Error getting GAM_CLIENT_ID\n");
+	    gam_client_id = "";
         }
     } else {
         gam_client_id = session;
