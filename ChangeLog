@@ -1,3 +1,8 @@
+Mon Jan 31 09:07:19 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS configure.in gamin.spec.in doc/*.html: made release
+	  0.0.22, updated the docs.
+
 Sat Jan 29 20:28:36 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c: another patch from John McCutchan

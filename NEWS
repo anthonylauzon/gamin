@@ -5,6 +5,12 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.22: Jan 31 2004:
+   -  Added Python regression test, and a python disconnect() operation.
+   -  Applied patches from John McCutchan to fix inotify 0.18 backend.
+   -  3 bugs fixed.
+
+
 0.0.21: Jan 26 2004:
    -  Added Python bindings.
    -  Applied patch from Philipp Zabel to switch to inotify 0.18

@@ -87,6 +87,10 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
+* Mon Jan 31 2005 Daniel Veillard <veillard@redhat.com> 0.0.22-1
+- bit of python bindings improvements, added test
+- fixed 3 bugs
+
 * Wed Jan 26 2005 Daniel Veillard <veillard@redhat.com> 0.0.21-1
 - Added Python support
 - Updated for inotify-0.18 
