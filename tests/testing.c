@@ -414,8 +414,8 @@ playTest(const char *filename)
 	        (command[clen -1] == '\r'))) {
 		command[clen -1] = 0;
 		no++;
-		if (processCommand(command, no) < 0)
-		    break;
+		/* in interactive mode we don't exit on parse errors */
+		processCommand(command, no);
 		clen = 0;
 	    }
 	}

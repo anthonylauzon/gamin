@@ -1,3 +1,10 @@
+Tue Aug  3 14:55:49 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* tests/testing.c: do not exit on parse if interactive
+	* server/gam_poll.c: fix a bug for removed resources
+	* libgamin/gam_api.c: try to work around some timeout/connection
+	  issues when multiple process try to for a server.
+
 Mon Aug  2 14:11:18 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in: spelling fix (thanks fcrozat)

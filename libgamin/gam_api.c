@@ -21,7 +21,7 @@
 
 #define TEST_DEBUG
 
-#define MAX_RETRIES 5
+#define MAX_RETRIES 25
 
 #ifdef TEST_DEBUG
 static char *
@@ -327,7 +327,6 @@ gamin_connect_unix_socket(const char *path)
     strncpy(&addr.sun_path[0], path, (sizeof(addr) - 4) - 1);
 #endif
 
-  retry:
     if (connect(fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         if (retries == 0) {
             const char *fam_client_id = getenv("GAM_CLIENT_ID");
@@ -347,7 +346,8 @@ gamin_connect_unix_socket(const char *path)
         if (retries < MAX_RETRIES) {
             usleep(100);
             retries++;
-            goto retry;
+            close(fd);
+            goto retry_start;
         }
 
         gam_error(DEBUG_INFO, "Failed to connect to socket %s\n", path);

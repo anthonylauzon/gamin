@@ -346,10 +346,14 @@ scan_files:
         if (fevent != 0) {
             gam_poll_emit_event(node, fevent, exist_subs);
         } else {
-            /* just send the EXIST events */
+	    GamPollData *data;
 
-            gam_server_emit_event(gam_node_get_path(node),
-                                  GAMIN_EVENT_EXISTS, exist_subs);
+            /* just send the EXIST events if the node exists */
+	    data = gam_node_get_data(node);
+
+	    if (data && data->exists)
+		gam_server_emit_event(gam_node_get_path(node),
+				      GAMIN_EVENT_EXISTS, exist_subs);
 
         }
     }
