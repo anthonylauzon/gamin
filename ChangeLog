@@ -1,4 +1,8 @@
-Tue Aug 17 16:55:16 CEST 2004 Daniel Veillard <veillard@redhat.com
+Tue Aug 17 16:57:58 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_server.c: a bit of framework which looks safe too
+
+Tue Aug 17 16:55:16 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* gam_tree.c: cleanup while chasing regression in make tests
 

@@ -24,6 +24,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <glib.h>
+#include <sys/stat.h>
 #include "gam_error.h"
 #include "gam_protocol.h"
 #include "gam_event.h"
@@ -72,6 +73,25 @@ gam_init_subscriptions(void)
 }
 
 /**
+ * gam_exists:
+ * @path: a path to a filename or directory
+ *
+ * Check if a given path exists
+ *
+ * Returns TRUE if it exists and FALSE otherwise
+ */
+static gboolean
+gam_exists(const char *path) {
+    struct stat sbuf;
+    int stat_ret;
+
+    stat_ret = stat(path, &sbuf);
+    if (stat_ret == 0)
+        return(TRUE);
+    return(FALSE);
+}
+
+/**
  * gam_add_subscription:
  *
  * Register a subscription to the checking backend, on Linux we will use
@@ -82,6 +102,17 @@ gam_init_subscriptions(void)
 gboolean
 gam_add_subscription(GamSubscription * sub)
 {
+    
+    if (sub == NULL)
+        return(FALSE);
+
+/****
+    const char *path;
+    path = gam_subscription_get_path(sub);
+    if (!gam_exists(path)) {
+	return (gam_poll_add_subscription(sub));
+    }
+ ***/
 #ifdef USE_INOTIFY
     return (gam_inotify_add_subscription(sub));
 #elif linux
