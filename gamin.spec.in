@@ -69,6 +69,11 @@ rm -fr %{buildroot}
 
 
 %changelog
+* Fri Dec  3 2004 Daniel Veillard <veillard@redhat.com> 0.0.19-1
+- still chasing the loop bug, made another pass at checking GList,
+  added own copy with memory poisonning of GList implementation.
+- fixed a compile issue when compiling without debug
+
 * Fri Nov 26 2004 Daniel Veillard <veillard@redhat.com> 0.0.18-1
 - still chasing the loop bug, checked and cleaned up all GList use
 - patch from markmc to minimize load on busy apps

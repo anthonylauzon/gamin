@@ -1,3 +1,7 @@
+Fri Dec  3 16:39:35 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: release of 0.0.19
+
 Fri Dec  3 16:10:03 CET 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/Makefile.am server/gam_debug_lists.c: adding our own
