@@ -3,6 +3,7 @@
        FAMCancelMonitor;
        FAMClose;
        FAMDebugLevel;
+       FAMDebug;
        FamErrlist;
        FAMErrno;
        FAMMonitorCollection;

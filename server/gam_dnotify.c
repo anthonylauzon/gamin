@@ -31,6 +31,9 @@
 #include "gam_event.h"
 #include "gam_server.h"
 #include "gam_event.h"
+#ifdef GAMIN_DEBUG_API
+#include "gam_debugging.h"
+#endif
 
 /* just pulling a value out of nowhere here...may need tweaking */
 #define MAX_QUEUE_SIZE 500
@@ -95,6 +98,9 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
 	    GAM_DEBUG(DEBUG_INFO, "  found incremented refcount: %d\n",
 	              data->refcount);
             G_UNLOCK(dnotify);
+#ifdef GAMIN_DEBUG_API
+            gam_debug_report(GAMDnotifyChange, path, data->refcount);
+#endif
             return;
         }
 
@@ -114,6 +120,9 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
               DN_MODIFY | DN_CREATE | DN_DELETE | DN_RENAME | DN_ATTRIB |
               DN_MULTISHOT);
         GAM_DEBUG(DEBUG_INFO, "activated DNotify for %s\n", path);
+#ifdef GAMIN_DEBUG_API
+        gam_debug_report(GAMDnotifyCreate, path, 0);
+#endif
     } else {
         data = g_hash_table_lookup(path_hash, path);
 
@@ -132,9 +141,15 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
             g_hash_table_remove(path_hash, data->path);
             g_hash_table_remove(fd_hash, GINT_TO_POINTER(data->fd));
             gam_dnotify_data_free(data);
+#ifdef GAMIN_DEBUG_API
+	    gam_debug_report(GAMDnotifyDelete, path, 0);
+#endif
         } else {
 	    GAM_DEBUG(DEBUG_INFO, "  found decremented refcount: %d\n",
 	              data->refcount);
+#ifdef GAMIN_DEBUG_API
+            gam_debug_report(GAMDnotifyChange, path, data->refcount);
+#endif
 	}
     }
 

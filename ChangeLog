@@ -1,3 +1,19 @@
+Thu Feb 17 12:46:06 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in libgamin/gam_api.c libgamin/gam_data.c
+	  libgamin/gam_protocol.h libgamin/gamin_sym.version
+	  server/gam_debugging.[ch] server/Makefile.am: adding a
+	  debugging infrastructure where some server internal events
+	  can be reported to the client. This is only compiled if 
+	  configured with --enable-debug-api, cleaned bup some configure.in
+	  bugs
+	* server/gam_dnotify.c: plugged DNotify in the debugging framework
+	* python/gamin.c python/gamin.py: added python support for the
+	  debugging framework
+	* python/tests/Makefile.am python/tests/dnotify.py 
+	  python/tests/dnotify2.py: started to add regression testing
+	  for checking DNotify behaviour when debugging framework is activated.
+
 Wed Feb 16 15:26:08 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* python/tests/level.py: reproduced the damn "Desktop doesn't refresh"

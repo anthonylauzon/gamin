@@ -55,7 +55,8 @@ extern "C" {
 typedef enum {
     GAM_REQ_FILE = 1,	/* monitoring a file */
     GAM_REQ_DIR = 2,	/* monitoring a directory */
-    GAM_REQ_CANCEL = 3 	/* cancelling a monitor */
+    GAM_REQ_CANCEL = 3,	/* cancelling a monitor */
+    GAM_REQ_DEBUG = 4 	/* debugging request */
 } GAMReqType;
 
 /**

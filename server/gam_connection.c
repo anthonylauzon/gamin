@@ -9,6 +9,9 @@
 #include "gam_protocol.h"
 #include "gam_channel.h"
 #include "gam_error.h"
+#ifdef GAMIN_DEBUG_API
+#include "gam_debugging.h"
+#endif
 #include "fam.h"
 
 /************************************************************************
@@ -90,6 +93,9 @@ gam_connection_close(GamConnDataPtr conn)
         GAM_DEBUG(DEBUG_INFO, "connection has no source: close failed\n");
         return (-1);
     }
+#ifdef GAMIN_DEBUG_API
+    gam_debug_release(conn);
+#endif
     GAM_DEBUG(DEBUG_INFO, "Closing connection %d\n", conn->fd);
     g_io_channel_unref(conn->source);
     gamConnList = g_list_remove_all(gamConnList, conn);
@@ -336,6 +342,14 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
             gam_remove_subscription(sub);
             gam_listener_remove_subscription(conn->listener, sub);
             break;
+        case GAM_REQ_DEBUG:
+#ifdef GAMIN_DEBUG_API
+	    gam_debug_add(conn, &req->path[0], options);
+#else
+            GAM_DEBUG(DEBUG_INFO, "Unhandled debug request for %s\n",
+                      &req->path[0]);
+#endif
+            break;
         default:
             GAM_DEBUG(DEBUG_INFO, "Unknown request type %d for %s\n",
                       type, &req->path[0]);
@@ -498,13 +512,18 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
         case GAMIN_EVENT_ENDEXISTS:
             type = FAMEndExist;
             break;
+#ifdef GAMIN_DEBUG_API
+	case 50:
+	    type = 50 + reqno;
+	    break;
+#endif
         default:
             GAM_DEBUG(DEBUG_INFO, "Unknown event type %d\n", event);
             return (-1);
     }
 
-    GAM_DEBUG(DEBUG_INFO, "Event to %d : %s %s\n", conn->pid,
-              path, gam_event_to_string(event));
+    GAM_DEBUG(DEBUG_INFO, "Event to %d : %d, %d, %s %s\n", conn->pid,
+              reqno, type, path, gam_event_to_string(event));
     /*
      * prepare the packet
      */

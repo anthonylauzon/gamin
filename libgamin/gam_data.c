@@ -12,8 +12,14 @@
 #include "gam_data.h"
 #include "gam_protocol.h"
 #include "gam_error.h"
+#include "config.h"
 
 #define FAM_EVENT_SIZE (sizeof(FAMEvent))
+
+#ifdef GAMIN_DEBUG_API
+extern int debug_reqno;
+extern void *debug_userData;
+#endif
 
 typedef enum {
     REQ_NONE = 0,               /* not set */
@@ -504,6 +510,17 @@ gamin_data_conn_event(GAMDataPtr conn, GAMPacketPtr evn)
     if ((conn == NULL) || (evn == NULL))
         return (-1);
 
+#ifdef GAMIN_DEBUG_API
+    if (evn->type >= 50) {
+        GAM_DEBUG(DEBUG_INFO, "Got Debug Event: type %d, seq %d\n",
+	          evn->type, evn->seq);
+	conn->evn_ready = 1;
+	conn->evn_reqnum = debug_reqno;
+	conn->evn_userdata = debug_userData;
+        return(1);
+    }
+#endif
+    
     /* Check the event number */
     req = gamin_data_get_req(conn, evn->seq);
     if (req == NULL) {

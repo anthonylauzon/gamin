@@ -32,6 +32,8 @@ gam_server_SOURCES =					\
 	gam_channel.h					\
 	gam_connection.c				\
 	gam_connection.h				\
+	gam_debugging.h					\
+	gam_debugging.c					\
 	gam_excludes.c					\
 	gam_excludes.h					\
 	local_inotify.h					\

@@ -23,6 +23,10 @@
 
 #define MAX_RETRIES 25
 
+#ifdef GAMIN_DEBUG_API
+int debug_reqno = -1;
+void *debug_userData = NULL;
+#endif
 int FAMErrno = 0;
 
 enum {
@@ -45,6 +49,11 @@ const char *FamErrlist[] = {
     "Unimplemented function",
     NULL
 };
+
+#ifdef GAMIN_DEBUG_API
+int FAMDebug(FAMConnection *fc, const char *filename, FAMRequest * fr,
+             void *userData);
+#endif
 
 #ifdef TEST_DEBUG
 static char *
@@ -522,6 +531,21 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
     GAMPacket req;
     int ret;
 
+#ifdef GAMIN_DEBUG_API
+    if (type == GAM_REQ_DEBUG) {
+        len = strlen(filename);
+        if (len > MAXPATHLEN) {
+	    FAMErrno = FAM_FILE;
+            return (-1);
+	}
+        reqnum = gamin_data_get_reqnum(data, filename, (int) type, userData);
+        if (reqnum < 0) {
+	    FAMErrno = FAM_ARG;
+            return (-1);
+	}
+        reqnum = fr->reqnum;
+    } else
+#endif
     if (filename == NULL) {
         len = 0;
         reqnum = fr->reqnum;
@@ -1378,3 +1402,50 @@ int FAMNoExists(FAMConnection *fc) {
     return(0);
 }
 
+#ifdef GAMIN_DEBUG_API
+/**
+ * FAMDebug:
+ * @fc: pointer to a connection structure.
+ * @filename: file name.
+ * @fr: pointer to the request structure.
+ * @userdata: user provided data for the callbacks
+ *
+ * Specific extension for the core FAM API to request debug informations
+ *
+ * Returns 0 in case of success and -1 in case of error.
+ */
+int
+FAMDebug(FAMConnection *fc, const char *filename, FAMRequest * fr,
+         void *userData)
+{
+    int ret;
+
+    if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMDebug() arg error\n");
+        FAMErrno = FAM_ARG;
+        return (-1);
+    }
+    if (strlen(filename) >= MAXPATHLEN) {
+        FAMErrno = FAM_FILE;
+        return (-1);
+    }
+    if ((fc->fd < 0) || (fc->client == NULL)) {
+	GAM_DEBUG(DEBUG_INFO, "FAMDebug() arg error\n");
+        FAMErrno = FAM_ARG;
+        return (-1);
+    }
+
+    GAM_DEBUG(DEBUG_INFO, "FAMDebug(%s)\n", filename);
+
+    /*
+     * send debug message to the server
+     */
+    ret = gamin_send_request(GAM_REQ_DEBUG, fc->fd, filename,
+			     fr, userData, fc->client, 0);
+    if (debug_reqno == -1) {
+        debug_reqno = fr->reqnum;
+	debug_userData = userData;
+    }
+    return(ret);
+}
+#endif

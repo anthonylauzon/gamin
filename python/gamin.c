@@ -8,6 +8,12 @@
 
 #include <Python.h>
 #include <fam.h>
+#include "config.h"
+
+#ifdef GAMIN_DEBUG_API
+int FAMDebug(FAMConnection *fc, const char *filename, FAMRequest * fr,
+             void *userData);
+#endif
 
 void init_gamin(void);
 
@@ -153,10 +159,15 @@ call_internal_callback(PyObject *self, const char *filename, FAMCodes event) {
 
     if ((self == NULL) || (filename == NULL))
         return(-1);
+/*    fprintf(stderr, "call_internal_callback(%p)\n", self); */
     ret = PyEval_CallMethod(self, (char *) "_internal_callback",
                             (char *) "(zi)", filename, (int) event);
     if (ret != NULL) {
         Py_DECREF(ret);
+#if 0
+    } else {
+	fprintf(stderr, "call_internal_callback() failed\n");
+#endif
     }
     return(0);
 }
@@ -346,7 +357,7 @@ gamin_MonitorFile(PyObject *self, PyObject * args) {
     }
     request = check_request(noreq);
 
-    ret = FAMMonitorDirectory(conn, filename, request, userdata);
+    ret = FAMMonitorFile(conn, filename, request, userdata);
     if (ret < 0) {
         release_request(noreq);
 	return(PyInt_FromLong(-1));
@@ -383,6 +394,40 @@ gamin_MonitorCancel(PyObject *self, PyObject * args) {
     return(PyInt_FromLong(ret));
 }
 
+#ifdef GAMIN_DEBUG_API
+static PyObject *
+gamin_MonitorDebug(PyObject *self, PyObject * args) {
+    PyObject *userdata;
+    char * filename;
+    int ret;
+    int noreq;
+    int no;
+    FAMConnection *conn;
+    FAMRequest *request;
+
+    if (!PyArg_ParseTuple(args, (char *)"izO:MonitorDebug",
+        &no, &filename, &userdata))
+	return(NULL);
+    
+    conn = check_connection(no);
+    if (conn == NULL) {
+	return(PyInt_FromLong(-1));
+    }
+    noreq = get_request();
+    if (noreq < 0) {
+	return(PyInt_FromLong(-1));
+    }
+    request = check_request(noreq);
+
+    ret = FAMDebug(conn, filename, request, userdata);
+    if (ret < 0) {
+        release_request(noreq);
+	return(PyInt_FromLong(-1));
+    }
+    return(PyInt_FromLong(noreq));
+}
+#endif
+
 static PyMethodDef gaminMethods[] = {
     {(char *)"MonitorConnect", gamin_MonitorConnect, METH_VARARGS, NULL},
     {(char *)"MonitorDirectory", gamin_MonitorDirectory, METH_VARARGS, NULL},
@@ -395,6 +440,9 @@ static PyMethodDef gaminMethods[] = {
     {(char *)"MonitorClose", gamin_MonitorClose, METH_VARARGS, NULL},
     {(char *)"GetFd", gamin_GetFd, METH_VARARGS, NULL},
     {(char *)"Errno", gamin_Errno, METH_VARARGS, NULL},
+#ifdef GAMIN_DEBUG_API
+    {(char *)"MonitorDebug", gamin_MonitorDebug, METH_VARARGS, NULL},
+#endif
     {NULL, NULL, 0, NULL}
 };
 

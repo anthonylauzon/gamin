@@ -3,6 +3,10 @@
 import _gamin
 import os.path
 
+has_debug_api = 0
+if _gamin.__dict__.has_key("MonitorDebug"):
+    has_debug_api = 1
+   
 #
 # the type of events provided in the callbacks.
 #
@@ -78,15 +82,20 @@ class WatchMonitor:
 	    self.data = data
 	    self.path = path
 	    self.__mon_no = mon_no
-	    if dir:
+	    if dir == 1:
 		ret = _gamin.MonitorDirectory(self.__mon_no, path, self);
 		if ret < 0:
 		    raise(GaminException("Failed to monitor directory %s" %
 					 (path)))
-	    else:
+	    elif dir == 0:
 		ret = _gamin.MonitorFile(self.__mon_no, path, self);
 		if ret < 0:
 		    raise(GaminException("Failed to monitor file %s" %
+					 (path)))
+	    elif dir == -1:
+		ret = _gamin.MonitorDebug(self.__mon_no, path, self);
+		if ret < 0:
+		    raise(GaminException("Failed to debug %s" %
 					 (path)))
 	    self.__req_no = ret
 
@@ -100,12 +109,12 @@ class WatchMonitor:
 	    ret = _gamin.MonitorCancel(self.__mon_no, self.__req_no);
 	    if ret < 0:
 		raise(GaminException("Failed to stop monitor on %s" %
-				     (path)))
+				     (self.path)))
 	    try:
 	        self.monitor.objects[self.path].remove(self)
 	    except:
 	        pass
-	    
+
     def __init__ (self):
         self.__no = _gamin.MonitorConnect()
 	if self.__no < 0:
@@ -122,6 +131,17 @@ class WatchMonitor:
     def __raise_disconnected():
 	raise(GaminException("Already disconnected"))
         
+    def _debug_object(self, value, callback, data = None):
+        if has_debug_api == 0:
+	    return;
+
+        if (self.__no < 0):
+	    __raise_disconnected();
+        obj = self.WatchObject(self, self.__no, value, -1, callback, data)
+	# persistency need to be insured
+	self.objects["debug"] = obj
+	return obj
+
     def disconnect(self):
         if (self.__no >= 0):
 	    _gamin.MonitorClose(self.__no)

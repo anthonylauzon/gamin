@@ -6,6 +6,8 @@ PYTESTS=        		\
 		basic5.py	\
 		basic6.py	\
 		noexists.py	\
+		dnotify.py	\
+		dnotify2.py	\
 		level.py	\
 		multiple.py	\
 		multiple2.py	\
