@@ -193,7 +193,9 @@ gam_client_conn_read(GIOChannel * source, GIOCondition condition,
 
     switch (gam_connection_get_state(conn)) {
         case GAM_STATE_AUTH:
-            return (gam_client_conn_check_cred(source, fd, conn));
+            if (!gam_client_conn_check_cred(source, fd, conn))
+	        return (FALSE);
+	    return (TRUE);
         case GAM_STATE_ERROR:
             GAM_DEBUG(DEBUG_INFO, "connection in error state\n");
             return (FALSE);

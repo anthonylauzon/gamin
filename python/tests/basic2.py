@@ -8,12 +8,11 @@ def callback(path, event):
 
 mon = gamin.WatchMonitor()
 mon.watch_directory(".", callback)
+mon.handle_one_event()
 time.sleep(1)
-ret = mon.event_pending()
-if ret > 0:
-    ret = mon.handle_one_event()
-    ret = mon.handle_events()
+mon.handle_events()
 mon.stop_watch(".")
 mon.disconnect()
 del mon
-print 'OK'
+
+print "OK"

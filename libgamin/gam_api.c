@@ -71,6 +71,8 @@ gamin_dump_event(FAMEvent *event) {
 }
 #endif
 
+void gam_show_debug(void);
+
 void
 gam_show_debug(void) {
 }
@@ -444,10 +446,13 @@ gamin_data_available(int fd)
     struct timeval tv;
     int avail;
 
-    if (fd < 0)
+    if (fd < 0) {
+        GAM_DEBUG(DEBUG_INFO, "gamin_data_available wrong fd %d\n", fd);
         return (-1);
+    }
+    GAM_DEBUG(DEBUG_INFO, "Checking data available on %d\n", fd);
 
-  retry:
+retry:
     FD_ZERO(&read_set);
     FD_SET(fd, &read_set);
     tv.tv_sec = 0;
@@ -690,6 +695,7 @@ failed:
  * gamin_read_data:
  * @conn: the connection
  * @fd: the file descriptor for the socket
+ * @block: allow blocking
  *
  * Read the available data on the file descriptor. This is a potentially
  * blocking operation.
@@ -697,7 +703,7 @@ failed:
  * Return 0 in case of success, -1 in case of error.
  */
 static int
-gamin_read_data(GAMDataPtr conn, int fd)
+gamin_read_data(GAMDataPtr conn, int fd, int block)
 {
     int ret;
     char *data;
@@ -709,38 +715,45 @@ gamin_read_data(GAMDataPtr conn, int fd)
         if (gamin_check_cred(conn, fd) < 0) {
 	    return (-1);
 	}
-	ret = gamin_data_available(fd);
-	if (ret < 0)
-	    return(-1);
-	if (ret == 0)
-	    return(0);
+	if (!block) {
+	    ret = gamin_data_available(fd);
+	    if (ret < 0)
+	        return(-1);
+	    if (ret == 0)
+	        return(0);
+	}
     } else if (ret != 0) {
-	return (-1);
+        goto error;
     }
     ret = gamin_data_get_data(conn, &data, &size);
     if (ret < 0) {
-        return (-1);
+        GAM_DEBUG(DEBUG_INFO, "Failed getting connection data\n");
+        goto error;
     }
 retry:
     ret = read(fd, (char *) data, size);
     if (ret < 0) {
-        if (errno == EINTR)
+        if (errno == EINTR) {
+	    GAM_DEBUG(DEBUG_INFO, "client read() call interrupted\n");
             goto retry;
+	}
         gam_error(DEBUG_INFO, "failed to read() from server connection\n");
-        return (-1);
+        goto error;
     }
     if (ret == 0) {
         gam_error(DEBUG_INFO, "end from FAM server connection\n");
-        return (-1);
+        goto error;
     }
     GAM_DEBUG(DEBUG_INFO, "read %d bytes from server\n", ret);
 
     if (gamin_data_conn_data(conn, ret) < 0) {
         gam_error(DEBUG_INFO, "Failed to process %d bytes from server\n",
                   ret);
-        return (-1);
+        goto error;
     }
     return (0);
+error:
+    return(-1);
 }
 
 /**
@@ -1180,7 +1193,7 @@ FAMNextEvent(FAMConnection * fc, FAMEvent * fe)
     }
 
     if (!gamin_data_event_ready(conn)) {
-        if (gamin_read_data(conn, fc->fd) < 0) {
+        if (gamin_read_data(conn, fc->fd, 1) < 0) {
 	    gamin_try_reconnect(conn, fc->fd);
 	    FAMErrno = FAM_CONNECT;
 	    return (-1);
@@ -1236,7 +1249,7 @@ FAMPending(FAMConnection * fc)
     if (ret < 0)
         return (-1);
     if (ret > 0) {
-        if (gamin_read_data(conn, fc->fd) < 0) {
+        if (gamin_read_data(conn, fc->fd, 0) < 0) {
 	    gamin_try_reconnect(conn, fc->fd);
 	}
     }

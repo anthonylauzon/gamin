@@ -27,6 +27,11 @@ install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pythondir)
 	@INSTALL@ -m 0644 gamin.py $(DESTDIR)$(pythondir)
 
+test:
+	@(cd tests ; make tests)
+
+tests: test
+
 else
 all:
 endif

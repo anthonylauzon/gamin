@@ -400,13 +400,6 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
     unsigned int exists = 0;
     int is_dir_node;
 
-    /*
-     * For a yet unknow reason sometimes gam_tree_get_children()
-     * returned list seems to contain a loop. The l2 is a trick to
-     * detect the loop and at least not block on looping.
-     */
-    GList *l2;
-
     g_return_if_fail(dir_node != NULL);
 
     dpath = gam_node_get_path(dir_node);
@@ -428,11 +421,10 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
     else
         dir_exist_subs = NULL;
 
-    if ((event == 0) && (dir_exist_subs == NULL))
-        goto scan_files;
-
-    gam_poll_emit_event(dir_node, event, dir_exist_subs);
-    g_list_free(dir_exist_subs);
+    if (event != 0)
+	gam_poll_emit_event(dir_node, event, dir_exist_subs);
+    if (dir_exist_subs != NULL)
+	g_list_free(dir_exist_subs);
 
     dir = g_dir_open(dpath, 0, NULL);
 
@@ -479,45 +471,23 @@ scan_files:
 	}
     }
     children = gam_tree_get_children(tree, dir_node);
-    l2 = children;
     for (l = children; l; l = l->next) {
-        /*
-	 * loop in list usual detection trick code.
-	 */
-        if (l2)
-	    l2 = l2->next;
-	if (l2 == l) {
-	    gam_error(DEBUG_INFO,
-	              "gam_poll_scan_directory_internal(%s) loop detected\n",
-		      dpath);
-	    break;
-	}
-        if (l2)
-	    l2 = l2->next;
-	if (l2 == l) {
-	    gam_error(DEBUG_INFO,
-	              "gam_poll_scan_directory_internal(%s) loop detected\n",
-		      dpath);
-	    break;
-	}
-        /*
-	 * end of trick
-	 */
 
         node = (GamNode *) l->data;
 
         fevent = poll_file(node);
 
-        if (is_dir_node &&
-            gam_node_has_flag(node, FLAG_NEW_NODE) &&
-            gam_node_get_subscriptions(node)) {
-            gam_node_unset_flag(node, FLAG_NEW_NODE);
-            gam_poll_scan_directory_internal(node, exist_subs,
-                                             scan_for_new);
-        } else if (gam_node_has_flag(node, FLAG_NEW_NODE)) {
-            gam_node_unset_flag(node, FLAG_NEW_NODE);
-            fevent = GAMIN_EVENT_CREATED;
-        }
+        if (gam_node_has_flag(node, FLAG_NEW_NODE)) {
+	    if (is_dir_node &&
+		gam_node_get_subscriptions(node)) {
+		gam_node_unset_flag(node, FLAG_NEW_NODE);
+		gam_poll_scan_directory_internal(node, exist_subs,
+						 scan_for_new);
+	    } else {
+		gam_node_unset_flag(node, FLAG_NEW_NODE);
+		fevent = GAMIN_EVENT_CREATED;
+	    }
+	}
 
         if (fevent != 0) {
             gam_poll_emit_event(node, fevent, exist_subs);
