@@ -36,7 +36,7 @@
 #ifdef ENABLE_INOTIFY
 #include "gam_inotify.h"
 #endif
-#ifdef linux
+#ifdef ENABLE_DNOTIFY
 #include "gam_dnotify.h"
 #endif
 #include "gam_excludes.h"
@@ -72,7 +72,7 @@ gam_init_subscriptions(void)
 	return(TRUE);
     }
 #endif
-#ifdef linux
+#ifdef ENABLE_DNOTIFY
     if (gam_dnotify_init()) {
 	gam_debug(DEBUG_INFO, "Using DNotify as backend\n");
 	return(TRUE);

@@ -1,3 +1,8 @@
+Wed Sep 22 00:20:20 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in server/gam_excludes.c server/gam_server.c: applied
+	  a patch to cleanup dnotify and inotify duality from Martin Schlemmer
+
 Tue Sep 21 13:30:11 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in: release of 0.0.10

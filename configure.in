@@ -169,10 +169,18 @@ AM_CONDITIONAL(HAVE_LINUX, test x$os = xlinux-gnu)
 
 if test x$os = xlinux-gnu; then
 	AC_DEFINE([HAVE_LINUX],[],[Whether we are using linux or not])
+	
+	# We enable dnotify no matter what.  If the user enables
+	# inotify, he will still have dnotify to fall back on ...
+	AC_DEFINE(ENABLE_DNOTIFY,1,[Use dnotify as backend])
 	backend="dnotify"
 else
 	backend="polling"
 fi
+
+# We do not care about inotify for now - if the user enables
+# it, we still want to build dnotify support ...
+AM_CONDITIONAL(ENABLE_DNOTIFY, test x$backend = xdnotify)
 
 AC_ARG_ENABLE(inotify,
 [  --enable-inotify Uses inotify as backend],
@@ -184,17 +192,14 @@ esac])
 
 if test x$backend = xinotify; then
     AC_DEFINE(ENABLE_INOTIFY,1,[Use inotify as backend])
-else 
-    if test x$backend = xdnotify; then
-        AC_DEFINE(ENABLE_DNOTIFY,1,[Use dnotify as backend])
-        else if test x$backend = xpolling; then
-            AC_DEFINE(ENABLE_POLLING,1,[Use polling as backend])
-        fi
+else
+    # If all else fails, use polling
+    if test x$backend = xpolling; then
+        AC_DEFINE(ENABLE_POLLING,1,[Use polling as backend])
     fi
 fi
 
 AM_CONDITIONAL(ENABLE_INOTIFY, test x$backend = xinotify)
-AM_CONDITIONAL(ENABLE_DNOTIFY, test x$backend = xdnotify)
 
 dnl check for flavours of varargs macros (test from GLib)
 AC_MSG_CHECKING(for ISO C99 varargs macros in C)

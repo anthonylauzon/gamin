@@ -19,7 +19,7 @@ struct _gam_exclude {
 static int initialized = 0;
 static GList *excludes = NULL;
 static char *static_excludes[] = {
-#ifdef linux
+#ifdef HAVE_LINUX
     "/media/*",
     "/mnt/*",
 #endif
