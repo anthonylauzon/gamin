@@ -704,7 +704,7 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 
     node_remove_subscription(node, sub);
 
-    remove_dir = gam_node_get_subscriptions(node) == NULL;
+    remove_dir = (gam_node_get_subscriptions(node) == NULL);
 
     children = gam_tree_get_children(tree, node);
     for (l = children; l; l = l->next) {
@@ -726,6 +726,15 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 
     g_list_free(children);
 
+    /*
+     * do not remove the directory if the parent has a directory subscription
+     */
+    remove_dir = ((gam_node_get_subscriptions(node) == NULL) &&
+                  (!gam_node_has_dir_subscriptions(gam_node_parent(node))));
+
+    if (remove_dir) {
+	GAM_DEBUG(DEBUG_INFO, "  => remove_dir %s\n", gam_node_get_path(node));
+    }
     return remove_dir;
 }
 

@@ -1,3 +1,10 @@
+Tue Apr  5 16:48:31 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: found a problem when demonitoring a directory
+	  which is the child of a monitored directory related to #172596
+	* python/tests/Makefile.am python/tests/dnotify8.py
+	  python/tests/dnotify9.py: added a couple of regression tests for this
+
 Mon Apr  4 13:47:57 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: applied patch from Nickolay Shmyrev to fix
