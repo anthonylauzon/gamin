@@ -49,6 +49,8 @@ gboolean              gam_node_add_subscription    (GamNode         *node,
 gboolean              gam_node_remove_subscription (GamNode         *node,
 						   GamSubscription *sub);
 
+gboolean              gam_node_has_dir_subscriptions(GamNode * node);
+
 int                   gam_node_copy_subscriptions  (GamNode         *src,
 						   GamNode         *dest,
 						   GamSubFilterFunc filter);

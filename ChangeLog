@@ -1,3 +1,11 @@
+Wed Oct 13 00:40:32 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_node.c server/gam_node.h: adding a new API
+	* server/gam_subscription.c: fixed gnome bug #153531 when monitoring
+	  a directory as a file.
+	* tests/result/9 tests/scenario/9.tst: added a specific regression
+	  test.
+
 Sun Oct 10 19:45:48 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* TODO tests/Makefile.am tests/result/* tests/scenario/*: fixing

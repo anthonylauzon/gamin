@@ -125,7 +125,7 @@ void
 gam_node_set_is_dir(GamNode * node, gboolean is_dir)
 {
     if (!node)
-        return(NULL);
+        return;
     node->is_dir = is_dir;
 }
 
@@ -155,6 +155,30 @@ gam_node_get_subscriptions(GamNode * node)
     if (!node)
         return(NULL);
     return node->subs;
+}
+
+/**
+ * gam_node_has_dir_subscriptions:
+ * @node: the node
+ *
+ * Allow to find if a node has directory subscriptions
+ *
+ * Returns TRUE if yes and FALSE otherwise
+ */
+gboolean
+gam_node_has_dir_subscriptions(GamNode * node)
+{
+    GList *s;
+
+    if (!node)
+        return(FALSE);
+    if (!(node->is_dir))
+        return(FALSE);
+    for (s = node->subs;s != NULL;s = s->next) {
+        if (gam_subscription_is_dir((GamSubscription *) s->data))
+	    return(TRUE);
+    }
+    return(FALSE);
 }
 
 /**
@@ -266,7 +290,7 @@ void
 gam_node_set_node(GamNode * node, GNode * gnode)
 {
     if (node == NULL)
-        return(NULL);
+        return;
     node->node = gnode;
 }
 

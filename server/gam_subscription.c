@@ -270,6 +270,10 @@ gam_subscription_wants_event(GamSubscription * sub,
     if (sub->cancelled)
         return FALSE;
 
+    /* only directory listening cares for other files */
+    if ((sub->is_dir == 0) && (name[sub->pathlen] != 0))
+        return(FALSE);
+
     if (!gam_subscription_has_event(sub, event)) {
         return FALSE;
     }
