@@ -1,3 +1,8 @@
+Wed Jan 26 12:39:08 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in NEWS doc/* gamin.spec.in: preparing release 0.0.21
+	* python/tests/Makefile.am python/tests/basic.py : added first example
+
 Wed Jan 26 11:59:11 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* doc/*: added a page for the python bindings, updated the 

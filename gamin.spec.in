@@ -83,8 +83,14 @@ rm -fr %{buildroot}
 %doc AUTHORS ChangeLog NEWS README Copyright TODO
 %{_libdir}/python*/site-packages/gamin.py
 %{_libdir}/python*/site-packages/gaminmod*
+%doc python/tests/*.py
+%doc doc/python.html
 
 %changelog
+* Wed Jan 26 2005 Daniel Veillard <veillard@redhat.com> 0.0.21-1
+- Added Python support
+- Updated for inotify-0.18 
+
 * Thu Jan  6 2005 Daniel Veillard <veillard@redhat.com> 0.0.20-1
 - Frederic Crozat seems to have found the GList corruption which may fix
   #132354 and related problems

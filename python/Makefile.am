@@ -1,3 +1,6 @@
+## Process this file with automake to produce Makefile.in
+SUBDIRS=tests
+
 INCLUDES =			\
 	-I$(PYTHON_INCLUDES)	\
 	-I$(top_srcdir)/libgamin\
