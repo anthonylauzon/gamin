@@ -1,3 +1,9 @@
+Wed Feb 16 15:26:08 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* python/tests/level.py: reproduced the damn "Desktop doesn't refresh"
+	  bug
+	* server/gam_poll.c: fix fo the bug
+
 Tue Feb 15 15:40:31 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* python/gamin.py: allow multiple monitoring of the same

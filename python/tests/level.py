@@ -28,14 +28,16 @@ mon.handle_events()
 mon.stop_watch("temp_dir")
 if top != 3:
     print "Error: top monitor got %d events insteads of 3" % (top)
+time.sleep(1)
 os.mkdir ("temp_dir/a/b")
 time.sleep(1)
 mon.handle_events()
 mon.stop_watch("temp_dir/a")
-if sub != 3:
-    print "Error: sub monitor got %d events insteads of 3" % (sub)
 mon.disconnect()
 del mon
 shutil.rmtree ("temp_dir", True)
 
-print "OK"
+if sub != 3:
+    print "Error: sub monitor got %d events insteads of 3" % (sub)
+else:
+    print "OK"
