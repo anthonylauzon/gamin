@@ -1,3 +1,7 @@
+Tue Oct  5 18:50:57 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.spec.in: added BuildRequires: glib2-devel , bug #134689
+
 Sun Oct  3 19:43:23 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in: release of 0.0.14

@@ -5,6 +5,29 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.14: Oct  3 2004:
+   - Found and fixed the annoying bug where update were not received should
+    fix bugs ##132429, #133665 and #134413 in Red Hat bugzilla
+   - new mechanism to debug on-the-fly by sending SIGUSR2 to client or
+  server
+   - Added documentation about internals
+
+
+0.0.13: Oct  1 2004:
+   - applied portability fixes
+   - hardened the code while chasing a segfault
+
+
+0.0.12: Sep 30 2004:
+   - potential fix for a hard to reproduce looping problem.
+
+
+0.0.11: Sep 27 2004:
+   - inotify support compiled in by default
+   - fix ABI FAM compatibility problems #133162
+   - update to the latest version of inotify 
+
+
 0.0.10: Sep 21 2004:
    - fixed API/ABI incompatibility between FAM and gamin about FAMErrno and
     FamErrlist
