@@ -16,6 +16,7 @@ int             gam_server_num_listeners        (void);
 void            gam_server_emit_event           (const char *path,
 						 GaminEventType event,
 						 GList *subs);
+void		gam_shutdown			(void);
 #ifdef __cplusplus
 }
 #endif

@@ -269,19 +269,13 @@ if test x$enable_abstract_sockets = xyes; then
 fi
 
 if test x$enable_abstract_sockets = xno; then
-   AC_MSG_ERROR([Abstract sockets are required, and support not detected.])
    have_abstract_sockets=no;
 fi
 
 if test x$have_abstract_sockets = xyes ; then
-   abstract_sockets=1
-   DBUS_PATH_OR_ABSTRACT=abstract
-else
-   abstract_sockets=0
-   DBUS_PATH_OR_ABSTRACT=path
+   AC_DEFINE_UNQUOTED(HAVE_ABSTRACT_SOCKETS, $abstract_sockets, [Have abstract socket namespace])
 fi
 
-AC_DEFINE_UNQUOTED(HAVE_ABSTRACT_SOCKETS, $abstract_sockets, [Have abstract socket namespace])
 
 
 dnl ==========================================================================

@@ -13,15 +13,15 @@
      <exports symbol='FAMStopExecuting' type='enum'/>
      <exports symbol='FAMExists' type='enum'/>
      <exports symbol='FAMMoved' type='enum'/>
+     <exports symbol='FAMCodes' type='typedef'/>
+     <exports symbol='FAMEvent' type='typedef'/>
      <exports symbol='FAMConnection' type='typedef'/>
      <exports symbol='FAMConnectionPtr' type='typedef'/>
-     <exports symbol='FAMEvent' type='typedef'/>
-     <exports symbol='FAMRequest' type='typedef'/>
      <exports symbol='FAMRequestPtr' type='typedef'/>
+     <exports symbol='FAMRequest' type='typedef'/>
      <exports symbol='FAMConnection' type='struct'/>
      <exports symbol='FAMEvent' type='struct'/>
      <exports symbol='FAMRequest' type='struct'/>
-     <exports symbol='FAMCodes' type='variable'/>
      <exports symbol='FAMCancelMonitor' type='function'/>
      <exports symbol='FAMMonitorCollection' type='function'/>
      <exports symbol='FAMSuspendMonitor' type='function'/>
@@ -111,6 +111,7 @@
     <enum name='GAM_REQ_CANCEL' file='gam_protocol' value='3' type='GAMReqType'/>
     <enum name='GAM_REQ_DIR' file='gam_protocol' value='2' type='GAMReqType'/>
     <enum name='GAM_REQ_FILE' file='gam_protocol' value='1' type='GAMReqType'/>
+    <typedef name='FAMCodes' file='fam' type='enum'/>
     <struct name='FAMConnection' file='fam' type='struct FAMConnection'>
       <field name='fd' type='int' info=''/>
       <field name='client' type='void *' info=''/>
@@ -141,7 +142,6 @@
     </struct>
     <typedef name='GAMReqDataPtr' file='gam_data' type='GAMReqData *'/>
     <typedef name='GAMReqType' file='gam_protocol' type='enum'/>
-    <variable name='FAMCodes' file='fam' type='enum'/>
     <function name='FAMCancelMonitor' file='fam'>
       <info>This function is used to permanently stop a monitoring request. the routine will free the FAMRequest structure provided.</info>
       <return type='int' info='0 in case of success and -1 in case of error.'/>

@@ -1,3 +1,12 @@
+Thu Jul 29 16:31:20 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in libgamin/gam_api.c server/gam_channel.c
+	  server/gam_channel.h server/gam_connection.c server/gam_server.c
+	  server/gam_server.h: reactivated support for OSes without 
+	  abstract sockets using a /tmp subdir per user to avoid problems
+	* doc/socket.txt: small text describing the socket handling
+	* doc/gamin-api.xml: rebuilt
+
 Wed Jul 28 22:29:57 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in libgamin/gam_api.c server/gam_channel.c: desactivating

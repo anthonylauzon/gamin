@@ -276,7 +276,7 @@ gam_incoming_conn_read(GIOChannel * source, GIOCondition condition,
 
 /************************************************************************
  *									*
- *			Connection socket handling			*
+ *			Path for the socket connection			*
  *									*
  ************************************************************************/
 
@@ -296,6 +296,7 @@ gam_get_socket_path(const char *session)
 {
     const char *gam_client_id;
     const gchar *user;
+    gchar *ret;
 
     if (session == NULL) {
         gam_client_id = g_getenv("GAM_CLIENT_ID");
@@ -311,8 +312,248 @@ gam_get_socket_path(const char *session)
         gam_debug(DEBUG_INFO, "Error getting user informations\n");
         return (NULL);
     }
-    return (g_strconcat("/tmp/fam-", user, "-", gam_client_id, NULL));
+#ifdef HAVE_ABSTRACT_SOCKETS
+    ret = g_strconcat("/tmp/fam-", user, "-", gam_client_id, NULL);
+#else
+    ret = g_strconcat("/tmp/fam-", user, "/fam-", gam_client_id, NULL);
+#endif
+    return(ret);
 }
+
+
+#ifndef HAVE_ABSTRACT_SOCKETS
+/**
+ * gam_get_socket_dir:
+ *
+ * Get the directory path to the socket to connect the FAM server.
+ *
+ * Returns a new string or NULL in case of error.
+ */
+static gchar *
+gam_get_socket_dir(void)
+{
+    const gchar *user;
+    gchar *ret;
+
+    user = g_get_user_name();
+
+    if (user == NULL) {
+        gam_debug(DEBUG_INFO, "Error getting user informations\n");
+        return (NULL);
+    }
+    ret = g_strconcat("/tmp/fam-", user, NULL);
+    return(ret);
+}
+
+
+
+/************************************************************************
+ *									*
+ *		Security for OSes without abstract sockets		*
+ *									*
+ ************************************************************************/
+/**
+ * gam_check_secure_dir:
+ *
+ * Tries to create or ensure that the directory used to hold the socket used
+ * for communicating with is a safe directory to avoid possible attacks.
+ *
+ * Returns TRUE if safe and FALSE otherwise.
+ */
+static gboolean
+gam_check_secure_dir(void)
+{
+    gchar *dir;
+    struct stat st;
+    int ret;
+    int tries = 0;
+
+    dir = gam_get_socket_dir();
+    if (dir == NULL) {
+	gam_error(DEBUG_INFO, "Failed to get path to socket directory\n");
+        return(FALSE);
+    }
+create:
+    ret = mkdir(dir, 0700);
+    if (ret >= 0) {
+	gam_debug(DEBUG_INFO, "Created socket directory %s\n", dir);
+	g_free(dir);
+        return(TRUE);
+    }
+
+    switch (errno) {
+        case EEXIST:
+	    ret = stat(dir, &st);
+	    if (ret < 0) {
+		gam_error(DEBUG_INFO, "Failed to stat socket directory %s\n",
+		          dir);
+		g_free(dir);
+		return(FALSE);
+	    }
+	    if (st.st_uid != getuid()) {
+		gam_error(DEBUG_INFO,
+		          "Socket directory %s has different owner\n",
+		          dir);
+	        break;
+	    }
+	    if (!S_ISDIR (st.st_mode)) {
+		gam_error(DEBUG_INFO, "Socket path %s is not a directory\n",
+		          dir);
+	        break;
+	    }
+	    if (st.st_mode & (S_IRWXG|S_IRWXO)) {
+		gam_error(DEBUG_INFO,
+		          "Socket directory %s has wrong permissions\n",
+		          dir);
+	        break;
+	    }
+	    if (((st.st_mode & (S_IRWXU)) != S_IRWXU)) {
+		gam_error(DEBUG_INFO,
+		          "Socket directory %s has wrong permissions\n",
+		          dir);
+	        break;
+	    }
+	    /*
+	     * all checks on existing dir seems okay
+	     */
+	    gam_debug(DEBUG_INFO, "Reusing socket directory %s\n", dir);
+	    g_free(dir);
+	    return(TRUE);
+        case EACCES:
+	    gam_error(DEBUG_INFO, 
+	              "No permission to create socket directory %s\n",
+	              dir);
+	    g_free(dir);
+	    return(FALSE);
+        case ENAMETOOLONG:
+	    gam_error(DEBUG_INFO, "Socket directory %s name too long\n",
+	              dir);
+	    g_free(dir);
+	    return(FALSE);
+        default:
+	    gam_error(DEBUG_INFO,
+	              "Failed to create socket directory %s\n",
+		      dir);
+	    g_free(dir);
+	    return(FALSE);
+    }
+
+    /*
+     * The path to the directory is considered unsafe
+     * try to remove the given path to rebuild the directory.
+     */
+    ret = rmdir(dir);
+    if (ret < 0) {
+	ret = unlink(dir);
+	if (ret < 0) {
+	    gam_error(DEBUG_INFO, "Failed to remove unsafe path %s\n",
+	              dir);
+	    g_free(dir);
+	    return(FALSE);
+	}
+    }
+    gam_debug(DEBUG_INFO, "Removed %s\n", dir);
+    tries++;
+    if (tries < 5)
+        goto create;
+    g_free(dir);
+    return(FALSE);
+}
+
+/**
+ * gam_check_secure_path:
+ * @path: path to the (possibly abstract) socket
+ *
+ * Tries to create or ensure that the socket used for communicating with
+ * the clients are in a safe directory to avoid possible attacks.
+ *
+ * Returns the socket file descriptor or -1 in case of error.
+ */
+static gboolean
+gam_check_secure_path(const char *path)
+{
+    struct stat st;
+    int ret;
+
+    if (!gam_check_secure_dir())
+        return(FALSE);
+    /*
+     * Check the existing socket if any
+     */
+    ret = stat(path, &st);
+    if (ret < 0)
+	return(TRUE);
+    
+    if (st.st_uid != getuid()) {
+	gam_error(DEBUG_INFO,
+		  "Socket %s has different owner\n",
+		  path);
+	goto cleanup;
+    }
+#ifdef S_ISSOCK
+    if (!S_ISSOCK (st.st_mode)) {
+	gam_error(DEBUG_INFO, "Socket path %s is not a socket\n",
+		  path);
+	goto cleanup;
+    }
+#endif
+    if (st.st_mode & (S_IRWXG|S_IRWXO)) {
+	gam_error(DEBUG_INFO,
+		  "Socket %s has wrong permissions\n",
+		  path);
+	goto cleanup;
+    }
+    /*
+     * Looks good though binding may fail due to an existing server
+     */
+    return(TRUE);
+
+cleanup:
+    /*
+     * the existing file at the socket location seems strange, try to remove it
+     */
+    ret = unlink(path);
+    if (ret < 0) {
+	gam_error(DEBUG_INFO, "Failed to remove %s\n", path);
+	return(FALSE);
+    }
+    return(TRUE);
+}
+#endif /* ! HAVE_ABSTRACT_SOCKETS */
+
+/************************************************************************
+ *									*
+ *			Connection socket shutdown			*
+ *									*
+ ************************************************************************/
+
+/**
+ * gam_conn_shutdown:
+ * @session: the session name or NULL
+ *
+ * Shutdown the connection socket if any
+ */
+void
+gam_conn_shutdown(const char *session) {
+#ifndef HAVE_ABSTRACT_SOCKETS
+    gchar *path;
+    int ret;
+
+    path = gam_get_socket_path(session);
+
+    ret = unlink(path);
+    if (ret < 0) {
+	gam_error(DEBUG_INFO, "Failed to remove %s\n", path);
+    }
+    g_free(path);
+#endif
+}
+
+/************************************************************************
+ *									*
+ *			Connection socket handling			*
+ *									*
+ ************************************************************************/
 
 /**
  * gam_listen_unix_socket:
@@ -341,26 +582,15 @@ gam_listen_unix_socket(const char *path)
     strncpy(&addr.sun_path[1], path, (sizeof(addr) - 4) - 2);
 #else
     /*
-     * disabled, until a solution based on a tmp subdir is implemented
-     * http://mail.gnome.org/archives/gamin-list/2004-July/msg00017.html
+     * if the socket is exposed at the filesystem level we need to take
+     * some extra protection checks. Also make sure the socket is created
+     * with restricted mode
      */
-#error "Code really to be fixed for abstract socket"
-    {
-        struct stat st;
-        int ret;
-
-        if (stat(path, &st) == 0 && S_ISSOCK(st.st_mode)) {
-            gam_debug(DEBUG_INFO, "Removing existing unix socket %s\n",
-                      path);
-            ret = unlink(path);
-            if (ret != 0) {
-                gam_debug(DEBUG_INFO, "Failed to remove socket %s\n", path);
-                close(fd);
-                return (-1);
-            }
-        }
+    if (!gam_check_secure_path(path)) {
+	return (-1);
     }
     strncpy(&addr.sun_path[0], path, (sizeof(addr) - 4) - 1);
+    umask(0077);
 #endif
 
     if (bind(fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {

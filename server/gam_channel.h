@@ -23,6 +23,7 @@ gboolean	gam_client_conn_write	(GIOChannel *target,
 					 int fd,
 					 gpointer data,
 					 size_t len);
+void		gam_conn_shutdown	(const char *session);
 #ifdef __cplusplus
 }
 #endif

@@ -549,6 +549,7 @@ gam_connections_check(void)
         timeout = time(NULL);
     } else if (time(NULL) - timeout > MAX_IDLE_TIMEOUT) {
         gam_debug(DEBUG_INFO, "Exitting on timeout\n");
+	gam_shutdown();
         exit(0);
     }
     return (TRUE);

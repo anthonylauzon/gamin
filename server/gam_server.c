@@ -36,6 +36,18 @@
 #include "gam_dnotify.h"
 #endif
 
+static const char *session;
+
+/**
+ * gam_shutdown:
+ *
+ * Shutdown routine called when the server exits
+ */
+void
+gam_shutdown(void) {
+    gam_conn_shutdown(session);
+}
+
 /**
  * gam_init_subscriptions:
  *
@@ -213,7 +225,6 @@ int
 main(int argc, const char *argv[])
 {
     GMainLoop *loop;
-    const char *session = NULL;
 
     if (argc > 1) {
         if (!strcmp(argv[1], "--notimeout")) {
@@ -252,6 +263,8 @@ main(int argc, const char *argv[])
     }
 
     g_main_loop_run(loop);
+
+    gam_shutdown();
 
     return (0);
 }
