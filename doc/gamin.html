@@ -52,7 +52,40 @@ should be found in the source under the COPYING file.</p>
 <p>Basically it is exactly like for using the fam interface. From a
 programmer point of view this is the same API, and one can make use of <a
 href="http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=0650&amp;db=bks&amp;fname=/SGI_Developer/books/IIDsktp_IG/sgi_html/ch08.html">the
-existing FAM documentation</a>. </p>
+existing FAM documentation</a>.</p>
+
+<h2><a name="Config">Configuration</a></h2>
+
+<p>By default gamin should work without needing any configuration, but
+sometimes using the kernel notification APIs doesn't work or lead to troubles
+(for example when trying to unmount device). By default gamin revert to using
+polling for all paths matching <code>/mnt/*</code> or <code>/media/*</code>
+on Linux. This may be overriden or extended by the config file
+<code>$HOME/.gaminrc</code> . Here is an example of such a configuration
+file:</p>
+<pre># configuration for gamin
+# Can be used to override the default behaviour.
+# notify filepath(s) : indicate to use kernel notification
+# poll filepath(s)   : indicate to use polling instead
+ 
+notify /mnt/local* /mnt/pictures*
+poll /temp/*</pre>
+
+<p>The configuration file accepts only 2 types of command:</p>
+<ul>
+  <li>notify : to express that kernel monitoring should be used for matching
+    paths</li>
+  <li>poll: to express that polling should be used for matching paths</li>
+</ul>
+
+<p>When checking a path to guess whether polling or kernel notification
+should be used, gamin checks first the user provided rules in their
+declaration order within the configuration file and then check the predefined
+rules. This way the first declaration for <code>/mnt/local*</code> in the
+example override the default one for <code>/mnt/*</code> .</p>
+
+<p><em>Caveat: separators in the config file should be spaces, not
+tabs.</em></p>
 
 <h2><a name="News">News</a></h2>
 
@@ -241,7 +274,7 @@ the filesystem, no attack is possible that way. The client and the server
 checks on the first '\0' byte received from the socket that the other side is
 running under the same UID.</p>
 
-<h3>If there is no abstract socket support: </h3>
+<h3>If there is no abstract socket support:</h3>
 
 <p>On the server side:</p>
 <pre> start:

@@ -15,6 +15,9 @@
       <xsl:when test="$name = '#Overview'">
         <xsl:text>overview.html</xsl:text>
       </xsl:when>
+      <xsl:when test="$name = '#Config'">
+        <xsl:text>config.html</xsl:text>
+      </xsl:when>
       <xsl:when test="$name = '#News'">
         <xsl:text>news.html</xsl:text>
       </xsl:when>

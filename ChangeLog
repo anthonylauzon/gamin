@@ -1,3 +1,7 @@
+Mon Sep 20 17:18:23 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* doc/config.html doc/*: added documentation for the config file.
+
 Mon Sep 20 16:21:24 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in server/Makefile.am server/gam_poll.c: applied a
