@@ -112,13 +112,6 @@ gam_tree_add(GamTree * tree, GamNode * parent, GamNode * child)
     if (g_hash_table_lookup(tree->node_hash, gam_node_get_path(child)))
         return FALSE;           /* lock ??? */
 
-    /*
-     * g_message ("Adding child: %s to %s, %d : %s",
-     * gam_node_get_path (child),
-     * gam_node_get_path (parent),
-     * g_node_n_children (parent->node),
-     * gam_node_is_dir (child) ? "directory" : "file");
-     */
     node = new_node(child);
     g_node_append(parent->node, node);
     g_hash_table_insert(tree->node_hash,
@@ -143,7 +136,7 @@ gam_tree_remove(GamTree * tree, GamNode * node)
 
     if (g_node_is_ancestor(tree->root, node->node)) {
 
-        g_assert(g_node_n_children(node->node) == 0);
+        g_assert(g_node_first_child(node->node) == NULL);
 
         g_hash_table_remove(tree->node_hash, gam_node_get_path(node));
         g_node_unlink(node->node);
@@ -281,7 +274,7 @@ gam_tree_get_children(GamTree * tree, GamNode * root)
 gboolean
 gam_tree_has_children(GamTree * tree, GamNode * node)
 {
-    return g_node_n_children(node->node) > 0;
+    return(g_node_first_child(node->node) != NULL);
 }
 
 /**

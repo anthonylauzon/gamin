@@ -1,3 +1,9 @@
+Tue Mar 15 12:32:02 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_tree.c: a bit of cleanup, and avoiding potentially
+	  expensive call g_node_n_children() when the operation should 
+	  really be O(1)
+
 Tue Mar 15 12:24:06 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: fixed the crash on failed tree assert bug #150471
