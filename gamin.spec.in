@@ -68,6 +68,10 @@ rm -fr %{buildroot}
 
 
 %changelog
+* Fri Oct  1 2004 Daniel Veillard <veillard@redhat.com> 0.0.13-1
+- applied portability fixes
+- hardened the code while chasing a segfault
+
 * Thu Sep 30 2004 Daniel Veillard <veillard@redhat.com> 0.0.12-1
 - potential fix for a hard to reproduce looping problem.
 

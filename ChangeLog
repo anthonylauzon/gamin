@@ -1,3 +1,7 @@
+Fri Oct  1 18:15:05 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: release 0.0.13
+
 Fri Oct  1 12:01:39 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/fam.h server/gam_poll.c: portability cleanups w.r.t.
