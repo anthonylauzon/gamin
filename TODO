@@ -1,0 +1,23 @@
+ - on the client handle numbers provided by the caller.
+ - merge GAMIN_EVENT_ with FAMEvents ?
+ - check both ways of identification, not just server checking client.
+ - path flexibility for the remote server in gam_fork.c
+ - cleanup deps w.r.t. libmarmot
+ - try to use getlogin and $USER to get the user name
+ - test for availability of setsid(), usleep()
+ - remove threading, gam_poll_init_full(), use timers instead
+   of running a loop with usleep in a thread.
+ - code 'cb' processing cleanup
+ - doc extraction and reformatting of comments in gtk-doc style
+ - add a flag for server to not exit on idle
+ - make Copyright file for LGPL
+ - block exports of all symbols not from fam.h
+                                                                                
+Regression tests:
+  - try all the file length on the client till error.
+  - try the fragmented/multirequests tests on the client side
+
+Done:
+  - code and file cleanup, indenting
+  - removed old common dependancy
+  - autostart/stop of the server side

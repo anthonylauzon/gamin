@@ -1,0 +1,54 @@
+#ifndef __GAM_CONNECTION_H__
+#define __GAM_CONNECTION_H__ 1
+
+#include <glib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * Data associated to connections in the gamin server
+ */
+typedef struct GamConnData GamConnData;
+typedef GamConnData *GamConnDataPtr;
+
+/**
+ * the different states the connection can be in
+ */
+typedef enum GamConnState {
+    GAM_STATE_ERROR = -1,	/* error condition */
+    GAM_STATE_AUTH,		/* authenthication needed */
+    GAM_STATE_OKAY,		/* normal state */
+    GAM_STATE_CLOSED		/* the connection was closed by server */
+} GamConnState;
+
+int		gam_connections_init	(void);
+int		gam_connections_close	(void);
+gboolean	gam_connections_check	(void);
+
+GamConnDataPtr	gam_connection_new	(GMainLoop *loop,
+					 GIOChannel *source);
+int		gam_connection_set_pid	(GamConnDataPtr conn,
+					 int pid);
+int		gam_connection_exists	(GamConnDataPtr conn);
+int		gam_connection_close	(GamConnDataPtr conn);
+
+int		gam_connection_get_fd	(GamConnDataPtr conn);
+int		gam_connection_get_pid  (GamConnDataPtr conn);
+GamConnState	gam_connection_get_state(GamConnDataPtr conn);
+int		gam_connection_get_data	(GamConnDataPtr conn,
+					 char **data,
+					 int *size);
+int		gam_connection_data	(GamConnDataPtr conn,
+					 int len);
+int		gam_send_event		(GamConnDataPtr conn,
+					 int reqno,
+					 int event,
+					 const char *path,
+					 int len);
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __GAM_CONNECTION_H__ */

@@ -1,0 +1,9 @@
+Marmot is a file and directory monitoring system.
+
+NOTES:
+
+* You need Doxygen installed to build the documentation.  If you have this,
+  simply run 'doxygen', and you will find html and man pages in doc/api/html
+  and doc/api/man respectively.  Latex documentation is also produced in
+  doc/api/latex.  Run 'make ps' or 'make pdf' in that directory to produce
+  PostScript or PDF docs.
