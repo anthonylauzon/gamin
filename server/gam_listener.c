@@ -235,6 +235,7 @@ gam_listener_get_subscriptions(GamListener * listener)
  */
 void
 gam_listener_debug(GamListener * listener) {
+#ifdef GAM_DEBUG_ENABLED
     GList *cur;
     GamSubscription *sub;
 
@@ -251,6 +252,7 @@ gam_listener_debug(GamListener * listener) {
         
 	cur = g_list_next(cur);
     }
+#endif
 }
 
 /** @} */

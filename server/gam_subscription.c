@@ -302,6 +302,7 @@ gam_subscription_wants_event(GamSubscription * sub,
  */
 void
 gam_subscription_debug(GamSubscription *sub) {
+#ifdef GAM_DEBUG_ENABLED
     if (sub == NULL) {
 	GAM_DEBUG(DEBUG_INFO, "    Subscription is NULL\n");
         return;
@@ -309,6 +310,7 @@ gam_subscription_debug(GamSubscription *sub) {
     GAM_DEBUG(DEBUG_INFO,
               "    Subscription %d reqno %d events %d dir %d: %s\n",
               sub->reqno, sub->events, sub->events, sub->is_dir, sub->path);
+#endif
 }
 
 

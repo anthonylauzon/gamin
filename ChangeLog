@@ -1,3 +1,8 @@
+Thu Dec  2 18:46:09 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_connection.c server/gam_listener.c server/gam_server.c
+	  server/gam_subscription.c: fixed compilation without debug
+
 Thu Dec  2 01:17:09 CET 2004 Daniel Veillard <veillard@redhat.com>
 
 	* autogen.sh: removed reference to old m4 subdir

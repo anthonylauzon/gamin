@@ -307,7 +307,9 @@ gam_server_init(GMainLoop * loop, const char *session)
      */
     if (no_timeout == 0)
 	g_timeout_add(1000, (GSourceFunc) gam_connections_check, NULL);
+#ifdef GAM_DEBUG_ENABLED
     g_timeout_add(1000, (GSourceFunc) gam_error_check, NULL);
+#endif
 
     return TRUE;
 }

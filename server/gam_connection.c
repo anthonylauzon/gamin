@@ -567,6 +567,7 @@ gam_connections_check(void)
  */
 void
 gam_connections_debug(void) {
+#ifdef GAM_DEBUG_ENABLED
     GamConnDataPtr conn;
     GList *cur;
 
@@ -604,4 +605,5 @@ gam_connections_debug(void) {
 	}
         cur = g_list_next(cur);
     }
+#endif
 }
