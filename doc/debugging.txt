@@ -31,5 +31,7 @@ Signal        Stop      Print   Pass to program Description
 SIG33         No        Yes     Yes             Real-time event 33
 (gdb) 
 
+even better add it to your $HOME/.gdbinit
+
 Daniel Veillard
 $id$

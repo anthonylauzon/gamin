@@ -56,12 +56,13 @@ rm -fr %{buildroot}
 
 %doc AUTHORS ChangeLog NEWS README Copyright TODO
 %{_libdir}/lib*.so.*
-%{_bindir}/gam_server
+%{_libexecdir}/gam_server
 
 %files devel
 %defattr(-, root, root)
 
 %doc AUTHORS ChangeLog NEWS README Copyright TODO
+%doc doc/*.txt
 %{_libdir}/lib*.so
 %{_libdir}/*a
 %{_includedir}/fam.h
