@@ -177,7 +177,7 @@ gamin_write_credential_byte(int fd)
     char data[2] = { 0, 0 };
     int written;
 
-  retry:
+retry:
     written = write(fd, &data[0], 1);
     if (written < 0) {
         if (errno == EINTR)
@@ -290,14 +290,14 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
         len = strlen(filename);
         if (len > MAXPATHLEN)
             return (-1);
-        reqnum = gamin_data_get_reqnum(data, (int) type, userData);
+        reqnum = gamin_data_get_reqnum(data, filename, (int) type, userData);
         if (reqnum < 0)
             return (-1);
     } else {
         len = strlen(filename);
         if (len > MAXPATHLEN)
             return (-1);
-        reqnum = gamin_data_get_request(data, (int) type, userData,
+        reqnum = gamin_data_get_request(data, filename, (int) type, userData,
 	                                fr->reqnum);
         if (reqnum < 0)
             return (-1);
@@ -315,7 +315,7 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
 
     GAM_DEBUG(DEBUG_INFO, "gamin_send_request %d for socket %d\n", reqnum,
               fd);
-    return (0);
+    return (ret);
 }
 
 /**
@@ -493,6 +493,124 @@ retry:
         return (-1);
     }
     return (0);
+}
+
+/**
+ * gamin_resend_request:
+ * @fd: the file descriptor for the socket
+ * @type: the GAMReqType for the request
+ * @filename,: the filename for the file or directory
+ * @reqnum: the request number.
+ *
+ * Reemit a request, used on a reconnection.
+ *
+ * Returns 0 in case of success and -1 in case of error
+ */
+static int
+gamin_resend_request(int fd, GAMReqType type, const char *filename,
+                     int reqnum)
+{
+    size_t len, tlen;
+    GAMPacket req;
+    int ret;
+
+    if ((filename == NULL) || (fd < 0))
+        return(-1);
+
+    len = strlen(filename);
+    tlen = sizeof(GAMPacket) - MAXPATHLEN + len;
+    /* We use only local socket so no need for network byte order conversion */
+    req.len = (unsigned short) tlen;
+    req.version = GAM_PROTO_VERSION;
+    req.seq = reqnum;
+    req.type = (unsigned short) type;
+    req.pathlen = len;
+    if (len > 0)
+        memcpy(&req.path[0], filename, len);
+    ret = gamin_write_byte(fd, (const char *) &req, tlen);
+
+    GAM_DEBUG(DEBUG_INFO, "gamin_resend_request %d for socket %d\n", reqnum,
+              fd);
+    return (ret);
+}
+
+/**
+ * gamin_try_reconnect:
+ * @conn: the connection
+ * @fd: the file descriptor for the socket
+ *
+ * The last read or write resulted in a failure, connection to the server
+ * has been broken, close the socket and try to reconnect and register
+ * the monitors again. Reusing the same fd is needed since applications
+ * are unlikely to recheck it.
+ *
+ * Return 0 in case of success, -1 in case of error.
+ */
+static int
+gamin_try_reconnect(GAMDataPtr conn, int fd)
+{
+    int newfd, i, ret, nb_req;
+    GAMReqDataPtr *reqs;
+    char *socket_name;
+
+
+    if ((conn == NULL) || (fd < 0))
+        return(-1);
+    GAM_DEBUG(DEBUG_INFO, "Trying to reconnect to server on %d\n", fd);
+
+    /*
+     * the connection is no more in an usable state
+     */
+    /*conn->fd = -1; */
+
+    socket_name = gamin_get_socket_path();
+    if (socket_name == NULL)
+        return (-1);
+
+    /*
+     * try to reopen a connection to the server
+     */
+    close(fd);
+    newfd = gamin_connect_unix_socket(socket_name);
+
+    free(socket_name);
+    if (newfd < 0) {
+        return (-1);
+    }
+
+    if (newfd != fd) {
+	/*
+	 * reuse the same descriptor
+	 */
+	ret = dup2(newfd, fd);
+	if (ret < 0) {
+	    gam_error(DEBUG_INFO,
+	              "Failed to reuse descriptor %d on reconnect\n",
+		      fd);
+	    close(newfd);
+	    return (-1);
+	}
+    }
+
+    /*
+     * seems we managed to rebuild a connection to the server.
+     * start the authentication again and resubscribe all existing
+     * monitoring commands.
+     */
+    ret = gamin_write_credential_byte(fd);
+    if (ret != 0) {
+        close(fd);
+        return (-1);
+    }
+
+    nb_req = gamin_data_reset(conn, &reqs);
+    if (reqs != NULL) {
+	for (i = 0; i < nb_req;i++) {
+	    gamin_resend_request(fd, reqs[i]->type, reqs[i]->filename,
+	                         reqs[i]->reqno);
+	}
+    }
+    return(0);
 }
 
 /************************************************************************
@@ -763,8 +881,10 @@ FAMNextEvent(FAMConnection * fc, FAMEvent * fe)
     }
 
     if (!gamin_data_event_ready(conn)) {
-        if (gamin_read_data(conn, fc->fd) < 0)
+        if (gamin_read_data(conn, fc->fd) < 0) {
+	    gamin_try_reconnect(conn, fc->fd);
 	    return (-1);
+	}
     }
     ret = gamin_data_read_event(conn, fe);
     if (ret < 0)
@@ -805,7 +925,9 @@ FAMPending(FAMConnection * fc)
     if (ret < 0)
         return (-1);
     if (ret > 0) {
-        gamin_read_data(conn, fc->fd);
+        if (gamin_read_data(conn, fc->fd) < 0) {
+	    gamin_try_reconnect(conn, fc->fd);
+	}
     }
 
     return (gamin_data_event_ready(conn));

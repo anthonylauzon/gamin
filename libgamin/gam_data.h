@@ -32,6 +32,22 @@ extern "C" {
 #endif
 
 /**
+ * GAMReqData:
+ *
+ * Internal structure associated to a request and exported only to allow
+ * restarts.
+ */
+typedef struct GAMReqData GAMReqData;
+typedef GAMReqData *GAMReqDataPtr;
+struct GAMReqData {
+    int reqno;                  /* the request number */
+    int state;			/* the request state */
+    int type;                   /* the type of events */
+    char *filename;		/* the filename needed for restarts */
+    void *userData;             /* the user data if any */
+};
+
+/**
  * Structure associated to a FAM connection
  */
 typedef struct GAMData GAMData;
@@ -40,14 +56,17 @@ typedef GAMData *GAMDataPtr;
 
 GAMDataPtr	gamin_data_new		(void);
 void		gamin_data_free		(GAMDataPtr conn);
-
+int		gamin_data_reset	(GAMDataPtr conn,
+					 GAMReqDataPtr **requests);
 int		gamin_data_get_data	(GAMDataPtr conn,
 					 char **data,
 					 int *size);
 int		gamin_data_get_reqnum	(GAMDataPtr conn,
+					 const char *filename,
 					 int type,
 					 void *userData);
 int		gamin_data_get_request	(GAMDataPtr conn,
+					 const char *filename,
 					 int type,
 					 void *userData,
 					 int reqno);

@@ -24,3 +24,5 @@ Done:
  - removed threading and locking, checked with snorp that's not really
    needed now that there is no DBus plug nor recursion, still use a pipe
    to handle event synchronously.
+ - restart the connection and monitor on the client side if the
+   server exits

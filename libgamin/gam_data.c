@@ -24,20 +24,6 @@ typedef enum GAMReqState {
 } GAMReqState;
 
 /**
- * GAMReqData:
- *
- * Structure associated to a request
- */
-typedef struct GAMReqData GAMReqData;
-typedef GAMReqData *GAMReqDataPtr;
-struct GAMReqData {
-    int reqno;                  /* the request number */
-    GAMReqState state;          /* the request state */
-    int type;                   /* the type of events */
-    void *userData;             /* the user data if any */
-};
-
-/**
  * GAMData:
  *
  * Structure associated to a connection
@@ -46,6 +32,7 @@ struct GAMReqData {
 struct GAMData {
     int reqno;                  /* counter for the requests */
     int auth;			/* did authentication took place */
+    int restarted;			/* did authentication took place */
 
     int evn_ready;              /* do we have a full event ready */
     int evn_read;               /* how many bytes were read for the event */
@@ -176,7 +163,8 @@ gamin_allocate_request(GAMDataPtr conn) {
  * Returns a pointer to the new request or NULL in case of error
  */
 static GAMReqDataPtr
-gamin_data_add_req2(GAMDataPtr conn, int type, void *userData, int reqno)
+gamin_data_add_req2(GAMDataPtr conn, const char *filename, int type,
+                    void *userData, int reqno)
 {
     GAMReqDataPtr req;
     int idx;
@@ -198,6 +186,7 @@ gamin_data_add_req2(GAMDataPtr conn, int type, void *userData, int reqno)
     req->type = type;
     req->userData = userData;
     req->state = REQ_INIT;
+    req->filename = strdup(filename);
 
     /*
      * insert the request at the indicated slot
@@ -225,7 +214,8 @@ gamin_data_add_req2(GAMDataPtr conn, int type, void *userData, int reqno)
  * Returns a pointer to the new request or NULL in case of error
  */
 static GAMReqDataPtr
-gamin_data_add_req(GAMDataPtr conn, int type, void *userData)
+gamin_data_add_req(GAMDataPtr conn, const char *filename, int type,
+                   void *userData)
 {
     GAMReqDataPtr req;
 
@@ -236,6 +226,7 @@ gamin_data_add_req(GAMDataPtr conn, int type, void *userData)
     req->type = type;
     req->userData = userData;
     req->state = REQ_INIT;
+    req->filename = strdup(filename);
 
     /*
      * we can add at the end because we can garantee reqno is always
@@ -307,6 +298,8 @@ gamin_data_del_req(GAMDataPtr conn, int reqno)
     if (idx < 0)
         return (-1);
     data = conn->req_tab[idx];
+    if (data->filename !=  NULL)
+        free(data->filename);
     free(data);
 
     /*
@@ -390,12 +383,38 @@ gamin_data_free(GAMDataPtr conn)
 
     if (conn->req_tab != NULL) {
         for (i = 0; i < conn->req_nr; i++) {
-            if (conn->req_tab[i] != NULL)
+            if (conn->req_tab[i] != NULL) {
+	        if (conn->req_tab[i]->filename != NULL)
+		    free(conn->req_tab[i]->filename);
                 free(conn->req_tab[i]);
+	    }
         }
         free(conn->req_tab);
     }
     free(conn);
+}
+
+/**
+ * gamin_data_reset:
+ * @conn:  a connection data structure
+ * @requests:  return value for the array of requests pending
+ *
+ * Reset the state of the data when there is a reconnection.
+ *
+ * Returns the number of pending requests or -1 in case of error.
+ */
+int
+gamin_data_reset(GAMDataPtr conn, GAMReqDataPtr **requests)
+{
+    if ((conn == NULL) || (requests == NULL))
+        return(-1);
+
+    *requests = &(conn->req_tab[0]);
+    conn->auth = 0;
+    conn->reqno = 1;
+    conn->restarted = 1;
+    conn->evn_ready = 0;
+    return(conn->req_nr);
 }
 
 /************************************************************************
@@ -503,6 +522,21 @@ gamin_data_conn_event(GAMDataPtr conn, GAMPacketPtr evn)
             req->type = REQ_CONFIRMED;
         case REQ_CONFIRMED:
             break;
+    }
+
+    /*
+     * When a reconnection occurs, skip all events which are emitted
+     * by the server to indicate the current state
+     */
+    if (conn->restarted) {
+        if ((evn->type == FAMCreated) || (evn->type == FAMMoved) ||
+	    (evn->type == FAMChanged))
+	    conn->restarted = 0;
+	if (conn->restarted != 0) {
+	    if (evn->type == FAMEndExist)
+	        conn->restarted = 0;
+	    return(0);
+	}
     }
     conn->evn_ready = 1;
     conn->evn_reqnum = evn->seq;
@@ -666,13 +700,14 @@ gamin_data_event_ready(GAMDataPtr conn)
  * Returns the new number or -1 in case of error
  */
 int
-gamin_data_get_reqnum(GAMDataPtr conn, int type, void *userData)
+gamin_data_get_reqnum(GAMDataPtr conn, const char *filename, int type,
+                      void *userData)
 {
     GAMReqDataPtr req;
 
     if (conn == NULL)
         return (-1);
-    req = gamin_data_add_req(conn, type, userData);
+    req = gamin_data_add_req(conn, filename, type, userData);
     if (req == NULL)
         return (-1);
     return (req->reqno);
@@ -691,13 +726,14 @@ gamin_data_get_reqnum(GAMDataPtr conn, int type, void *userData)
  * Returns the new number or -1 in case of error
  */
 int
-gamin_data_get_request(GAMDataPtr conn, int type, void *userData, int reqno)
+gamin_data_get_request(GAMDataPtr conn, const char *filename, int type,
+                       void *userData, int reqno)
 {
     GAMReqDataPtr req;
 
     if (conn == NULL)
         return (-1);
-    req = gamin_data_add_req2(conn, type, userData, reqno);
+    req = gamin_data_add_req2(conn, filename, type, userData, reqno);
     if (req == NULL)
         return (-1);
     return (req->reqno);
