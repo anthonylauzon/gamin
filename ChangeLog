@@ -1,3 +1,11 @@
+Fri Aug  6 17:09:53 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: to not link with glib threads, not needed anymore
+	* libgamin/gam_api.c: fixed timeouts values
+	* tests/Makefile.am tests/testing.c tests/result/4 tests/scenario/4.tst:
+	  adding more tests, especially transparent restart when the server
+	  is killed.
+
 Fri Aug  6 14:29:47 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_fork.c: avoid generating zombies

@@ -19,15 +19,16 @@ check-local: tests
 
 tests: testgam
 	-@(rm -rf test?)
-	-@(for i in $(top_srcdir)/tests/scenario/*.tst ; do		\
+	-@(unset GAM_CLIENT_ID ; unset GAM_DEBUG;			\
+	   for i in $(top_srcdir)/tests/scenario/*.tst ; do		\
 	   name=`basename $$i .tst`;					\
 	   if [ ! -f $(top_srcdir)/tests/result/$$name ] ; then		\
 	       echo New test file $$name ; 				\
 	       if [ -x ./testfam ] ; then 				\
-	       ./testgam $$i > $(top_srcdir)/tests/result/$$name ;	\
+	       ./testgam $$i > $(top_srcdir)/tests/result/$$name 2>/dev/null;\
 	       fi							\
 	   else								\
-	       echo running test $$name ;						\
-	       ./testgam $$i > result.$$name ;				\
+	       echo running test $$name ;				\
+	       ./testgam $$i > result.$$name 2>/dev/null;		\
 	       diff -c $(top_srcdir)/tests/result/$$name result.$$name ;\
 	   fi ; done )

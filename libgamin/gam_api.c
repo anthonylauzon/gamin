@@ -344,7 +344,7 @@ gamin_connect_unix_socket(const char *path)
             goto retry_start;
         }
         if (retries < MAX_RETRIES) {
-            usleep(100);
+            usleep(50000);
             retries++;
             close(fd);
             goto retry_start;
@@ -684,7 +684,7 @@ retry:
         return (-1);
     }
     if (ret == 0) {
-        gam_error(DEBUG_INFO, "end from server connection\n");
+        gam_error(DEBUG_INFO, "end from FAM server connection\n");
         return (-1);
     }
     gam_debug(DEBUG_INFO, "read %d bytes from server\n", ret);

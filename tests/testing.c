@@ -253,6 +253,17 @@ processCommand(char *line, int no)
 	    printf("connected to %s\n", arg);
 	else
 	    printf("connected\n");
+    } else if (!strcmp(command, "kill")) {
+        /*
+	 * okay, it's heavy but that's the simplest way since we do not have
+	 * the pid(s) of the servers running.
+	 */
+        ret = system("killall gam_server");
+        if (ret < 0) {
+            fprintf(stderr, "kill line %d: failed to killall gam_server\n", no);
+            return (-1);
+        }
+	printf("killall gam_server\n");
     } else if (!strcmp(command, "disconnect")) {
         if (testState.connected == 0) {
             fprintf(stderr, "disconnect line %d: not connected\n", no);
@@ -408,6 +419,7 @@ processCommand(char *line, int no)
 	 */
 	while ((delay < 30) && (testState.nb_events < nb_events + count)) {
 	    debugLoop(100);
+/*	    printf("+"); fflush(stdout); */
 	    delay++;
 	}
 	if (testState.nb_events < nb_events + count) {
@@ -419,7 +431,7 @@ processCommand(char *line, int no)
         int i;
 
         for (i = 0; (i < 30) && (FAMPending(&(testState.fc)) == 0); i++)
-            usleep(50);
+            usleep(50000);
     } else if (!strcmp(command, "wait")) {
         sleep(1);
     } else {
