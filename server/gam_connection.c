@@ -498,7 +498,7 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
     /*
      * prepare the packet
      */
-    tlen = sizeof(GAMPacket) - MAXPATHLEN + len;
+    tlen = GAM_PACKET_HEADER_LEN + len;
     /* We use only local socket so no need for network byte order conversion */
     req.len = (unsigned short) tlen;
     req.version = GAM_PROTO_VERSION;

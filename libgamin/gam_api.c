@@ -535,7 +535,7 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
             return (-1);
 	}
     }
-    tlen = sizeof(GAMPacket) - MAXPATHLEN + len;
+    tlen = GAM_PACKET_HEADER_LEN + len;
     /* We use only local socket so no need for network byte order conversion */
     req.len = (unsigned short) tlen;
     req.version = GAM_PROTO_VERSION;
@@ -756,7 +756,7 @@ gamin_resend_request(int fd, GAMReqType type, const char *filename,
         return(-1);
 
     len = strlen(filename);
-    tlen = sizeof(GAMPacket) - MAXPATHLEN + len;
+    tlen = GAM_PACKET_HEADER_LEN + len;
     /* We use only local socket so no need for network byte order conversion */
     req.len = (unsigned short) tlen;
     req.version = GAM_PROTO_VERSION;

@@ -83,7 +83,7 @@ struct GAMPacket {
  *
  * convenience macro to provide the length of the packet header.
  */
-#define GAM_PACKET_HEADER_LEN (sizeof(GAMPacket) - MAXPATHLEN)
+#define GAM_PACKET_HEADER_LEN (5 * (sizeof(unsigned short)))
 
 #ifdef __cplusplus
 }

@@ -1,3 +1,9 @@
+Fri Oct  1 11:47:55 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c libgamin/gam_protocol.h server/gam_connection.c:
+	  applied patch from Sergio Garcia to fix a packet size problem
+	  on some platforms.
+
 Fri Oct  1 01:13:52 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_node.[hc] server/gam_poll.c server/gam_subscription.[ch]:
