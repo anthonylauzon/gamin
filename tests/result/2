@@ -1,8 +1,8 @@
-mkdir test1
+mkdir /tmp/test_gamin
 connected to test
 pending 0
-mondir test1 0
-1: /u/veillard/gamin/tests/test1 Exists: NULL
-1: /u/veillard/gamin/tests/test1 EndExist: NULL
+mondir /tmp/test_gamin 0
+1: /tmp/test_gamin Exists: NULL
+1: /tmp/test_gamin EndExist: NULL
 disconnected
-rmdir test1
+rmdir /tmp/test_gamin

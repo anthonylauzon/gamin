@@ -1,13 +1,13 @@
 connect test
-mondir test1
+mondir /tmp/test_gamin
 expect 2
-mkdir test1
+mkdir /tmp/test_gamin
 expect 1
 wait
-mkfile test1/foo
+mkfile /tmp/test_gamin/foo
 expect 1
 wait
-rmfile test1/foo
+rmfile /tmp/test_gamin/foo
 expect 1
 disconnect
-rmdir test1
+rmdir /tmp/test_gamin

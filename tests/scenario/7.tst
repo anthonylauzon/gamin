@@ -1,12 +1,12 @@
-mkdir test1
+mkdir /tmp/test_gamin
 connect test
-monfile test1/missing
+monfile /tmp/test_gamin/missing
 expect 2
-mkfile test1/missing
+mkfile /tmp/test_gamin/missing
 expect 1
-append test1/missing
+append /tmp/test_gamin/missing
 expect 1
-rmfile test1/missing
+rmfile /tmp/test_gamin/missing
 expect 1
 disconnect
-rmdir test1
+rmdir /tmp/test_gamin

@@ -1,3 +1,8 @@
+Sun Oct 10 19:45:48 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* TODO tests/Makefile.am tests/result/* tests/scenario/*: fixing
+	  "make tests" so it's not tied to my own directories paths.
+
 Wed Oct  6 23:20:11 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/local_inotify.h: applied patch for inotify-0.13 from

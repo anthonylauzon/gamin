@@ -1,11 +1,11 @@
-mkdir test1
-mkfile test1/foo
+mkdir /tmp/test_gamin
+mkfile /tmp/test_gamin/foo
 connect test
-monfile test1/foo
+monfile /tmp/test_gamin/foo
 expect 2
 wait
-append test1/foo
+append /tmp/test_gamin/foo
 expect 1
 disconnect
-rmfile test1/foo
-rmdir test1
+rmfile /tmp/test_gamin/foo
+rmdir /tmp/test_gamin

@@ -1,13 +1,13 @@
-mkdir test1
+mkdir /tmp/test_gamin
 connected to test
-monfile test1/missing 0
-1: /u/veillard/gamin/tests/test1/missing Deleted: NULL
-1: /u/veillard/gamin/tests/test1/missing EndExist: NULL
-mkfile test1/missing
-1: /u/veillard/gamin/tests/test1/missing Created: NULL
-append test1/missing
-1: /u/veillard/gamin/tests/test1/missing Changed: NULL
-rmfile test1/missing
-1: /u/veillard/gamin/tests/test1/missing Deleted: NULL
+monfile /tmp/test_gamin/missing 0
+1: /tmp/test_gamin/missing Deleted: NULL
+1: /tmp/test_gamin/missing EndExist: NULL
+mkfile /tmp/test_gamin/missing
+1: /tmp/test_gamin/missing Created: NULL
+append /tmp/test_gamin/missing
+1: /tmp/test_gamin/missing Changed: NULL
+rmfile /tmp/test_gamin/missing
+1: /tmp/test_gamin/missing Deleted: NULL
 disconnected
-rmdir test1
+rmdir /tmp/test_gamin

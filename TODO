@@ -3,7 +3,6 @@
  - doc extraction and reformatting of comments in gtk-doc style
  - handling of directory removal (need to poll on monitored empty dirs).
  - "make valgrind" regression tests for both client and server.
- - fix "make tests" to use /tmp to avoid $pwd in the paths of the output
  - try to work around the fact the stat() info precision is only 1 sec
    on ext2/ext3, especially for directories.
  - check handling of mismatched resources i.e. mondir on file
@@ -14,6 +13,7 @@ Regression tests:
  - try the fragmented/multirequests tests on the client side
 
 Done:
+ - fix "make tests" to use /tmp to avoid $pwd in the paths of the output
  - automatic switch from dnotify to poll for resources generating too much
    kernel events.
  - handling of missing monitored resources where dnotify() won't work

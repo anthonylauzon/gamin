@@ -1,4 +1,4 @@
 connect test
-monfile test1/missing
+monfile /tmp/test_gamin/missing
 expect 2
 disconnect

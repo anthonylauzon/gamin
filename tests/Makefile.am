@@ -18,7 +18,7 @@ dist-hook:
 check-local: tests
 
 tests: testgam
-	-@(rm -rf test?)
+	-@(rm -rf /tmp/test_gamin)
 	-@(unset GAM_CLIENT_ID ; unset GAM_DEBUG;			\
 	   GAMIN_DEBUG_SERVER="../server/gam_server" ;			\
 	   export GAMIN_DEBUG_SERVER ;					\
@@ -26,7 +26,7 @@ tests: testgam
 	   name=`basename $$i .tst`;					\
 	   if [ ! -f $(top_srcdir)/tests/result/$$name ] ; then		\
 	       echo New test file $$name ; 				\
-	       if [ -x ./testfam ] ; then 				\
+	       if [ -x ./testgam ] ; then 				\
 	       ./testgam $$i > $(top_srcdir)/tests/result/$$name 2>/dev/null;\
 	       fi							\
 	   else								\

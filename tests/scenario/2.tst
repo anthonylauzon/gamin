@@ -1,7 +1,7 @@
-mkdir test1
+mkdir /tmp/test_gamin
 connect test
 pending
-mondir test1
+mondir /tmp/test_gamin
 expect 2
 disconnect
-rmdir test1
+rmdir /tmp/test_gamin

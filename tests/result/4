@@ -1,17 +1,17 @@
-mkdir test1
-mkfile test1/foo
+mkdir /tmp/test_gamin
+mkfile /tmp/test_gamin/foo
 connected to test
-mondir test1 0
-1: /u/veillard/gamin/tests/test1 Exists: NULL
+mondir /tmp/test_gamin 0
+1: /tmp/test_gamin Exists: NULL
 1: foo Exists: NULL
-1: /u/veillard/gamin/tests/test1 EndExist: NULL
-append test1/foo
+1: /tmp/test_gamin EndExist: NULL
+append /tmp/test_gamin/foo
 1: foo Changed: NULL
 killall gam_server
 no events
-append test1/foo
+append /tmp/test_gamin/foo
 1: foo Changed: NULL
-rmfile test1/foo
+rmfile /tmp/test_gamin/foo
 1: foo Deleted: NULL
 disconnected
-rmdir test1
+rmdir /tmp/test_gamin

@@ -1,12 +1,12 @@
 connected to test
-mondir test1 0
-1: /u/veillard/gamin/tests/test1 Deleted: NULL
-1: /u/veillard/gamin/tests/test1 EndExist: NULL
-mkdir test1
-1: /u/veillard/gamin/tests/test1 Created: NULL
-mkfile test1/foo
+mondir /tmp/test_gamin 0
+1: /tmp/test_gamin Deleted: NULL
+1: /tmp/test_gamin EndExist: NULL
+mkdir /tmp/test_gamin
+1: /tmp/test_gamin Created: NULL
+mkfile /tmp/test_gamin/foo
 1: foo Created: NULL
-rmfile test1/foo
+rmfile /tmp/test_gamin/foo
 1: foo Deleted: NULL
 disconnected
-rmdir test1
+rmdir /tmp/test_gamin
