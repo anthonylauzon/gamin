@@ -505,7 +505,7 @@ gamin_write_byte(int fd, const char *data, size_t len)
  */
 static int
 gamin_send_request(GAMReqType type, int fd, const char *filename,
-                   const FAMRequest * fr, void *userData, GAMDataPtr data,
+                   FAMRequest * fr, void *userData, GAMDataPtr data,
 		   int has_reqnum)
 {
     int reqnum;
@@ -1279,7 +1279,7 @@ FAMCancelMonitor(FAMConnection * fc, const FAMRequest * fr)
      * send destruction message to the server
      */
     ret = gamin_send_request(GAM_REQ_CANCEL, fc->fd, NULL,
-                             fr, NULL, fc->client, 0);
+                             (FAMRequest *) fr, NULL, fc->client, 0);
 
     if (ret != 0) {
         FAMErrno = FAM_CONNECT;
