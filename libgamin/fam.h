@@ -47,8 +47,7 @@ struct FAMConnection {
  * The only field available from the connection is the file
  * descriptor and it should be accessed though the macro
  */
-#define FAMCONNECTION_GETFD(fc) gamin_connection_get_fd(fc)
-int gamin_connection_get_fd(FAMConnectionPtr fc);
+#define FAMCONNECTION_GETFD(fc) ((fc)->fd)
 
 /**
  * Structure associated to a FAM request

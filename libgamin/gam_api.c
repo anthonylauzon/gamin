@@ -492,25 +492,6 @@ retry:
  ************************************************************************/
 
 /**
- * gamin_connection_get_fd:
- * @fc:  pointer to a connection structure
- *
- * accessor for the file descriptor field of the structure
- *
- * Returns the file descriptor or -1 in case of failure
- */
-int
-gamin_connection_get_fd(FAMConnectionPtr fc)
-{
-    if (fc == NULL)
-        return (-1);
-
-    GAM_DEBUG(DEBUG_INFO, "gamin_connection_get_fd() -> %d\n", fc->fd);
-
-    return (fc->fd);
-}
-
-/**
  * FAMOpen:
  * @fc:  pointer to an uninitialized connection structure
  *
