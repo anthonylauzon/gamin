@@ -28,6 +28,9 @@ gboolean      gam_listener_remove_subscription   (GamListener     *listener,
 GamSubscription *gam_listener_get_subscription   (GamListener *listener,
 						  const char *path);
 
+GamSubscription *gam_listener_get_subscription_by_reqno   (GamListener *listener,
+							   int reqno);
+
 GList        *gam_listener_get_subscriptions     (GamListener *listener);
 
 gboolean      gam_listener_is_subscribed         (GamListener *listener,

@@ -80,7 +80,7 @@ int gamin_request_get_num(FAMRequestPtr fr);
  * The FAMCodes indicates what kind of event happened that raised
  * the callback at the application level.
  */
-enum {
+typedef enum {
     FAMChanged=1,
     FAMDeleted=2,
     FAMStartExecuting=3,

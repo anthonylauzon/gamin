@@ -1,3 +1,10 @@
+Tue Jul 27 11:52:58 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/fam.h: fix a compilation problem with latest patch.
+	* libgamin/gam_api.c server/gam_connection.c server/gam_listener.c
+	  server/gam_listener.h: applied patch from Carlos Romero to fix
+	  FAMCancelMonitor.
+
 Sat Jul 17 19:40:25 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* doc/apibuild.py doc/gamin-api.xml doc/gamin-refs.xml: some

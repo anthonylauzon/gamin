@@ -314,16 +314,16 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
             break;
         case GAM_REQ_CANCEL:
             sub =
-                gam_listener_get_subscription(conn->listener,
-                                              &req->path[0]);
+                gam_listener_get_subscription_by_reqno(conn->listener,
+                                            	       req->seq);
             if (sub == NULL) {
                 gam_debug(DEBUG_INFO,
-                          "Cancel: subscription for %s not found\n",
-                          &req->path[0]);
+                          "Cancel: subscription for (%d) not found\n",
+                          req->seq);
 		goto error;
             }
-            gam_debug(DEBUG_INFO, "Cancelling subscription for %s\n",
-                      &req->path[0]);
+            gam_debug(DEBUG_INFO, "Cancelling subscription for (%d)\n",
+                      req->seq);
             gam_remove_subscription(sub);
             gam_listener_remove_subscription(conn->listener, sub);
             break;
@@ -390,12 +390,14 @@ gam_connection_data(GamConnDataPtr conn, int len)
                       req->version);
             return (-1);
         }
-        /* double check pathlen and total length */
-        if ((req->pathlen <= 0) || (req->pathlen > MAXPATHLEN)) {
-            gam_debug(DEBUG_INFO, "invalid path length %d\n\n",
-                      req->pathlen);
-            return (-1);
-        }
+	if (GAM_REQ_CANCEL != req->type) {
+    	    /* double check pathlen and total length */
+    	    if ((req->pathlen <= 0) || (req->pathlen > MAXPATHLEN)) {
+        	gam_debug(DEBUG_INFO, "invalid path length %d\n\n",
+                	  req->pathlen);
+        	return (-1);
+    	    }
+	}
         if (req->pathlen + GAM_PACKET_HEADER_LEN != req->len) {
             gam_debug(DEBUG_INFO, "invalid packet sizes: %d %d\n",
                       req->len, req->pathlen);

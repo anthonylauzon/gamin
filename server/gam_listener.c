@@ -143,6 +143,28 @@ gam_listener_get_subscription(GamListener * listener, const char *path)
 }
 
 /**
+ * Gets the subscription represented by the given reqno
+ *
+ * @param listener the listener
+ * @param reqno a subscription request number
+ * @returns a #GamSubscription, or NULL if it wasn't found
+ */
+GamSubscription *
+gam_listener_get_subscription_by_reqno(GamListener * listener, int reqno)
+{
+    GList *l;
+
+    for (l = listener->subs; l; l = l->next) {
+        GamSubscription *sub = l->data;
+
+        if (gam_subscription_get_reqno(sub) == reqno)
+            return sub;
+    }
+
+    return NULL;
+}
+
+/**
  * Tells if a given #GamListener is subscribed to a file/directory
  *
  * @param listener the listener

@@ -293,6 +293,7 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
         reqnum = gamin_data_get_reqnum(data, filename, (int) type, userData);
         if (reqnum < 0)
             return (-1);
+	fr->reqnum = reqnum;
     } else {
         len = strlen(filename);
         if (len > MAXPATHLEN)
