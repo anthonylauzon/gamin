@@ -26,6 +26,7 @@
 #include <time.h>
 #include <errno.h>
 #include <glib.h>
+#include "fam.h"
 #include "gam_error.h"
 #include "gam_tree.h"
 #include "gam_poll.h"

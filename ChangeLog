@@ -1,3 +1,8 @@
+Fri Oct  1 12:01:39 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/fam.h server/gam_poll.c: portability cleanups w.r.t.
+	  PATH_MAX not in limits.h reported by Michael Banck
+
 Fri Oct  1 11:47:55 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c libgamin/gam_protocol.h server/gam_connection.c:

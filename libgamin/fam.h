@@ -33,6 +33,11 @@ extern "C" {
 /* For NAME_MAX - maximum # of chars in a filename */
 #include "limits.h"
 
+/* PATH_MAX is not defined in limits.h on some platforms */
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
 /**
  * Structure associated to a FAM connection
  */
