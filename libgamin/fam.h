@@ -85,7 +85,7 @@ struct FAMRequest {
  * The FAMCodes indicates what kind of event happened that raised
  * the callback at the application level.
  */
-typedef enum {
+typedef enum FAMCodes {
     FAMChanged=1,
     FAMDeleted=2,
     FAMStartExecuting=3,

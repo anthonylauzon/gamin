@@ -28,7 +28,7 @@
        (all gam_servers should be killed after an update to 0.0.23).
 
 
-0.0.22: Jan 31 2004:
+0.0.22: Jan 31 2005:
    -  Added Python regression test, and a python disconnect() operation.
    -  Applied patches from John McCutchan to fix inotify 0.18 backend.
    -  3 bugs fixed.

@@ -1,3 +1,8 @@
+Tue Mar 15 13:05:54 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* doc/gamin.html doc/news.html: typo
+	* libgamin/fam.h: removed an incompatibility with SGI FAM #149822
+
 Tue Mar 15 12:49:21 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: revisited the patch a bit.
