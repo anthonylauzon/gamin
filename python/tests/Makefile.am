@@ -10,6 +10,7 @@ PYTESTS=        		\
 		dnotify2.py	\
 		dnotify3.py	\
 		dnotify4.py	\
+		dnotify5.py	\
 		level.py	\
 		multiple.py	\
 		multiple2.py	\

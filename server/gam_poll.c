@@ -37,6 +37,8 @@
 #include "gam_event.h"
 #include "gam_excludes.h"
 
+/* #define VERBOSE_POLL */
+
 #define DEFAULT_POLL_TIMEOUT 3
 
 #define FLAG_NEW_NODE 1 << 5
@@ -248,6 +250,55 @@ gam_poll_data_destroy(GamPollData * data)
     g_free(data);
 }
 
+/**
+ * gam_poll_delist_node:
+ * @node: the node to delist
+ *
+ * This function is called when kernel monitoring for a node should
+ * be turned off.
+ */
+static void
+gam_poll_delist_node(GamNode * node) {
+    GList *subs;
+
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_delist_node %s\n",
+              gam_node_get_path(node));
+    subs = gam_node_get_subscriptions(node);
+
+    while (subs != NULL) {
+	if (gam_node_is_dir(node))
+	    trigger_dir_handler(gam_node_get_path(node), FALSE);
+	else
+	    trigger_file_handler(gam_node_get_path(node), FALSE);
+	subs = subs->next;
+    }
+}
+
+/**
+ * gam_poll_relist_node:
+ * @node: the node to delist
+ *
+ * This function is called when kernel monitoring for a node should
+ * be turned on (again).
+ */
+static void
+gam_poll_relist_node(GamNode * node) {
+    GList *subs;
+
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_relist_node %s\n",
+              gam_node_get_path(node));
+    subs = gam_node_get_subscriptions(node);
+
+    while (subs != NULL) {
+	if (gam_node_is_dir(node))
+	    trigger_dir_handler(gam_node_get_path(node), TRUE);
+	else
+	    trigger_file_handler(gam_node_get_path(node), TRUE);
+	subs = subs->next;
+    }
+}
+
+
 static GaminEventType
 poll_file(GamNode * node)
 {
@@ -295,10 +346,12 @@ poll_file(GamNode * node)
         if ((gam_errno() == ENOENT) && (!(data->flags & MON_MISSING))) {
             /* deleted */
             data->flags = MON_MISSING;
-            event = GAMIN_EVENT_DELETED;
+
 	    if (gam_node_get_subscriptions(node) != NULL) {
+		gam_poll_delist_node(node);
 	        gam_poll_add_missing(node);
 	    }
+            event = GAMIN_EVENT_DELETED;
         }
     } else if (data->flags & MON_MISSING) {
         /* created */
@@ -365,22 +418,19 @@ poll_file(GamNode * node)
 	    data->flags |= MON_BUSY;
 	    data->checks = 0;
 	    gam_poll_add_missing(node);
-	    if (gam_node_is_dir(node))
-		trigger_dir_handler(gam_node_get_path(node), FALSE);
-	    else
-		trigger_file_handler(gam_node_get_path(node), FALSE);
+	    gam_poll_delist_node(node);
 	}
     }
 
     if ((event == 0) && (data->flags & MON_BUSY) && (data->checks > 10)) {
-	GAM_DEBUG(DEBUG_INFO, "switching %s back to kernel monitoring\n", path);
-	data->flags &= ~MON_BUSY;
-	data->checks = 0;
-	gam_poll_remove_missing(node);
-	if (gam_node_is_dir(node))
-	    trigger_dir_handler(gam_node_get_path(node), TRUE);
-	else
-	    trigger_file_handler(gam_node_get_path(node), TRUE);
+	if (gam_node_get_subscriptions(node) != NULL) {
+	    GAM_DEBUG(DEBUG_INFO, "switching %s back to kernel monitoring\n",
+	              path);
+	    data->flags &= ~MON_BUSY;
+	    data->checks = 0;
+	    gam_poll_remove_missing(node);
+	    gam_poll_relist_node(node);
+	}
     }
 
     return(event);
@@ -556,12 +606,16 @@ gam_poll_scan_callback(gpointer data) {
 	    break;
 	} 
 
+#ifdef VERBOSE_POLL
+	GAM_DEBUG(DEBUG_INFO, "Checking missing file %s", data->path);
+#endif
 	if (node->is_dir) {
 	    gam_poll_scan_directory_internal(node);
 	} else {
-	    GAM_DEBUG(DEBUG_INFO,
-	              " gam_poll_scan_callback: node is a file %s\n",
-		      gam_node_get_path(node));
+	    GaminEventType event;
+
+	    event = poll_file(node);
+	    gam_poll_emit_event(node, event, NULL);
 	}
 
 	/*
@@ -570,10 +624,9 @@ gam_poll_scan_callback(gpointer data) {
 	 */
 	if (data->flags == 0) {
 	    gam_poll_remove_missing(node);
-	    if (gam_node_is_dir(node))
-		trigger_dir_handler(gam_node_get_path(node), TRUE);
-	    else
-		trigger_file_handler(gam_node_get_path(node), TRUE);
+	    if (gam_node_get_subscriptions(node) != NULL) {
+	        gam_poll_relist_node(node);
+	    }
 	}
     }
 

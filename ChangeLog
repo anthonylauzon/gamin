@@ -1,3 +1,10 @@
+Fri Feb 18 12:59:16 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: more cleanup, bug fix on monitoring
+	  missing files.
+	* python/tests/Makefile.am python/tests/dnotify5.py: added
+	  a specific test.
+	  
 Thu Feb 17 17:15:31 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c server/gam_poll.c: removing bugs,
