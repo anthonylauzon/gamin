@@ -38,7 +38,11 @@ gamin_fork_server(const char *fam_client_id)
             execl(server_path, server_path, NULL);
             gam_error(DEBUG_INFO, "failed to exec %s\n", server_path);
         }
-        exit(0);
+	/*
+	 * calling exit() generate troubles for termination handlers
+	 * for example if the client uses bonobo/ORBit
+	 */
+        _exit(0);
     }
     return (0);
 }

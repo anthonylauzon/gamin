@@ -1,3 +1,9 @@
+Thu Aug  5 11:55:59 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_fork.c: markmc pointed at a problem when forking
+	  a daemon and exiting, the exit(0) called the ORBit atexit 
+	  handlers in the child.
+
 Thu Aug  4 16:55:38 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in: release of 0.0.4
