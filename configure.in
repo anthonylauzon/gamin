@@ -137,7 +137,14 @@ fi
 
 AC_ARG_ENABLE(debug,
 [  --enable-debug  Enable debugging messages],
-AC_DEFINE([MARMOT_DEBUG], 1, [Enable debugging messages]),)
+[case "${enableval}" in
+	yes) debug=yes ;;
+	no) debug=no ;;
+	*) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
+esac],[debug=no])
+
+AC_DEFINE([GAMIN_DEBUG], test x$debug = xyes, [Enable debugging messages])
+AM_CONDITIONAL(GAMIN_DEBUG, test x$debug = xyes)
 
 AC_ARG_ENABLE(docs,
 [  --enable-docs   Build documentation (requires Doxygen)],
@@ -175,8 +182,10 @@ AC_ARG_ENABLE(inotify,
 esac])
 
 if test x$backend = xinotify; then
-    AC_DEFINE(USE_INOTIFY,1,[Use inotify as backend])
+    AC_DEFINE(ENABLE_INOTIFY,1,[Use inotify as backend])
 fi
+
+AM_CONDITIONAL(ENABLE_INOTIFY, test x$backend = xinotify)
 
 dnl check for flavours of varargs macros (test from GLib)
 AC_MSG_CHECKING(for ISO C99 varargs macros in C)

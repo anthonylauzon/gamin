@@ -20,7 +20,6 @@
 
 
 #include <config.h>
-#ifdef USE_INOTIFY
 #define _GNU_SOURCE
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -464,4 +463,3 @@ gam_inotify_remove_all_for(GamListener * listener)
 }
 
 /** @} */
-#endif /* USE_INOTIFY */

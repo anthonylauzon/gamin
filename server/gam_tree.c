@@ -33,9 +33,6 @@ struct _GamTree {
                                  */
     GHashTable *node_hash;      /* a hash table that maps path->node */
 
-#ifdef WITH_TREADING
-    GMutex *lock;
-#endif
 };
 
 typedef struct {
@@ -80,9 +77,6 @@ gam_tree_new(void)
     tree->root = new_node(gam_node_new("/", NULL, TRUE));
     tree->node_hash = g_hash_table_new_full(g_str_hash, g_str_equal,
                                             g_free, NULL);
-#ifdef WITH_TREADING
-    tree->lock = g_mutex_new();
-#endif
 
     return tree;
 }
@@ -97,9 +91,6 @@ gam_tree_free(GamTree * tree)
 {
     g_node_destroy(tree->root);
     g_hash_table_destroy(tree->node_hash);
-#ifdef WITH_TREADING
-    g_mutex_free(tree->lock);
-#endif
 
     g_free(tree);
 }
@@ -117,9 +108,6 @@ gam_tree_add(GamTree * tree, GamNode * parent, GamNode * child)
 {
     GNode *node;
 
-#ifdef WITH_TREADING
-    g_mutex_lock(tree->lock);
-#endif
 
     if (g_hash_table_lookup(tree->node_hash, gam_node_get_path(child)))
         return FALSE; /* lock ??? */
@@ -136,9 +124,6 @@ gam_tree_add(GamTree * tree, GamNode * parent, GamNode * child)
     g_hash_table_insert(tree->node_hash,
                         g_strdup(gam_node_get_path(child)), node);
 
-#ifdef WITH_TREADING
-    g_mutex_unlock(tree->lock);
-#endif
 
     return TRUE;
 }
@@ -155,9 +140,6 @@ gam_tree_remove(GamTree * tree, GamNode * node)
 {
     gboolean ret = FALSE;
 
-#ifdef WITH_TREADING
-    g_mutex_lock(tree->lock);
-#endif
 
     if (g_node_is_ancestor(tree->root, node->node)) {
 
@@ -170,9 +152,6 @@ gam_tree_remove(GamTree * tree, GamNode * node)
         ret = TRUE;
     }
 
-#ifdef WITH_TREADING
-    g_mutex_unlock(tree->lock);
-#endif
 
     return ret;
 }

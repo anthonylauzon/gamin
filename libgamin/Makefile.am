@@ -3,8 +3,12 @@ INCLUDES =						\
 	-I$(top_builddir) 				\
 	-I$(top_srcdir)/lib				\
 	-DBINDIR=\""$(bindir)"\"			\
-	-DBUILDDIR=\""$(top_builddir)"\"		\
-	-DGAM_DEBUG_ENABLED
+	-DBUILDDIR=\""$(top_builddir)"\"		
+
+
+if GAMIN_DEBUG
+INCLUDES += -DGAM_DEBUG_ENABLED
+endif
 
 EXTRA_DIST = 						\
 	gamin_sym.version

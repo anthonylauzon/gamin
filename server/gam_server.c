@@ -244,15 +244,6 @@ main(int argc, const char *argv[])
 	}
     }
 
-#ifdef WITH_TREADING
-    g_thread_init(NULL);
-
-    if (!g_thread_supported()) {
-        g_error("The glib thread library does not support your system.\n");
-        exit(1);
-    }
-#endif
-
     if (!gam_init_subscriptions()) {
 	gam_debug(DEBUG_INFO, "Could not initialize the subscription system.\n");
         exit(0);

@@ -6,8 +6,11 @@ INCLUDES =						\
 	-I$(top_srcdir)/lib				\
 	$(LIBGAMIN_CFLAGS)				\
 	-DBINDIR=\""$(bindir)"\"			\
-	-DG_DISABLE_DEPRECATED				\
-	-DGAM_DEBUG_ENABLED
+	-DG_DISABLE_DEPRECATED				
+
+if GAMIN_DEBUG
+INCLUDES += -DGAM_DEBUG_ENABLED
+endif
 
 
 bin_PROGRAMS= gam_server
@@ -27,12 +30,14 @@ gam_server_SOURCES =					\
 	gam_poll.h					\
 	gam_dnotify.c					\
 	gam_dnotify.h					\
-	gam_inotify.c					\
-	gam_inotify.h					\
 	gam_channel.c					\
 	gam_channel.h					\
 	gam_connection.c				\
 	gam_connection.h
+
+if ENABLE_INOTIFY
+gam_server_SOURCES += gam_inotify.c gam_inotify.h
+endif
 
 gam_server_LDFLAGS =
 gam_server_DEPENDENCIES = $(DEPS)

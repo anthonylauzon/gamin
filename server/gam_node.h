@@ -15,9 +15,6 @@ typedef gboolean (*GamSubFilterFunc) (GamSubscription *sub);
 struct _GamNode {
 	char *path;
 
-#ifdef WITH_TREADING
-	GMutex *lock;
-#endif
 	GList *subs;
 	gboolean is_dir;
 	gpointer data;
@@ -28,13 +25,6 @@ struct _GamNode {
 	GNode *node;
 };
 
-#ifdef WITH_TREADING
-#define gam_node_lock(x) g_mutex_lock (x->lock)
-#define gam_node_unlock(x) g_mutex_unlock (x->lock)
-#else
-#define gam_node_lock(x)
-#define gam_node_unlock(x)
-#endif
 
 GamNode               *gam_node_new                 (const char     *path,
 						   GamSubscription *initial_sub,

@@ -1,8 +1,11 @@
 INCLUDES =						\
 	$(default_includes)				\
 	-I$(top_builddir) 				\
-	-I$(top_srcdir)/lib				\
-	-DGAM_DEBUG_ENABLED
+	-I$(top_srcdir)/lib				
+
+if GAMIN_DEBUG
+INCLUDES += -DGAM_DEBUG_ENABLED
+endif
 
 lib_LIBRARIES = libgamin_shared.a
 

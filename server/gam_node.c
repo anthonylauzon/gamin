@@ -58,9 +58,6 @@ gam_node_new(const char *path, GamSubscription * sub, gboolean is_dir)
     node->data = NULL;
     node->data_destroy = NULL;
     node->flags = 0;
-#ifdef WITH_TREADING
-    node->lock = g_mutex_new();
-#endif
 
     return node;
 }
@@ -82,9 +79,6 @@ gam_node_free(GamNode * node)
 
     g_free(node->path);
     g_list_free(node->subs);
-#ifdef WITH_TREADING
-    g_mutex_free(node->lock);
-#endif
     g_free(node);
 }
 
@@ -99,12 +93,8 @@ gam_node_parent(GamNode * node)
 {
     GamNode *ret = NULL;
 
-    /* gam_node_lock (node); */
-
     if (node->node && node->node->parent)
         ret = (GamNode *) node->node->parent->data;
-
-    /* gam_node_unlock (node); */
 
     return ret;
 }
@@ -167,12 +157,10 @@ gam_node_get_subscriptions(GamNode * node)
 gboolean
 gam_node_add_subscription(GamNode * node, GamSubscription * sub)
 {
-    /* gam_node_lock (node); */
 
     if (!g_list_find(node->subs, sub))
         node->subs = g_list_prepend(node->subs, sub);
 
-    /* gam_node_unlock (node); */
 
     return TRUE;
 }
@@ -187,9 +175,7 @@ gam_node_add_subscription(GamNode * node, GamSubscription * sub)
 gboolean
 gam_node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
-    /* gam_node_lock (node); */
     node->subs = g_list_remove(node->subs, sub);
-    /* gam_node_unlock (node); */
 
     return TRUE;
 }
@@ -212,7 +198,6 @@ gam_node_copy_subscriptions(GamNode * src,
     int i = 0;
 
 
-    gam_node_lock(src);
     for (l = gam_node_get_subscriptions(src); l; l = l->next) {
         sub = (GamSubscription *) l->data;
         if (!filter || (filter && (*filter) (sub))) {
@@ -220,7 +205,6 @@ gam_node_copy_subscriptions(GamNode * src,
             i++;
         }
     }
-    gam_node_unlock(src);
 
     return i;
 }
@@ -237,7 +221,6 @@ gam_node_has_recursive_sub(GamNode * node)
 #ifdef WITH_RECURSIVE
     GList *l;
 
-    /* gam_node_lock (node); */
 
     for (l = gam_node_get_subscriptions(node); l; l = l->next) {
         GamSubscription *sub = (GamSubscription *) l->data;
@@ -246,7 +229,6 @@ gam_node_has_recursive_sub(GamNode * node)
             return TRUE;
     }
 
-    /* gam_node_unlock (node); */
 #endif
     return FALSE;
 }
@@ -261,12 +243,10 @@ gam_node_has_recursive_sub(GamNode * node)
 void
 gam_node_set_data(GamNode * node, gpointer data, GDestroyNotify destroy)
 {
-    /* gam_node_lock (node); */
 
     node->data = data;
     node->data_destroy = destroy;
 
-    /* gam_node_unlock (node); */
 }
 
 /**

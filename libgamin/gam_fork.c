@@ -22,21 +22,23 @@
 static const char *
 gamin_find_server_path()
 {
-	static const char *server_paths[] = {
-/** Disabled right now until we find a safe way to enable this 
-						BUILDDIR "/server/gam_server",
- **/
-						BINDIR "/gam_server", 
-						NULL
-						};
-	int i;
+    static const char *server_paths[] = {
+        BINDIR "/gam_server",
+        NULL
+    };
+    int i;
+    const char *gamin_debug_server = getenv("GAMIN_DEBUG_SERVER");
 
-	for (i = 0; server_paths[i]; i++) {
-		if (access(server_paths[i], X_OK|R_OK) == 0) {
-			return server_paths[i];
-		}
-	}
-	return NULL;
+    if (gamin_debug_server) {
+        return gamin_debug_server;
+    }
+
+    for (i = 0; server_paths[i]; i++) {
+        if (access(server_paths[i], X_OK | R_OK) == 0) {
+            return server_paths[i];
+        }
+    }
+    return NULL;
 }
 
 /**
@@ -53,8 +55,9 @@ gamin_fork_server(const char *fam_client_id)
 {
     const char *server_path = gamin_find_server_path();
     int ret, pid, status;
+
     if (!server_path) {
-	    gam_error(DEBUG_INFO, "failed to find gam_server\n");
+        gam_error(DEBUG_INFO, "failed to find gam_server\n");
     }
 
 
@@ -69,21 +72,21 @@ gamin_fork_server(const char *fam_client_id)
             execl(server_path, server_path, NULL);
             gam_error(DEBUG_INFO, "failed to exec %s\n", server_path);
         }
-	/*
-	 * calling exit() generate troubles for termination handlers
-	 * for example if the client uses bonobo/ORBit
-	 */
+        /*
+         * calling exit() generate troubles for termination handlers
+         * for example if the client uses bonobo/ORBit
+         */
         _exit(0);
     }
 
     /*
      * do a waitpid on the intermediate process to avoid zombies.
      */
-retry_wait:
-    ret = waitpid (pid, &status, 0);
+  retry_wait:
+    ret = waitpid(pid, &status, 0);
     if (ret < 0) {
         if (errno == EINTR)
-	    goto retry_wait;
+            goto retry_wait;
     }
 
     return (0);

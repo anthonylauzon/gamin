@@ -487,10 +487,6 @@ gam_poll_init_full(gboolean start_scan_thread)
 {
     tree = gam_tree_new();
 
-#ifdef WITH_TREADING
-    if (start_scan_thread)
-        g_thread_create(gam_poll_scan_loop, NULL, TRUE, NULL);
-#endif
 
     gam_debug(DEBUG_INFO, "Initialized Poll\n");
     return TRUE;
