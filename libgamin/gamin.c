@@ -78,7 +78,7 @@ main(void)
 {
     int loop;
 
-    /* setenv("FAM_CLIENT_ID", "test-id", 0); */
+    /* setenv("GAM_CLIENT_ID", "test-id", 0); */
     for (loop = 0; loop < 1; loop++)
         do_connection();
 

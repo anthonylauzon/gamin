@@ -164,7 +164,7 @@ processCommand(char *line, int no)
             return (-1);
         }
         if (arg != NULL) {
-            setenv("FAM_CLIENT_ID", arg, 0);
+            setenv("GAM_CLIENT_ID", arg, 0);
         }
         ret = FAMOpen(&(testState.fc));
         if (ret < 0) {

@@ -70,7 +70,7 @@ gamin_get_user_name(void)
  *
  * Get the file path to the socket to connect the FAM server.
  * The fam server interface is available though a socket whose
- * id is available though an environment variable FAM_CLIENT_ID
+ * id is available though an environment variable GAM_CLIENT_ID
  *
  * Returns a new string or NULL in case of error.
  */
@@ -82,9 +82,9 @@ gamin_get_socket_path(void)
     char *ret;
     char path[MAXPATHLEN + 1];
 
-    fam_client_id = getenv("FAM_CLIENT_ID");
+    fam_client_id = getenv("GAM_CLIENT_ID");
     if (fam_client_id == NULL) {
-        GAM_DEBUG(DEBUG_INFO, "Error getting FAM_CLIENT_ID\n");
+        GAM_DEBUG(DEBUG_INFO, "Error getting GAM_CLIENT_ID\n");
         fam_client_id = "";
     }
     user = gamin_get_user_name();
@@ -131,7 +131,7 @@ gamin_connect_unix_socket(const char *path)
   retry:
     if (connect(fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
         if (retries == 0) {
-            const char *fam_client_id = getenv("FAM_CLIENT_ID");
+            const char *fam_client_id = getenv("GAM_CLIENT_ID");
 
             if (fam_client_id == NULL)
                 fam_client_id = "";
@@ -560,7 +560,7 @@ FAMOpen(FAMConnection * fc)
  *
  * This function tries to open a connection to the FAM server.
  * The fam server interface is available though a socket whose
- * id is available though an environment variable FAM_CLIENT_ID
+ * id is available though an environment variable GAM_CLIENT_ID
  *
  * Returns -1 in case of error, 0 otherwise
  */

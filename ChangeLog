@@ -1,3 +1,9 @@
+Thu Jun 17 00:38:33 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c libgamin/gam_fork.c libgamin/gamin.c
+	  libgamin/testing.c server/gam_channel.c: renamed the ID
+	  environment variable to GAM_CLIENT_ID
+
 Wed Jun 16 23:35:13 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c libgamin/gam_data.c libgamin/gam_data.h

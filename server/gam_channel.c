@@ -286,7 +286,7 @@ gam_incoming_conn_read(GIOChannel * source, GIOCondition condition,
  *
  * Get the file path to the socket to connect the FAM server.
  * The fam server interface is available though a socket whose
- * id is available though an environment variable FAM_CLIENT_ID
+ * id is available though an environment variable GAM_CLIENT_ID
  * or passed as the @session argument though the command line.
  *
  * Returns a new string or NULL in case of error.
@@ -298,9 +298,9 @@ gam_get_socket_path(const char *session)
     const gchar *user;
 
     if (session == NULL) {
-        gam_client_id = g_getenv("FAM_CLIENT_ID");
+        gam_client_id = g_getenv("GAM_CLIENT_ID");
         if (gam_client_id == NULL) {
-            gam_debug(DEBUG_INFO, "Error getting FAM_CLIENT_ID\n");
+            gam_debug(DEBUG_INFO, "Error getting GAM_CLIENT_ID\n");
         }
     } else {
         gam_client_id = session;
