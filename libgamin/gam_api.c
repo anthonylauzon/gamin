@@ -2,6 +2,7 @@
  * gam_api.c: implementation of the library side of the gamin FAM implementation
  */
 
+#include "config.h"
 #include <pwd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -308,6 +309,127 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
 }
 
 /**
+ * gamin_check_cred:
+ *
+ * The first read on the connection gathers credentials from the server
+ * and checks them. Parts directly borrowed from DBus code.
+ *
+ * Returns 0 in case of success and -1 in case of error.
+ */
+static int
+gamin_check_cred(GAMDataPtr conn, int fd)
+{
+    struct msghdr msg;
+    struct iovec iov;
+    char buf;
+    pid_t c_pid;
+    uid_t c_uid, s_uid;
+    gid_t c_gid;
+
+#ifdef HAVE_CMSGCRED
+    char cmsgmem[CMSG_SPACE(sizeof(struct cmsgcred))];
+    struct cmsghdr *cmsg = (struct cmsghdr *) cmsgmem;
+#endif
+
+    s_uid = getuid();
+
+#if defined(LOCAL_CREDS) && defined(HAVE_CMSGCRED)
+    /* Set the socket to receive credentials on the next message */
+    {
+        int on = 1;
+
+        if (setsockopt(fd, 0, LOCAL_CREDS, &on, sizeof(on)) < 0) {
+            gam_error(DEBUG_INFO, "Unable to set LOCAL_CREDS socket option\n");
+            return(-1);
+        }
+    }
+#endif
+
+    iov.iov_base = &buf;
+    iov.iov_len = 1;
+
+    memset(&msg, 0, sizeof(msg));
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+
+#ifdef HAVE_CMSGCRED
+    memset(cmsgmem, 0, sizeof(cmsgmem));
+    msg.msg_control = cmsgmem;
+    msg.msg_controllen = sizeof(cmsgmem);
+#endif
+
+retry:
+    if (recvmsg(fd, &msg, 0) < 0) {
+        if (errno == EINTR)
+            goto retry;
+
+        gam_debug(DEBUG_INFO, "Failed to read credentials byte on %d\n", fd);
+        goto failed;
+    }
+
+    if (buf != '\0') {
+        gam_debug(DEBUG_INFO, "Credentials byte was not nul on %d\n", fd);
+        goto failed;
+    }
+#ifdef HAVE_CMSGCRED
+    if (cmsg->cmsg_len < sizeof(cmsgmem) || cmsg->cmsg_type != SCM_CREDS) {
+        gam_debug(DEBUG_INFO,
+                  "Message from recvmsg() was not SCM_CREDS\n");
+        goto failed;
+    }
+#endif
+
+    gam_debug(DEBUG_INFO, "read credentials byte\n");
+
+    {
+#ifdef SO_PEERCRED
+        struct ucred cr;
+        int cr_len = sizeof(cr);
+
+        if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &cr, &cr_len) ==
+            0 && cr_len == sizeof(cr)) {
+            c_pid = cr.pid;
+            c_uid = cr.uid;
+            c_gid = cr.gid;
+        } else {
+            gam_debug(DEBUG_INFO,
+                      "Failed to getsockopt() credentials on %d, returned len %d/%d\n",
+                      fd, cr_len, (int) sizeof(cr));
+            goto failed;
+        }
+#elif defined(HAVE_CMSGCRED)
+        struct cmsgcred *cred;
+
+        cred = (struct cmsgcred *) CMSG_DATA(cmsg);
+
+        c_pid = cred->cmcred_pid;
+        c_uid = cred->cmcred_euid;
+        c_gid = cred->cmcred_groups[0];
+#else /* !SO_PEERCRED && !HAVE_CMSGCRED */
+        gam_debug(DEBUG_INFO,
+                  "Socket credentials not supported on this OS\n");
+        goto failed;
+#endif
+    }
+
+    if (s_uid != c_uid) {
+        gam_debug(DEBUG_INFO,
+                  "Credentials check failed: s_uid %d, c_uid %d\n",
+                  (int) s_uid, (int) c_uid);
+        goto failed;
+    }
+    gam_debug(DEBUG_INFO,
+              "Credentials: s_uid %d, c_uid %d, c_gid %d, c_pid %d\n",
+              (int) s_uid, (int) c_uid, (int) c_gid, (int) c_pid);
+
+    return(0);
+
+failed:
+    close(fd);
+    return (-1);
+}
+
+/**
  * gamin_read_data:
  * @conn: the connection
  * @fd: the file descriptor for the socket
@@ -324,6 +446,19 @@ gamin_read_data(GAMDataPtr conn, int fd)
     char *data;
     int size;
 
+    ret = gamin_data_need_auth(conn);
+    if (ret == 1) {
+        if (gamin_check_cred(conn, fd) < 0) {
+	    return (-1);
+	}
+	ret = gamin_data_available(fd);
+	if (ret < 0)
+	    return(-1);
+	if (ret == 0)
+	    return(0);
+    } else if (ret != 0) {
+	return (-1);
+    }
     ret = gamin_data_get_data(conn, &data, &size);
     if (ret < 0) {
         return (-1);

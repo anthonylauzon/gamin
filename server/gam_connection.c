@@ -198,7 +198,7 @@ gam_connection_get_pid(GamConnDataPtr conn)
  * @conn: a connection data structure.
  * @pid: the client process id
  *
- * Set the client process id, this also indocate that authentication was done.
+ * Set the client process id, this also indicate that authentication was done.
  *
  * Returns 0 in case of success or -1 in case of error.
  */

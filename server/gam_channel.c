@@ -18,6 +18,20 @@
  ************************************************************************/
 
 /**
+ * gam_client_conn_send_cred:
+ *
+ * The write read on the connection send a NUL byte to allow the client
+ * to check the server credentials early on.
+ */
+static gboolean
+gam_client_conn_send_cred(GIOChannel * source, int fd)
+{
+    char data[2] = { 0, 0 };
+
+    return(gam_client_conn_write(source, fd, &data[0], 1));
+}
+
+/**
  * gam_client_conn_check_cred:
  *
  * The first read on the connection gathers credentials from the client
@@ -135,9 +149,14 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
         goto failed;
     }
 
+    if (!gam_client_conn_send_cred(source, fd)) {
+        gam_debug(DEBUG_INFO, "Failed to send credential byte to client\n");
+        goto failed;
+    }
+
     return TRUE;
 
-  failed:
+failed:
     gam_client_conn_shutdown(source, conn);
     return (FALSE);
 }
@@ -512,7 +531,7 @@ gam_client_conn_write(GIOChannel * source, int fd, gpointer data,
     if (fd < 0)
         return (FALSE);
 
-  retry:
+retry:
     written = write(fd, data, len);
     if (written < 0) {
         if (errno == EINTR)

@@ -45,6 +45,7 @@ struct GAMReqData {
 
 struct GAMData {
     int reqno;                  /* counter for the requests */
+    int auth;			/* did authentication took place */
 
     int evn_ready;              /* do we have a full event ready */
     int evn_read;               /* how many bytes were read for the event */
@@ -356,6 +357,7 @@ gamin_data_new(void)
     if (ret == NULL)
         return (NULL);
     memset(ret, 0, sizeof(GAMData));
+    ret->auth = 0;
     ret->reqno = 1;
     ret->evn_ready = 0;
     return (ret);
@@ -434,6 +436,7 @@ gamin_data_read_event(GAMDataPtr conn, FAMEvent * event)
  * @size: amount of storage available
  *
  * Get the address and length of the data store for the connection
+ * This is called after authentication sucessed so that is reset too
  *
  * Returns 0 in case of success and -1 in case of failure
  */
@@ -442,6 +445,7 @@ gamin_data_get_data(GAMDataPtr conn, char **data, int *size)
 {
     if ((conn == NULL) || (data == NULL) || (size == NULL))
         return (-1);
+    conn->auth = 1;
     *data = (char *) &conn->event;
     *size = sizeof(GAMPacket);
     *data += conn->evn_read;
@@ -497,6 +501,25 @@ gamin_data_conn_event(GAMDataPtr conn, GAMPacketPtr evn)
               evn->seq, evn->type);
 
     return (1);
+}
+
+/**
+ * gamin_data_need_auth:
+ * @conn: connection data structure.
+ *
+ * Is the current connection needing authentication
+ *
+ * Returns 1 if true, 0 if not needed and -1 in case of error
+ */
+int
+gamin_data_need_auth(GAMDataPtr conn) {
+    if (conn == NULL)
+        return(-1);
+    if (conn->auth == 1)
+        return(0);
+    if (conn->auth == 0)
+        return(1);
+    return(-1);
 }
 
 /**
