@@ -33,7 +33,7 @@
 #include "gam_channel.h"
 #include "gam_subscription.h"
 #include "gam_poll.h"
-#ifdef USE_INOTIFY
+#ifdef ENABLE_INOTIFY
 #include "gam_inotify.h"
 #endif
 #ifdef linux
@@ -63,7 +63,7 @@ gam_shutdown(void) {
 gboolean
 gam_init_subscriptions(void)
 {
-#ifdef USE_INOTIFY
+#ifdef ENABLE_INOTIFY
     return (gam_inotify_init());
 #elif linux
     return (gam_dnotify_init());
@@ -113,7 +113,7 @@ gam_add_subscription(GamSubscription * sub)
 	return (gam_poll_add_subscription(sub));
     }
  ***/
-#ifdef USE_INOTIFY
+#ifdef ENABLE_INOTIFY
     return (gam_inotify_add_subscription(sub));
 #elif linux
     return (gam_dnotify_add_subscription(sub));
@@ -132,7 +132,7 @@ gam_add_subscription(GamSubscription * sub)
 gboolean
 gam_remove_subscription(GamSubscription * sub)
 {
-#ifdef USE_INOTIFY
+#ifdef ENABLE_INOTIFY
     return (gam_inotify_remove_subscription(sub));
 #elif linux
     return (gam_dnotify_remove_subscription(sub));
