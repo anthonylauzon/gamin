@@ -80,12 +80,11 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
     DNotifyData *data;
     int fd;
 
-#if 0
-    if (added)
-        fprintf(stderr, "Adding %s to dnotify\n", path);
-    else
-        fprintf(stderr, "Removing %s from dnotify\n", path);
-#endif
+    if (added) {
+	GAM_DEBUG(DEBUG_INFO, "Adding %s to dnotify\n", path);
+    } else {
+        GAM_DEBUG(DEBUG_INFO, "Removing %s from dnotify\n", path);
+    }
 
     G_LOCK(dnotify);
 
@@ -93,6 +92,8 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
 
         if ((data = g_hash_table_lookup(path_hash, path)) != NULL) {
             data->refcount++;
+	    GAM_DEBUG(DEBUG_INFO, "  found incremented refcount: %d\n",
+	              data->refcount);
             G_UNLOCK(dnotify);
             return;
         }
@@ -117,6 +118,7 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
         data = g_hash_table_lookup(path_hash, path);
 
         if (!data) {
+	    GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
             G_UNLOCK(dnotify);
             return;
         }
@@ -130,7 +132,10 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
             g_hash_table_remove(path_hash, data->path);
             g_hash_table_remove(fd_hash, GINT_TO_POINTER(data->fd));
             gam_dnotify_data_free(data);
-        }
+        } else {
+	    GAM_DEBUG(DEBUG_INFO, "  found decremented refcount: %d\n",
+	              data->refcount);
+	}
     }
 
     G_UNLOCK(dnotify);
@@ -197,7 +202,7 @@ gam_dnotify_pipe_handler(gpointer user_data)
 
         GAM_DEBUG(DEBUG_INFO, "handling signal\n");
 
-        gam_poll_scan_directory(data->path, NULL);
+        gam_poll_scan_directory(data->path);
         i++;
     }
 

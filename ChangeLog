@@ -1,3 +1,12 @@
+Thu Jan 27 23:58:00 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_data.c: cleanup
+	* python/gamin.py: added a disconnect() method
+	* server/gam_channel.c: fixed a serious bug in some disconnection
+	  cases
+	* server/gam_dnotify.c server/gam_poll.c server/gam_poll.h: cleanup
+	  gam_poll_scan_directory() and worked out debug messages
+
 Wed Jan 26 12:39:08 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in NEWS doc/* gamin.spec.in: preparing release 0.0.21

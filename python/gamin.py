@@ -25,6 +25,7 @@ GAM_CONNECT= 3 # Connection failure
 GAM_AUTH=    4 # Authentication failure
 GAM_MEM=     5 # Memory allocation
 GAM_UNIMPLEM=6 # Unimplemented
+GAM_INTR=    7 # Interrupted system call
 
 def GaminErrno():
     return gaminmod.Errno()
@@ -44,6 +45,8 @@ def GaminErrmsg(err = None):
         msg = "memory allocation error"
     elif err == GAM_UNIMPLEM:
         msg = "unimplemented part error"
+    elif err == GAM_INTR:
+        msg = "interrupted system call"
     else:
         msg = ""
     return msg
@@ -110,9 +113,19 @@ class WatchMonitor:
 	    raise(GaminException("Failed to get file descriptor"))
 
     def __del__ (self):
-        gaminmod.MonitorClose(self.__no)
+        self.disconnect()
     
+    def __raise_disconnected():
+	raise(GaminException("Already disconnected"))
+        
+    def disconnect(self):
+        if (self.__no >= 0):
+	    gaminmod.MonitorClose(self.__no)
+	self.__no = -1;
+
     def watch_directory(self, directory, callback, data = None):
+        if (self.__no < 0):
+	    __raise_disconnected();
         directory = os.path.abspath(directory)
         if self.objects.has_key(directory):
 	    raise(GaminException("Resource %s already monitored" % (directory)))
@@ -122,6 +135,8 @@ class WatchMonitor:
 	return obj
 
     def watch_file(self, file, callback, data = None):
+        if (self.__no < 0):
+	    __raise_disconnected();
         file = os.path.abspath(file)
         if self.objects.has_key(file):
 	    raise(GaminException("Resource %s already monitored" % (file)))
@@ -131,6 +146,8 @@ class WatchMonitor:
 	return obj
 
     def stop_watch(self, path):
+        if (self.__no < 0):
+	    return
         path = os.path.abspath(path)
 	try:
 	    obj = self.objects[path]
@@ -140,21 +157,29 @@ class WatchMonitor:
 	obj.cancel()
 	
     def get_fd(self):
+        if (self.__no < 0):
+	    __raise_disconnected();
         return self.__fd
 
     def event_pending(self):
+        if (self.__no < 0):
+	    __raise_disconnected();
         ret = gaminmod.EventPending(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to check pending events"))
 	return ret
 
     def handle_one_event(self):
+        if (self.__no < 0):
+	    __raise_disconnected();
         ret = gaminmod.ProcessOneEvent(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to process one event"))
 	return ret
 
     def handle_events(self):
+        if (self.__no < 0):
+	    __raise_disconnected();
         ret = gaminmod.ProcessEvents(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to process events"))

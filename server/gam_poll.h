@@ -23,8 +23,7 @@ gboolean   gam_poll_remove_all_for        (GamListener *listener);
 void       gam_poll_set_directory_handler (GamPollHandler handler);
 void       gam_poll_set_file_handler      (GamPollHandler handler);
 
-void       gam_poll_scan_directory        (const char *path,
-					   GList      *exist_subs);
+void       gam_poll_scan_directory        (const char *path);
 
 void       gam_poll_add_missing		  (GamNode *node);
 void       gam_poll_remove_missing        (GamNode *node);

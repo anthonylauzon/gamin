@@ -180,8 +180,8 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
     GList *subs;
     int is_dir_node = gam_node_is_dir(node);
 
-    GAM_DEBUG(DEBUG_INFO, "Poll: emit events for %s\n",
-              gam_node_get_path(node));
+    GAM_DEBUG(DEBUG_INFO, "Poll: emit events %d for %s\n",
+              event, gam_node_get_path(node));
     subs = gam_node_get_subscriptions(node);
     if (subs)
         subs = g_list_copy(subs);
@@ -347,9 +347,7 @@ poll_file(GamNode * node)
 
     if ((data->checks >= 4) && (!(data->flags & MON_BUSY))) {
 	if (gam_node_get_subscriptions(node) != NULL) {
-#if 0
-	    fprintf(stderr, "switching %s back to polling\n", path);
-#endif
+	    GAM_DEBUG(DEBUG_INFO, "switching %s back to polling\n", path);
 	    data->flags |= MON_BUSY;
 	    data->checks = 0;
 	    gam_poll_add_missing(node);
@@ -361,9 +359,7 @@ poll_file(GamNode * node)
     }
 
     if ((event == 0) && (data->flags & MON_BUSY) && (data->checks > 10)) {
-#if 0
-	fprintf(stderr, "switching %s back to kernel monitoring\n", path);
-#endif
+	GAM_DEBUG(DEBUG_INFO, "switching %s back to kernel monitoring\n", path);
 	data->flags &= ~MON_BUSY;
 	data->checks = 0;
 	gam_poll_remove_missing(node);
@@ -424,9 +420,13 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
         goto scan_files;
 
     event = poll_file(dir_node);
-    dir_exist_subs =
-        list_intersection(exist_subs,
-                          gam_node_get_subscriptions(dir_node));
+
+    if (exist_subs != NULL)
+	dir_exist_subs =
+	    list_intersection(exist_subs,
+			      gam_node_get_subscriptions(dir_node));
+    else
+        dir_exist_subs = NULL;
 
     if ((event == 0) && (dir_exist_subs == NULL))
         goto scan_files;
@@ -995,16 +995,13 @@ gam_poll_remove_all_for(GamListener * listener)
  * Scans a directory for changes, and emits events if needed.
  *
  * @param path the path to the directory to be scanned
- * @param exist_subs a list of type #GamSubscription of new subscriptions
- * which need to be sent the EXIST event.
  */
 void
-gam_poll_scan_directory(const char *path, GList * exist_subs)
+gam_poll_scan_directory(const char *path)
 {
     GamNode *node;
 
-    GAM_DEBUG(DEBUG_INFO, "Poll: scanning %s: subs %d\n",
-              path, exist_subs != NULL);
+    GAM_DEBUG(DEBUG_INFO, "Poll: directory scanning %s\n", path);
 
     current_time = time(NULL);
     node = gam_tree_get_at_path(tree, path);
@@ -1015,7 +1012,7 @@ gam_poll_scan_directory(const char *path, GList * exist_subs)
 	return;
     }
 
-    gam_poll_scan_directory_internal(node, exist_subs, TRUE);
+    gam_poll_scan_directory_internal(node, NULL, TRUE);
     GAM_DEBUG(DEBUG_INFO, "Poll: scanning %s done\n", path);
 }
 

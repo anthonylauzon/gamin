@@ -32,7 +32,7 @@ typedef enum {
 struct GAMData {
     int reqno;                  /* counter for the requests */
     int auth;			/* did authentication took place */
-    int restarted;			/* did authentication took place */
+    int restarted;		/* did authentication took place */
 
     int evn_ready;              /* do we have a full event ready */
     int evn_read;               /* how many bytes were read for the event */

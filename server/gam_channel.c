@@ -216,6 +216,7 @@ retry:
         if (errno == EINTR)
             goto retry;
         GAM_DEBUG(DEBUG_INFO, "failed to read() from client connection\n");
+        gam_client_conn_shutdown(source, conn);
         return (FALSE);
     }
     if (ret == 0) {
