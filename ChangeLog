@@ -1,3 +1,12 @@
+Mon Apr  4 13:47:57 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: applied patch from Nickolay Shmyrev to fix
+	  a problem on unreadable directories.
+	  Seems to break python/tests/dnotify4.py though ... need more checking.
+	* python/tests/Makefile.am python/tests/readonly.py
+	  tests/testing.c tests/result/11 tests/scenario/11.tst: also 
+	  included the regression tests for the feature
+
 Sun Apr  3 17:35:37 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c: applied patch from Todor Penev to fix a

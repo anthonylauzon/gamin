@@ -353,6 +353,18 @@ processCommand(char *line, int no)
             return (-1);
         }
         printf("mkdir %s\n", arg);
+    } else if (!strcmp(command, "chmod")) {
+        if (args != 3) {
+            fprintf(stderr, "chmod line %d: lacks path and mode\n", no);
+            return (-1);
+        }
+        ret = chmod(arg, strtol (arg2, NULL, 8));
+        if (ret < 0) {
+            fprintf(stderr, "chmod line %d: failed to chmod %s to %s\n", no,
+                    arg, arg2);
+            return (-1);
+        }
+        printf("chmod %s to %s\n", arg, arg2);
     } else if (!strcmp(command, "mkfile")) {
         if (args != 2) {
             fprintf(stderr, "mkfile line %d: lacks name\n", no);

@@ -21,7 +21,8 @@ PYTESTS=        		\
 		multiple.py	\
 		multiple2.py	\
 		multiple3.py	\
-		nokernel.py
+		nokernel.py 	\
+		readonly.py
 
 EXTRA_DIST = $(PYTESTS)
 

@@ -624,7 +624,7 @@ gam_poll_scan_directory_internal(GamNode * dir_node)
     dir = g_dir_open(dpath, 0, NULL);
 
     if (dir == NULL) {
-	GAM_DEBUG(DEBUG_INFO, "Poll: directory %s missing\n", dpath);
+	GAM_DEBUG(DEBUG_INFO, "Poll: directory %s is not readable or missing\n", dpath);
 	return;
     }
 
@@ -1206,9 +1206,7 @@ gam_poll_first_scan_dir(GamSubscription *sub, GamNode *dir_node,
 
     subs = g_list_prepend(NULL, sub);
 
-    dir = g_dir_open(dpath, 0, NULL);
-
-    if (dir == NULL) {
+    if (!g_file_test (dpath, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
 	GAM_DEBUG(DEBUG_INFO, "Monitoring missing dir: %s\n", dpath);
 	gam_server_emit_event(dpath, 1, GAMIN_EVENT_DELETED, subs, 1);
 	node = gam_node_new(dpath, NULL, TRUE);
@@ -1236,6 +1234,13 @@ gam_poll_first_scan_dir(GamSubscription *sub, GamNode *dir_node,
 
     if (with_exists)
 	gam_server_emit_event(dpath, 1, GAMIN_EVENT_EXISTS, subs, 1);
+
+    dir = g_dir_open(dpath, 0, NULL);
+    
+    if (dir == NULL) {
+	goto done;
+    }
+
     while ((name = g_dir_read_name(dir)) != NULL) {
         path = g_build_filename(dpath, name, NULL);
 
