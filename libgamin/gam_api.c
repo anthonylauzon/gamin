@@ -1151,7 +1151,7 @@ FAMMonitorCollection(FAMConnection * fc, const char *filename,
  *
  * Read the next event, possibly blocking on input.
  *
- * Returns 0 in case of success and -1 in case of error.
+ * Returns 1 in case of success and -1 in case of error.
  */
 int
 FAMNextEvent(FAMConnection * fc, FAMEvent * fe)
