@@ -60,6 +60,7 @@ static GamTree *tree = NULL;
 static GList *new_subs = NULL;
 static GList *removed_subs = NULL;
 static GList *missing_resources = NULL;
+static GList *all_resources = NULL;
 static GamPollHandler dir_handler = NULL;
 static GamPollHandler file_handler = NULL;
 
@@ -668,6 +669,132 @@ prune_tree(GamNode * node)
 }
 
 
+static gboolean
+gam_poll_scan_all_callback(gpointer data) {
+    int idx;
+    GList *subs, *l;
+    GamNode *node;
+
+    static int in_poll_callback = 0;
+
+    if (in_poll_callback)
+	return(TRUE);
+ 
+    in_poll_callback++;
+
+    if (new_subs != NULL) {
+        /* we don't want to block the main loop */
+        subs = new_subs;
+        new_subs = NULL;
+
+        GAM_DEBUG(DEBUG_INFO,
+                  "%d new subscriptions.\n", g_list_length(subs));
+
+        for (l = subs; l; l = l->next) {
+            GamSubscription *sub = l->data;
+
+            const char *path = gam_subscription_get_path(sub);
+
+            node = gam_tree_get_at_path(tree, path);
+            if (!node) {
+                node = gam_tree_add_at_path(tree, path,
+                                            gam_subscription_is_dir(sub));
+            }
+
+            if (node_add_subscription(node, sub) < 0) {
+                gam_error(DEBUG_INFO,
+                          "Failed to add subscription for: %s\n", path);
+	    }
+    	    if (!gam_node_is_dir(node)) {
+		    char *parent;
+		    
+		    parent = g_path_get_dirname (path);
+		    g_print("parent %s\n",parent);
+		    node = gam_tree_get_at_path(tree, parent);
+	            if (!node) {
+	                node = gam_tree_add_at_path(tree, parent,
+                                            gam_subscription_is_dir(sub));
+        	    }
+		    g_free (parent);
+	    }
+
+	      if (g_list_find(all_resources, node) == NULL) {
+		all_resources = g_list_prepend (all_resources, node);
+	      }
+    	}
+	g_list_free (subs);
+    }
+
+    if (removed_subs) {
+        subs = removed_subs;
+        removed_subs = NULL;
+
+        for (l = subs; l; l = l->next) {
+            GamSubscription *sub = l->data;
+            GamNode *node = gam_tree_get_at_path(tree,
+                                                 gam_subscription_get_path
+                                                 (sub));
+
+            GAM_DEBUG(DEBUG_INFO, "Removing: %s\n",
+                      gam_subscription_get_path(sub));
+            if (node != NULL) {
+                if (!gam_node_is_dir(node)) {
+                    node_remove_subscription(node, sub);
+
+                    if (!gam_node_get_subscriptions(node)) {
+                        GamNode *parent;
+
+                        if ((all_resources != NULL) && (g_list_find(all_resources, node) == NULL)) {
+                            all_resources = g_list_remove (all_resources, node);
+                        }
+                        if (gam_tree_has_children(tree, node)) {
+                            fprintf(stderr,
+                                    "node %s is not dir but has children\n",
+                                    gam_node_get_path(node));
+                        } else {
+                            parent = gam_node_parent(node);
+                            gam_tree_remove(tree, node);
+
+                            prune_tree(parent);
+                        }
+                    }
+                } else {
+                    if (remove_directory_subscription(node, sub)) {
+                        GamNode *parent;
+
+                        if ((all_resources != NULL) && (g_list_find(all_resources, node) == NULL)) {
+                            all_resources = g_list_remove (all_resources, node);
+                        }
+                        parent = gam_node_parent(node);
+                        gam_tree_remove(tree, node);
+
+                        prune_tree(parent);
+                    }
+                }
+	    }
+	}
+
+    }
+
+    current_time = time(NULL);
+    for (idx = 0;;idx++) {
+	
+	/*
+	 * do not simply walk the list as it may be modified in the callback
+	 */
+	node = (GamNode *) g_list_nth_data(all_resources, idx);
+
+	if (node == NULL) {
+	    break;
+	} 
+
+	gam_poll_scan_directory_internal(node, NULL, TRUE);
+    }
+
+    in_poll_callback = 0;
+    return(TRUE);
+}
+
 
 /**
  * @defgroup Polling Polling Backend
@@ -734,6 +861,7 @@ gam_poll_init_full(gboolean start_scan_thread)
         g_timeout_add(1000, gam_poll_scan_callback, NULL);
 	poll_mode = 1;
     } else {
+        g_timeout_add(1000, gam_poll_scan_all_callback, NULL);
 	poll_mode = 2;
     }
     tree = gam_tree_new();
