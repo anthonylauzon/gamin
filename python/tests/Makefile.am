@@ -16,6 +16,7 @@ PYTESTS=        		\
 		flood.py	\
 		flood2.py	\
 		flood3.py	\
+		flood4.py	\
 		level.py	\
 		multiple.py	\
 		multiple2.py	\
