@@ -9,7 +9,6 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 URL: http://www.gnome.org/~veillard/gamin/
 Obsoletes: fam
 Provides: fam
-Provides: libfam.so.0
 BuildRequires: glib2-devel
 
 %description

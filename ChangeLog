@@ -1,3 +1,7 @@
+Thu Oct 28 15:32:16 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.spec.in: fixed a packaging bug Red Hat #135417
+
 Wed Oct 20 19:02:22 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in: release 0.0.16 with latest code
