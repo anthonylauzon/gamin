@@ -1,3 +1,14 @@
+Thu Nov 25 15:59:45 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: 0.0.18 sounds better than 0.1.0 really
+	  making sure that debug support is compiled in
+	* libgamin/gam_api.c libgamin/gam_fork.c server/gam_channel.c
+	  server/gam_connection.c server/gam_dnotify.c server/gam_inotify.c
+	  server/gam_listener.c server/gam_poll.c server/gam_server.c
+	  server/gam_subscription.c: switched all usage of gam_debug to
+	  the GAM_DEBUG macro to avoid paying for debug calls when not
+	  asked for.
+
 Thu Nov 25 13:59:34 CET 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in TODO gamin.pc.in gamin.spec.in: updated, will 

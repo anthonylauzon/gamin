@@ -77,7 +77,7 @@ gam_subscription_new(const char *path,
 
     sub->is_dir = is_dir;
 
-    gam_debug(DEBUG_INFO, "Created subscription for %s\n", path);
+    GAM_DEBUG(DEBUG_INFO, "Created subscription for %s\n", path);
     return sub;
 }
 
@@ -91,7 +91,7 @@ gam_subscription_free(GamSubscription * sub)
 {
     if (sub == NULL)
         return;
-    gam_debug(DEBUG_INFO, "Freeing subscription for %s\n", sub->path);
+    GAM_DEBUG(DEBUG_INFO, "Freeing subscription for %s\n", sub->path);
 
     g_free(sub->path);
     g_free(sub);
@@ -179,7 +179,7 @@ gam_subscription_set_listener(GamSubscription * sub,
 {
     if (sub == NULL)
         return;
-    gam_debug(DEBUG_INFO, "Setting subscription listener for %s\n", sub->path);
+    GAM_DEBUG(DEBUG_INFO, "Setting subscription listener for %s\n", sub->path);
     sub->listener = listener;
 }
 
@@ -235,7 +235,7 @@ gam_subscription_cancel(GamSubscription * sub)
 {
     if (sub == NULL)
         return;
-    gam_debug(DEBUG_INFO, "Cancelling subscription for %s\n", sub->path);
+    GAM_DEBUG(DEBUG_INFO, "Cancelling subscription for %s\n", sub->path);
     sub->cancelled = TRUE;
 }
 

@@ -70,23 +70,23 @@ gam_init_subscriptions(void)
     if (!poll_only) {
 #ifdef ENABLE_INOTIFY
 	if (gam_inotify_init()) {
-	    gam_debug(DEBUG_INFO, "Using INotify as backend\n");
+	    GAM_DEBUG(DEBUG_INFO, "Using INotify as backend\n");
 	    return(TRUE);
 	}
 #endif
 #ifdef ENABLE_DNOTIFY
 	if (gam_dnotify_init()) {
-	    gam_debug(DEBUG_INFO, "Using DNotify as backend\n");
+	    GAM_DEBUG(DEBUG_INFO, "Using DNotify as backend\n");
 	    return(TRUE);
 	}
 #endif
     }
     if (gam_poll_init()) {
-	gam_debug(DEBUG_INFO, "Using Poll as backend\n");
+	GAM_DEBUG(DEBUG_INFO, "Using Poll as backend\n");
 	return(TRUE);
     }
 
-    gam_debug(DEBUG_INFO, "Cannot initialize any backend\n");
+    GAM_DEBUG(DEBUG_INFO, "Cannot initialize any backend\n");
 
     return(FALSE);
 }
@@ -195,7 +195,7 @@ gam_server_emit_one_event(const char *path, int node_is_dir,
     reqno = gam_subscription_get_reqno(sub);
 
     if (gam_send_event(conn, reqno, event, subpath, len) < 0) {
-	gam_debug(DEBUG_INFO, "Failed to send event to PID %d\n",
+	GAM_DEBUG(DEBUG_INFO, "Failed to send event to PID %d\n",
 		  gam_connection_get_pid(conn));
     }
 }
@@ -256,7 +256,7 @@ gam_server_emit_event(const char *path, int is_dir_node, GaminEventType event,
         reqno = gam_subscription_get_reqno(sub);
 
         if (gam_send_event(conn, reqno, event, subpath, len) < 0) {
-            gam_debug(DEBUG_INFO, "Failed to send event to PID %d\n",
+            GAM_DEBUG(DEBUG_INFO, "Failed to send event to PID %d\n",
                       gam_connection_get_pid(conn));
         }
     }
@@ -318,10 +318,11 @@ main(int argc, const char *argv[])
 	}
     }
 
+    gam_error_init();
     signal(SIGPIPE, SIG_IGN);
 
     if (!gam_init_subscriptions()) {
-	gam_debug(DEBUG_INFO, "Could not initialize the subscription system.\n");
+	GAM_DEBUG(DEBUG_INFO, "Could not initialize the subscription system.\n");
         exit(0);
     }
 
@@ -332,7 +333,7 @@ main(int argc, const char *argv[])
     }
 
     if (!gam_server_init(loop, session)) {
-        gam_debug(DEBUG_INFO, "Couldn't initialize the server.\n");
+        GAM_DEBUG(DEBUG_INFO, "Couldn't initialize the server.\n");
         exit(0);
     }
 

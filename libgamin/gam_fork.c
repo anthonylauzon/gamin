@@ -61,7 +61,7 @@ gamin_fork_server(const char *fam_client_id)
     }
 
 
-    gam_debug(DEBUG_INFO, "Asking to launch %s with client id %s\n",
+    GAM_DEBUG(DEBUG_INFO, "Asking to launch %s with client id %s\n",
               server_path, fam_client_id);
     /* Become a daemon */
     pid = fork();

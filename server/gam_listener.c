@@ -60,7 +60,7 @@ gam_listener_new(void *service, int pid)
     listener->pid = pid;
     listener->subs = NULL;
 
-    gam_debug(DEBUG_INFO, "Created listener for %d\n", pid);
+    GAM_DEBUG(DEBUG_INFO, "Created listener for %d\n", pid);
 
     return listener;
 }
@@ -91,7 +91,7 @@ gam_listener_free(GamListener * listener)
     GList *cur;
 
     g_return_if_fail(listener != NULL);
-    gam_debug(DEBUG_INFO, "Freeing listener for %d\n", listener->pid);
+    GAM_DEBUG(DEBUG_INFO, "Freeing listener for %d\n", listener->pid);
     while ((cur = g_list_first(listener->subs)) != NULL) {
         GamSubscription * sub = cur->data;
 	listener->subs = g_list_remove_all(listener->subs, sub);

@@ -79,7 +79,7 @@ gam_connection_close(GamConnDataPtr conn)
         return (-1);
     item = g_list_find(gamConnList, (gconstpointer) conn);
     if (item == NULL) {
-        gam_debug(DEBUG_INFO, "Connection already closed \n");
+        GAM_DEBUG(DEBUG_INFO, "Connection already closed \n");
         return (-1);
     }
 
@@ -87,10 +87,10 @@ gam_connection_close(GamConnDataPtr conn)
         gam_listener_free(conn->listener);
     }
     if (conn->source == NULL) {
-        gam_debug(DEBUG_INFO, "connection has no source: close failed\n");
+        GAM_DEBUG(DEBUG_INFO, "connection has no source: close failed\n");
         return (-1);
     }
-    gam_debug(DEBUG_INFO, "Closing connection %d\n", conn->fd);
+    GAM_DEBUG(DEBUG_INFO, "Closing connection %d\n", conn->fd);
     g_io_channel_unref(conn->source);
     g_free(conn);
     gamConnList = g_list_delete_link(gamConnList, item);
@@ -162,7 +162,7 @@ gam_connection_new(GMainLoop * loop, GIOChannel * source)
     ret->source = source;
     ret->req_read = 0;
     gamConnList = g_list_append(gamConnList, ret);
-    gam_debug(DEBUG_INFO, "Created connection %d\n", ret->fd);
+    GAM_DEBUG(DEBUG_INFO, "Created connection %d\n", ret->fd);
     return (ret);
 }
 
@@ -213,7 +213,7 @@ gam_connection_set_pid(GamConnDataPtr conn, int pid)
     if (conn == NULL)
         return (-1);
     if (conn->state != GAM_STATE_AUTH) {
-        gam_debug(DEBUG_INFO, "Not waiting for authentication\n");
+        GAM_DEBUG(DEBUG_INFO, "Not waiting for authentication\n");
         conn->state = GAM_STATE_ERROR;
         return (-1);
     }
@@ -221,7 +221,7 @@ gam_connection_set_pid(GamConnDataPtr conn, int pid)
     conn->pid = pid;
     conn->listener = gam_listener_new(conn, pid);
     if (conn->listener == NULL) {
-        gam_debug(DEBUG_INFO, "Failed to create listener\n");
+        GAM_DEBUG(DEBUG_INFO, "Failed to create listener\n");
         conn->state = GAM_STATE_ERROR;
         return (-1);
     }
@@ -287,7 +287,7 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
         return (-1);
     if ((conn->fd < 0) || (conn->listener == NULL))
         return (-1);
-    gam_debug(DEBUG_INFO, "Request: from %d, seq %d, type %d\n",
+    GAM_DEBUG(DEBUG_INFO, "Request: from %d, seq %d, type %d\n",
               conn->pid, req->seq, req->type);
     if (req->pathlen >= MAXPATHLEN)
         return (-1);
@@ -321,18 +321,18 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
                 gam_listener_get_subscription_by_reqno(conn->listener,
                                             	       req->seq);
             if (sub == NULL) {
-                gam_debug(DEBUG_INFO,
+                GAM_DEBUG(DEBUG_INFO,
                           "Cancel: subscription for (%d) not found\n",
                           req->seq);
 		goto error;
             }
-            gam_debug(DEBUG_INFO, "Cancelling subscription for (%d)\n",
+            GAM_DEBUG(DEBUG_INFO, "Cancelling subscription for (%d)\n",
                       req->seq);
             gam_remove_subscription(sub);
             gam_listener_remove_subscription(conn->listener, sub);
             break;
         default:
-            gam_debug(DEBUG_INFO, "Unknown request type %d for %s\n",
+            GAM_DEBUG(DEBUG_INFO, "Unknown request type %d for %s\n",
                       req->type, &req->path[0]);
             goto error;
     }
@@ -361,11 +361,11 @@ gam_connection_data(GamConnDataPtr conn, int len)
     GAMPacketPtr req;
 
     if ((conn == NULL) || (len < 0) || (conn->req_read < 0)) {
-        gam_debug(DEBUG_INFO, "invalid connection data\n");
+        GAM_DEBUG(DEBUG_INFO, "invalid connection data\n");
         return (-1);
     }
     if ((len + conn->req_read) > (int) sizeof(GAMPacket)) {
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "detected a data overflow or invalid size\n");
         return (-1);
     }
@@ -385,25 +385,25 @@ gam_connection_data(GamConnDataPtr conn, int len)
         }
         /* check the packet total length */
         if (req->len > sizeof(GAMPacket)) {
-            gam_debug(DEBUG_INFO, "invalid length %d\n", req->len);
+            GAM_DEBUG(DEBUG_INFO, "invalid length %d\n", req->len);
             return (-1);
         }
         /* check the version */
         if (req->version != GAM_PROTO_VERSION) {
-            gam_debug(DEBUG_INFO, "unsupported version %d\n",
+            GAM_DEBUG(DEBUG_INFO, "unsupported version %d\n",
                       req->version);
             return (-1);
         }
 	if (GAM_REQ_CANCEL != req->type) {
     	    /* double check pathlen and total length */
     	    if ((req->pathlen <= 0) || (req->pathlen > MAXPATHLEN)) {
-        	gam_debug(DEBUG_INFO, "invalid path length %d\n\n",
+        	GAM_DEBUG(DEBUG_INFO, "invalid path length %d\n\n",
                 	  req->pathlen);
         	return (-1);
     	    }
 	}
         if (req->pathlen + GAM_PACKET_HEADER_LEN != req->len) {
-            gam_debug(DEBUG_INFO, "invalid packet sizes: %d %d\n",
+            GAM_DEBUG(DEBUG_INFO, "invalid packet sizes: %d %d\n",
                       req->len, req->pathlen);
             return (-1);
         }
@@ -422,7 +422,7 @@ gam_connection_data(GamConnDataPtr conn, int len)
         }
 
         if (gam_connection_request(conn, req) < 0) {
-            gam_debug(DEBUG_INFO, "gam_connection_request() failed\n");
+            GAM_DEBUG(DEBUG_INFO, "gam_connection_request() failed\n");
             return (-1);
         }
 
@@ -462,12 +462,12 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
         return (-1);
 
     if (len <= 0) {
-        gam_debug(DEBUG_INFO, "Empty file path\n");
+        GAM_DEBUG(DEBUG_INFO, "Empty file path\n");
         return (-1);
     }
 
     if (len >= MAXPATHLEN) {
-        gam_debug(DEBUG_INFO, "File path too long %s\n", path);
+        GAM_DEBUG(DEBUG_INFO, "File path too long %s\n", path);
         return (-1);
     }
 
@@ -494,11 +494,11 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
             type = FAMEndExist;
             break;
         default:
-            gam_debug(DEBUG_INFO, "Unknown event type %d\n", event);
+            GAM_DEBUG(DEBUG_INFO, "Unknown event type %d\n", event);
             return (-1);
     }
 
-    gam_debug(DEBUG_INFO, "Event to %d : %s %s\n", conn->pid,
+    GAM_DEBUG(DEBUG_INFO, "Event to %d : %s %s\n", conn->pid,
               path, gam_event_to_string(event));
     /*
      * prepare the packet
@@ -515,7 +515,7 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
         gam_client_conn_write(conn->source, conn->fd, (gpointer) & req,
                               tlen);
     if (!ret) {
-        gam_debug(DEBUG_INFO, "Failed to send event to %d\n", conn->pid);
+        GAM_DEBUG(DEBUG_INFO, "Failed to send event to %d\n", conn->pid);
         return (-1);
     }
     return (0);
@@ -543,16 +543,16 @@ gam_connections_check(void)
 
     if (g_list_first(gamConnList) != NULL) {
         if (timeout != 0) {
-            gam_debug(DEBUG_INFO, "New active connection\n");
+            GAM_DEBUG(DEBUG_INFO, "New active connection\n");
         }
         timeout = 0;
         return (TRUE);
     }
     if (timeout == 0) {
-        gam_debug(DEBUG_INFO, "No more active connections\n");
+        GAM_DEBUG(DEBUG_INFO, "No more active connections\n");
         timeout = time(NULL);
     } else if (time(NULL) - timeout > MAX_IDLE_TIMEOUT) {
-        gam_debug(DEBUG_INFO, "Exitting on timeout\n");
+        GAM_DEBUG(DEBUG_INFO, "Exitting on timeout\n");
 	gam_shutdown();
         exit(0);
     }

@@ -104,7 +104,7 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
             data->refcount++;
 	    data->subs = g_list_prepend(data->subs, sub);
             G_UNLOCK(inotify);
-	    gam_debug(DEBUG_INFO, "inotify updated refcount\n");
+	    GAM_DEBUG(DEBUG_INFO, "inotify updated refcount\n");
 	    /*
 	     * hum might need some work to check if the path is a dir,
 	     * setting 0 and forcing to bypass checks right now.
@@ -130,7 +130,7 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
         g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
         g_hash_table_insert(path_hash, data->path, data);
 
-        gam_debug(DEBUG_INFO, "activated INotify for %s\n", path);
+        GAM_DEBUG(DEBUG_INFO, "activated INotify for %s\n", path);
 
 	gam_server_emit_event (path, 0, GAMIN_EVENT_EXISTS, subs, 1);
 	gam_server_emit_event (path, 0, GAMIN_EVENT_ENDEXISTS, subs, 1);
@@ -146,14 +146,14 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
 		data->subs = g_list_remove_all (data->subs, sub);
 	}
         data->refcount--;
-	    gam_debug(DEBUG_INFO, "inotify decremeneted refcount\n");
+	    GAM_DEBUG(DEBUG_INFO, "inotify decremeneted refcount\n");
 
         if (data->refcount == 0) {
             r = ioctl (fd, INOTIFY_IGNORE, &data->wd); 
 	    if (r < 0) {
-                gam_debug (DEBUG_INFO, "INOTIFY_IGNORE failed for %s\n", data->path);
+                GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s\n", data->path);
             }
-            gam_debug(DEBUG_INFO, "deactivated INotify for %s\n",
+            GAM_DEBUG(DEBUG_INFO, "deactivated INotify for %s\n",
                       data->path);
             g_hash_table_remove(path_hash, data->path);
             g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
@@ -198,24 +198,24 @@ static void gam_inotify_emit_event (INotifyData *data, struct inotify_event *eve
 	gevent = inotify_event_to_gamin_event (event->mask);
 	// we got some event that GAMIN doesn't understand
 	if (gevent == GAMIN_EVENT_UNKNOWN) {
-		gam_debug(DEBUG_INFO, "inotify_emit_event got unknown event %x\n", event->mask);
+		GAM_DEBUG(DEBUG_INFO, "inotify_emit_event got unknown event %x\n", event->mask);
 		return;
 	}
 
 	if (event->filename[0] != '\0') {
 		int pathlen = strlen(data->path);
-		gam_debug(DEBUG_INFO, "Got filename with event\n");
+		GAM_DEBUG(DEBUG_INFO, "Got filename with event\n");
 		if (data->path[pathlen-1] == '/') {
 			event_path = g_strconcat (data->path, event->filename, NULL);
 		} else {
 			event_path = g_strconcat (data->path, "/", event->filename, NULL);
 		}
 	} else {
-		gam_debug(DEBUG_INFO, "Got no filename with event\n");
+		GAM_DEBUG(DEBUG_INFO, "Got no filename with event\n");
 		event_path = g_strdup (data->path);
 	}
 
-	gam_debug(DEBUG_INFO, "gam_inotify_emit_event() %s\n", event_path);
+	GAM_DEBUG(DEBUG_INFO, "gam_inotify_emit_event() %s\n", event_path);
 
 	gam_server_emit_event (event_path, 0, gevent, data->subs, 1);
 }
@@ -226,12 +226,12 @@ gam_inotify_read_handler(gpointer user_data)
     struct inotify_event event;
     INotifyData *data;
 
-    gam_debug(DEBUG_INFO, "gam_inotify_read_handler()\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler()\n");
     G_LOCK(inotify);
 
     if (g_io_channel_read_chars(inotify_read_ioc, (char *)&event, sizeof(struct inotify_event), NULL, NULL) != G_IO_STATUS_NORMAL) {
 	G_UNLOCK(inotify);
-        gam_debug(DEBUG_INFO, "gam_inotify_read_handler failed\n");
+        GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler failed\n");
 	return FALSE;
     }
 
@@ -260,16 +260,16 @@ gam_inotify_read_handler(gpointer user_data)
     data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event.wd));
 
     if (!data) {
-	gam_debug(DEBUG_INFO, "Could not find WD %d in hash\n", event.wd);
+	GAM_DEBUG(DEBUG_INFO, "Could not find WD %d in hash\n", event.wd);
         G_UNLOCK(inotify);
         return TRUE;
     }
 
     gam_inotify_emit_event (data, &event);
 
-    gam_debug(DEBUG_INFO, "gam_inotify event for %s (%x) %s\n", data->path, event.mask, event.filename);
+    GAM_DEBUG(DEBUG_INFO, "gam_inotify event for %s (%x) %s\n", data->path, event.mask, event.filename);
 
-    gam_debug(DEBUG_INFO, "gam_inotify_read_handler() done\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler() done\n");
 
     G_UNLOCK(inotify);
 
@@ -289,7 +289,7 @@ gam_inotify_consume_subscriptions_real(gpointer data)
 
 		for (l = subs; l; l = l->next) {
 			GamSubscription *sub = l->data;
-			gam_debug(DEBUG_INFO, "called gam_inotify_add_handler()\n");
+			GAM_DEBUG(DEBUG_INFO, "called gam_inotify_add_handler()\n");
 			gam_inotify_add_rm_handler (gam_subscription_get_path (sub), sub, TRUE);
 		}
 
@@ -305,14 +305,14 @@ gam_inotify_consume_subscriptions_real(gpointer data)
 
 		for (l = subs; l; l = l->next) {
 			GamSubscription *sub = l->data;
-			gam_debug(DEBUG_INFO, "called gam_inotify_rm_handler()\n");
+			GAM_DEBUG(DEBUG_INFO, "called gam_inotify_rm_handler()\n");
 			gam_inotify_add_rm_handler (gam_subscription_get_path (sub), sub, FALSE);
 		}
 	} else {
 		G_UNLOCK(removed_subs);
 	}
 
-	gam_debug(DEBUG_INFO, "gam_inotify_consume_subscriptions()\n");
+	GAM_DEBUG(DEBUG_INFO, "gam_inotify_consume_subscriptions()\n");
 
 	have_consume_idler = FALSE;
 	return FALSE;
@@ -361,7 +361,7 @@ gam_inotify_init(void)
     fd = open("/dev/inotify", O_RDONLY);
 
     if (fd < 0) {
-        gam_debug(DEBUG_INFO, "Could not open /dev/inotify\n");
+        GAM_DEBUG(DEBUG_INFO, "Could not open /dev/inotify\n");
         return FALSE;
     }
 
@@ -381,7 +381,7 @@ gam_inotify_init(void)
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
     wd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
 
-    gam_debug(DEBUG_INFO, "inotify initialized\n");
+    GAM_DEBUG(DEBUG_INFO, "inotify initialized\n");
 
     int i = 0; // INOTIFY_DEBUG_INODE|INOTIFY_DEBUG_ERRORS|INOTIFY_DEBUG_EVENTS;
     ioctl(fd, INOTIFY_SETDEBUG, &i);
@@ -408,7 +408,7 @@ gam_inotify_add_subscription(GamSubscription * sub)
 	new_subs = g_list_prepend(new_subs, sub);
 	G_UNLOCK(new_subs);
 
-	gam_debug(DEBUG_INFO, "inotify_add_sub\n");
+	GAM_DEBUG(DEBUG_INFO, "inotify_add_sub\n");
 
 	gam_inotify_consume_subscriptions();
     return TRUE;
@@ -425,7 +425,7 @@ gam_inotify_remove_subscription(GamSubscription * sub)
 {
 	G_LOCK(new_subs);
 	if (g_list_find(new_subs, sub)) {
-		gam_debug(DEBUG_INFO, "removed sub found on new_subs\n");
+		GAM_DEBUG(DEBUG_INFO, "removed sub found on new_subs\n");
 		new_subs = g_list_remove_all (new_subs, sub);
 		G_UNLOCK(new_subs);
 		return TRUE;
@@ -439,7 +439,7 @@ gam_inotify_remove_subscription(GamSubscription * sub)
 	removed_subs = g_list_prepend (removed_subs, sub);
 	G_UNLOCK(removed_subs);
 
-	gam_debug(DEBUG_INFO, "inotify_remove_sub\n");
+	GAM_DEBUG(DEBUG_INFO, "inotify_remove_sub\n");
 	gam_inotify_consume_subscriptions();
 
     return TRUE;

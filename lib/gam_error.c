@@ -7,7 +7,7 @@
 
 typedef void (*signal_handler)(int);
 
-int gam_debug_active;
+int gam_debug_active = 0;
 static int initialized = 0;
 static int do_debug = 0;
 static int got_signal = 0;

@@ -112,7 +112,7 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
         fcntl(fd, F_NOTIFY,
               DN_MODIFY | DN_CREATE | DN_DELETE | DN_RENAME | DN_ATTRIB |
               DN_MULTISHOT);
-        gam_debug(DEBUG_INFO, "activated DNotify for %s\n", path);
+        GAM_DEBUG(DEBUG_INFO, "activated DNotify for %s\n", path);
     } else {
         data = g_hash_table_lookup(path_hash, path);
 
@@ -125,7 +125,7 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
 
         if (data->refcount == 0) {
             close(data->fd);
-            gam_debug(DEBUG_INFO, "deactivated DNotify for %s\n",
+            GAM_DEBUG(DEBUG_INFO, "deactivated DNotify for %s\n",
                       data->path);
             g_hash_table_remove(path_hash, data->path);
             g_hash_table_remove(fd_hash, GINT_TO_POINTER(data->fd));
@@ -139,7 +139,7 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
 static void
 gam_dnotify_file_handler(const char *path, gboolean added)
 {
-    gam_debug(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path, added);
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path, added);
     
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
 	gam_dnotify_directory_handler(path, added);
@@ -156,7 +156,7 @@ static void
 dnotify_signal_handler(int sig, siginfo_t * si, void *sig_data)
 {
     if (changes->length > MAX_QUEUE_SIZE) {
-        gam_debug(DEBUG_INFO, "Queue Full\n");
+        GAM_DEBUG(DEBUG_INFO, "Queue Full\n");
         return;
     }
 
@@ -165,13 +165,13 @@ dnotify_signal_handler(int sig, siginfo_t * si, void *sig_data)
     g_io_channel_write_chars(pipe_write_ioc, "bogus", 5, NULL, NULL);
     g_io_channel_flush(pipe_write_ioc, NULL);
 
-    gam_debug(DEBUG_INFO, "signal handler done\n");
+    GAM_DEBUG(DEBUG_INFO, "signal handler done\n");
 }
 
 static void
 overflow_signal_handler(int sig, siginfo_t * si, void *sig_data)
 {
-    gam_debug(DEBUG_INFO, "**** signal queue overflow ***\n");
+    GAM_DEBUG(DEBUG_INFO, "**** signal queue overflow ***\n");
 }
 
 static gboolean
@@ -182,7 +182,7 @@ gam_dnotify_pipe_handler(gpointer user_data)
     gpointer fd;
     int i;
 
-    gam_debug(DEBUG_INFO, "gam_dnotify_pipe_handler()\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_pipe_handler()\n");
     g_io_channel_read_chars(pipe_read_ioc, buf, sizeof(buf), NULL, NULL);
 
     i = 0;
@@ -195,20 +195,20 @@ gam_dnotify_pipe_handler(gpointer user_data)
         if (data == NULL)
             continue;
 
-        gam_debug(DEBUG_INFO, "handling signal\n");
+        GAM_DEBUG(DEBUG_INFO, "handling signal\n");
 
         gam_poll_scan_directory(data->path, NULL);
         i++;
     }
 
-    gam_debug(DEBUG_INFO, "gam_dnotify_pipe_handler() done\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_pipe_handler() done\n");
     return TRUE;
 }
 
 static gboolean
 gam_dnotify_consume_subscriptions_real(gpointer data)
 {
-    gam_debug(DEBUG_INFO, "gam_dnotify_consume_subscriptions_real()\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_consume_subscriptions_real()\n");
     gam_poll_consume_subscriptions();
     have_consume_idler = FALSE;
     return FALSE;
@@ -222,7 +222,7 @@ gam_dnotify_consume_subscriptions(void)
     if (have_consume_idler)
         return;
 
-    gam_debug(DEBUG_INFO, "gam_dnotify_consume_subscriptions()\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_consume_subscriptions()\n");
     have_consume_idler = TRUE;
     source = g_idle_source_new();
     g_source_set_callback(source, gam_dnotify_consume_subscriptions_real,
@@ -297,7 +297,7 @@ gam_dnotify_init(void)
     gam_poll_set_directory_handler(gam_dnotify_directory_handler);
     gam_poll_set_file_handler(gam_dnotify_file_handler);
 
-    gam_debug(DEBUG_INFO, "dnotify initialized\n");
+    GAM_DEBUG(DEBUG_INFO, "dnotify initialized\n");
 
     gam_backend_add_subscription = gam_dnotify_add_subscription;
     gam_backend_remove_subscription = gam_dnotify_remove_subscription;
@@ -315,7 +315,7 @@ gam_dnotify_init(void)
 gboolean
 gam_dnotify_add_subscription(GamSubscription * sub)
 {
-    gam_debug(DEBUG_INFO, "gam_dnotify_add_subscription\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_add_subscription\n");
 
     if (!gam_poll_add_subscription(sub)) {
         return FALSE;
@@ -323,7 +323,7 @@ gam_dnotify_add_subscription(GamSubscription * sub)
 
     gam_dnotify_consume_subscriptions();
 
-    gam_debug(DEBUG_INFO, "gam_dnotify_add_subscription: done\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_add_subscription: done\n");
     return TRUE;
 }
 
@@ -336,7 +336,7 @@ gam_dnotify_add_subscription(GamSubscription * sub)
 gboolean
 gam_dnotify_remove_subscription(GamSubscription * sub)
 {
-    gam_debug(DEBUG_INFO, "gam_dnotify_remove_subscription\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_remove_subscription\n");
 
     if (!gam_poll_remove_subscription(sub)) {
         return FALSE;
@@ -344,7 +344,7 @@ gam_dnotify_remove_subscription(GamSubscription * sub)
 
     gam_dnotify_consume_subscriptions();
 
-    gam_debug(DEBUG_INFO, "gam_dnotify_remove_subscription: done\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_remove_subscription: done\n");
     return TRUE;
 }
 

@@ -97,12 +97,12 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
     if ((node->path == NULL) || (node->path[0] != '/'))
         return(-1);
 
-    gam_debug(DEBUG_INFO, "node_add_subscription(%s)\n", node->path);
+    GAM_DEBUG(DEBUG_INFO, "node_add_subscription(%s)\n", node->path);
     gam_node_add_subscription(node, sub);
 
     path = gam_node_get_path(node);
     if (gam_exclude_check(path)) {
-	gam_debug(DEBUG_INFO, "  gam_exclude_check: true\n");
+	GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
         return(0);
     }
 
@@ -125,13 +125,13 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
     if ((node->path == NULL) || (node->path[0] != '/'))
         return(-1);
 
-    gam_debug(DEBUG_INFO, "node_remove_subscription(%s)\n", node->path);
+    GAM_DEBUG(DEBUG_INFO, "node_remove_subscription(%s)\n", node->path);
 
     gam_node_remove_subscription(node, sub);
 
     path = gam_node_get_path(node);
     if (gam_exclude_check(path)) {
-	gam_debug(DEBUG_INFO, "  gam_exclude_check: true\n");
+	GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
         return(0);
     }
 
@@ -177,7 +177,7 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
     GList *subs;
     int is_dir_node = gam_node_is_dir(node);
 
-    gam_debug(DEBUG_INFO, "Poll: emit events for %s\n",
+    GAM_DEBUG(DEBUG_INFO, "Poll: emit events for %s\n",
               gam_node_get_path(node));
     subs = gam_node_get_subscriptions(node);
     if (subs)
@@ -241,13 +241,13 @@ poll_file(GamNode * node)
     const char *path;
 
     path = gam_node_get_path(node);
-    gam_debug(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
+    GAM_DEBUG(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
 
     data = gam_node_get_data(node);
     if (data == NULL) {
         char real[PATH_MAX];
 
-        gam_debug(DEBUG_INFO, "Poll: poll_file : new\n");
+        GAM_DEBUG(DEBUG_INFO, "Poll: poll_file : new\n");
         realpath(path, real);
         data = gam_poll_data_new(real);
 
@@ -268,7 +268,7 @@ poll_file(GamNode * node)
         else
             return GAMIN_EVENT_DELETED;
     }
-    gam_debug(DEBUG_INFO, " at %d delta %d : %d\n", current_time,
+    GAM_DEBUG(DEBUG_INFO, " at %d delta %d : %d\n", current_time,
               current_time - data->lasttime, data->checks);
 
     event = 0;
@@ -295,8 +295,8 @@ poll_file(GamNode * node)
                (data->sbuf.st_ctim.tv_nsec != sbuf.st_ctim.tv_nsec)) {
         event = GAMIN_EVENT_CHANGED;
     } else {
-	gam_debug(DEBUG_INFO, "Poll: poll_file %s unchanged\n", path);
-	gam_debug(DEBUG_INFO, "%d %d : %d %d\n", data->sbuf.st_mtim.tv_sec,
+	GAM_DEBUG(DEBUG_INFO, "Poll: poll_file %s unchanged\n", path);
+	GAM_DEBUG(DEBUG_INFO, "%d %d : %d %d\n", data->sbuf.st_mtim.tv_sec,
 	          data->sbuf.st_mtim.tv_nsec, sbuf.st_mtim.tv_sec,
 		  sbuf.st_mtim.tv_nsec);
 #else
@@ -304,7 +304,7 @@ poll_file(GamNode * node)
                (data->sbuf.st_size != sbuf.st_size) ||
                (data->sbuf.st_ctime != sbuf.st_ctime)) {
         event = GAMIN_EVENT_CHANGED;
-	gam_debug(DEBUG_INFO, "%d : %d\n", data->sbuf.st_mtime,
+	GAM_DEBUG(DEBUG_INFO, "%d : %d\n", data->sbuf.st_mtime,
 		  sbuf.st_mtime);
 #endif
     }
@@ -437,7 +437,7 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
 
     exists = 1;
 
-    gam_debug(DEBUG_INFO, "Poll: scanning directory %s\n", dpath);
+    GAM_DEBUG(DEBUG_INFO, "Poll: scanning directory %s\n", dpath);
     while ((name = g_dir_read_name(dir)) != NULL) {
         path = g_build_filename(gam_node_get_path(dir_node), name, NULL);
 
@@ -694,7 +694,7 @@ gam_poll_add_missing(GamNode *node) {
 #if 0
     fprintf(stderr, "Adding %s to polling\n", gam_node_get_path(node));
 #endif
-    gam_debug(DEBUG_INFO, "Poll adding missing node %s\n",
+    GAM_DEBUG(DEBUG_INFO, "Poll adding missing node %s\n",
               gam_node_get_path(node));
     if (g_list_find(missing_resources, node) == NULL)
 	missing_resources = g_list_append(missing_resources, node);
@@ -711,7 +711,7 @@ gam_poll_remove_missing(GamNode *node) {
 #if 0
     fprintf(stderr, "Removing %s from polling\n", gam_node_get_path(node));
 #endif
-    gam_debug(DEBUG_INFO, "Poll removing missing node %s\n",
+    GAM_DEBUG(DEBUG_INFO, "Poll removing missing node %s\n",
               gam_node_get_path(node));
     missing_resources = g_list_remove_all(missing_resources, node);
 }
@@ -742,7 +742,7 @@ gam_poll_init_full(gboolean start_scan_thread)
     gam_backend_remove_subscription = gam_poll_remove_subscription;
     gam_backend_remove_all_for = gam_poll_remove_all_for;
 
-    gam_debug(DEBUG_INFO, "Initialized Poll\n");
+    GAM_DEBUG(DEBUG_INFO, "Initialized Poll\n");
     return TRUE;
 }
 
@@ -782,7 +782,7 @@ gam_poll_add_subscription(GamSubscription * sub)
 
     new_subs = g_list_prepend(new_subs, sub);
 
-    gam_debug(DEBUG_INFO, "Poll: added subscription\n");
+    GAM_DEBUG(DEBUG_INFO, "Poll: added subscription\n");
     return TRUE;
 }
 
@@ -801,7 +801,7 @@ gam_poll_remove_subscription(GamSubscription * sub)
      * make sure the subscription still isn't in the new subscription queue
      */
     if (g_list_find(new_subs, sub)) {
-        gam_debug(DEBUG_INFO, "new subscriptions is removed\n");
+        GAM_DEBUG(DEBUG_INFO, "new subscriptions is removed\n");
         new_subs = g_list_remove_all(new_subs, sub);
     }
 
@@ -818,7 +818,7 @@ gam_poll_remove_subscription(GamSubscription * sub)
 
     removed_subs = g_list_prepend(removed_subs, sub);
 
-    gam_debug(DEBUG_INFO, "Poll: removed subscription\n");
+    GAM_DEBUG(DEBUG_INFO, "Poll: removed subscription\n");
     return TRUE;
 }
 
@@ -862,7 +862,7 @@ gam_poll_scan_directory(const char *path, GList * exist_subs)
 {
     GamNode *node;
 
-    gam_debug(DEBUG_INFO, "Poll: scanning %s: subs %d\n",
+    GAM_DEBUG(DEBUG_INFO, "Poll: scanning %s: subs %d\n",
               path, exist_subs != NULL);
 
     current_time = time(NULL);
@@ -875,7 +875,7 @@ gam_poll_scan_directory(const char *path, GList * exist_subs)
     }
 
     gam_poll_scan_directory_internal(node, exist_subs, TRUE);
-    gam_debug(DEBUG_INFO, "Poll: scanning %s done\n", path);
+    GAM_DEBUG(DEBUG_INFO, "Poll: scanning %s done\n", path);
 }
 
 /**
@@ -897,7 +897,7 @@ gam_poll_consume_subscriptions(void)
         subs = new_subs;
         new_subs = NULL;
 
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "%d new subscriptions.\n", g_list_length(subs));
 
         for (l = subs; l; l = l->next) {
@@ -923,17 +923,17 @@ gam_poll_consume_subscriptions(void)
             node_is_dir = gam_node_is_dir(node);
             if (node_is_dir) {
 
-                gam_debug(DEBUG_INFO,
+                GAM_DEBUG(DEBUG_INFO,
                           "Looking for existing files in: %s...\n", path);
 
                 gam_poll_scan_directory_internal(node, subs, TRUE);
 
-                gam_debug(DEBUG_INFO, "Done scanning %s\n", path);
+                GAM_DEBUG(DEBUG_INFO, "Done scanning %s\n", path);
             } else {
                 GaminEventType event;
 
                 event = poll_file(node);
-                gam_debug(DEBUG_INFO,
+                GAM_DEBUG(DEBUG_INFO,
                           "New file subscription: %s event %d\n", path,
                           event);
                 if ((event == 0) || (event == GAMIN_EVENT_EXISTS)
@@ -963,7 +963,7 @@ gam_poll_consume_subscriptions(void)
         subs = removed_subs;
         removed_subs = NULL;
 
-        gam_debug(DEBUG_INFO, "Tree has %d nodes\n",
+        GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n",
                   gam_tree_get_size(tree));
         for (l = subs; l; l = l->next) {
             GamSubscription *sub = l->data;
@@ -971,7 +971,7 @@ gam_poll_consume_subscriptions(void)
                                                  gam_subscription_get_path
                                                  (sub));
 
-            gam_debug(DEBUG_INFO, "Removing: %s\n",
+            GAM_DEBUG(DEBUG_INFO, "Removing: %s\n",
                       gam_subscription_get_path(sub));
             if (node != NULL) {
                 if (!gam_node_is_dir(node)) {
@@ -1013,7 +1013,7 @@ gam_poll_consume_subscriptions(void)
         }
         g_list_free(subs);
 
-        gam_debug(DEBUG_INFO, "Tree has %d nodes\n",
+        GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n",
                   gam_tree_get_size(tree));
 
     }

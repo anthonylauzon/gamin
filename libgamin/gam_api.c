@@ -229,7 +229,7 @@ gamin_check_secure_dir(void)
     /*
      * all checks on existing dir seems okay
      */
-    gam_debug(DEBUG_INFO, "Reusing socket directory %s\n", dir);
+    GAM_DEBUG(DEBUG_INFO, "Reusing socket directory %s\n", dir);
     free(dir);
     return(1);
 
@@ -248,7 +248,7 @@ unsafe:
 	    return(-1);
 	}
     }
-    gam_debug(DEBUG_INFO, "Removed %s\n", dir);
+    GAM_DEBUG(DEBUG_INFO, "Removed %s\n", dir);
     free(dir);
     return(0);
 }
@@ -615,23 +615,23 @@ retry:
         if (errno == EINTR)
             goto retry;
 
-        gam_debug(DEBUG_INFO, "Failed to read credentials byte on %d\n", fd);
+        GAM_DEBUG(DEBUG_INFO, "Failed to read credentials byte on %d\n", fd);
         goto failed;
     }
 
     if (buf != '\0') {
-        gam_debug(DEBUG_INFO, "Credentials byte was not nul on %d\n", fd);
+        GAM_DEBUG(DEBUG_INFO, "Credentials byte was not nul on %d\n", fd);
         goto failed;
     }
 #ifdef HAVE_CMSGCRED
     if (cmsg->cmsg_len < sizeof(cmsgmem) || cmsg->cmsg_type != SCM_CREDS) {
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "Message from recvmsg() was not SCM_CREDS\n");
         goto failed;
     }
 #endif
 
-    gam_debug(DEBUG_INFO, "read credentials byte\n");
+    GAM_DEBUG(DEBUG_INFO, "read credentials byte\n");
 
     {
 #ifdef SO_PEERCRED
@@ -644,7 +644,7 @@ retry:
             c_uid = cr.uid;
             c_gid = cr.gid;
         } else {
-            gam_debug(DEBUG_INFO,
+            GAM_DEBUG(DEBUG_INFO,
                       "Failed to getsockopt() credentials on %d, returned len %d/%d\n",
                       fd, cr_len, (int) sizeof(cr));
             goto failed;
@@ -658,19 +658,19 @@ retry:
         c_uid = cred->cmcred_euid;
         c_gid = cred->cmcred_groups[0];
 #else /* !SO_PEERCRED && !HAVE_CMSGCRED */
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "Socket credentials not supported on this OS\n");
         goto failed;
 #endif
     }
 
     if (s_uid != c_uid) {
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "Credentials check failed: s_uid %d, c_uid %d\n",
                   (int) s_uid, (int) c_uid);
         goto failed;
     }
-    gam_debug(DEBUG_INFO,
+    GAM_DEBUG(DEBUG_INFO,
               "Credentials: s_uid %d, c_uid %d, c_gid %d, c_pid %d\n",
               (int) s_uid, (int) c_uid, (int) c_gid, (int) c_pid);
     gamin_data_done_auth(conn);
@@ -701,7 +701,7 @@ gamin_read_data(GAMDataPtr conn, int fd)
 
     ret = gamin_data_need_auth(conn);
     if (ret == 1) {
-        gam_debug(DEBUG_INFO, "Client need auth %d\n", fd);
+        GAM_DEBUG(DEBUG_INFO, "Client need auth %d\n", fd);
         if (gamin_check_cred(conn, fd) < 0) {
 	    return (-1);
 	}
@@ -729,7 +729,7 @@ retry:
         gam_error(DEBUG_INFO, "end from FAM server connection\n");
         return (-1);
     }
-    gam_debug(DEBUG_INFO, "read %d bytes from server\n", ret);
+    GAM_DEBUG(DEBUG_INFO, "read %d bytes from server\n", ret);
 
     if (gamin_data_conn_data(conn, ret) < 0) {
         gam_error(DEBUG_INFO, "Failed to process %d bytes from server\n",

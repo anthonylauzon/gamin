@@ -85,23 +85,23 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
         if (errno == EINTR)
             goto retry;
 
-        gam_debug(DEBUG_INFO, "Failed to read credentials byte on %d\n", fd);
+        GAM_DEBUG(DEBUG_INFO, "Failed to read credentials byte on %d\n", fd);
         goto failed;
     }
 
     if (buf != '\0') {
-        gam_debug(DEBUG_INFO, "Credentials byte was not nul on %d\n", fd);
+        GAM_DEBUG(DEBUG_INFO, "Credentials byte was not nul on %d\n", fd);
         goto failed;
     }
 #ifdef HAVE_CMSGCRED
     if (cmsg->cmsg_len < sizeof(cmsgmem) || cmsg->cmsg_type != SCM_CREDS) {
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "Message from recvmsg() was not SCM_CREDS\n");
         goto failed;
     }
 #endif
 
-    gam_debug(DEBUG_INFO, "read credentials byte\n");
+    GAM_DEBUG(DEBUG_INFO, "read credentials byte\n");
 
     {
 #ifdef SO_PEERCRED
@@ -114,7 +114,7 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
             c_uid = cr.uid;
             c_gid = cr.gid;
         } else {
-            gam_debug(DEBUG_INFO,
+            GAM_DEBUG(DEBUG_INFO,
                       "Failed to getsockopt() credentials on %d, returned len %d/%d\n",
                       fd, cr_len, (int) sizeof(cr));
             goto failed;
@@ -128,29 +128,29 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
         c_uid = cred->cmcred_euid;
         c_gid = cred->cmcred_groups[0];
 #else /* !SO_PEERCRED && !HAVE_CMSGCRED */
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "Socket credentials not supported on this OS\n");
         goto failed;
 #endif
     }
 
     if (s_uid != c_uid) {
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "Credentials check failed: s_uid %d, c_uid %d\n",
                   (int) s_uid, (int) c_uid);
         goto failed;
     }
-    gam_debug(DEBUG_INFO,
+    GAM_DEBUG(DEBUG_INFO,
               "Credentials: s_uid %d, c_uid %d, c_gid %d, c_pid %d\n",
               (int) s_uid, (int) c_uid, (int) c_gid, (int) c_pid);
 
     if (gam_connection_set_pid(conn, c_pid) < 0) {
-        gam_debug(DEBUG_INFO, "Failed to save PID\n");
+        GAM_DEBUG(DEBUG_INFO, "Failed to save PID\n");
         goto failed;
     }
 
     if (!gam_client_conn_send_cred(source, fd)) {
-        gam_debug(DEBUG_INFO, "Failed to send credential byte to client\n");
+        GAM_DEBUG(DEBUG_INFO, "Failed to send credential byte to client\n");
         goto failed;
     }
 
@@ -181,13 +181,13 @@ gam_client_conn_read(GIOChannel * source, GIOCondition condition,
         return (gam_conn_error(source, condition, info));
     }
     if (conn == NULL) {
-        gam_debug(DEBUG_INFO, "lost informations\n");
+        GAM_DEBUG(DEBUG_INFO, "lost informations\n");
         return (FALSE);
     }
-    gam_debug(DEBUG_INFO, "gam_client_conn_read called\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_client_conn_read called\n");
     fd = gam_connection_get_fd(conn);
     if (fd < 0) {
-        gam_debug(DEBUG_INFO, "failed to get file descriptor\n");
+        GAM_DEBUG(DEBUG_INFO, "failed to get file descriptor\n");
         return (FALSE);
     }
 
@@ -195,17 +195,17 @@ gam_client_conn_read(GIOChannel * source, GIOCondition condition,
         case GAM_STATE_AUTH:
             return (gam_client_conn_check_cred(source, fd, conn));
         case GAM_STATE_ERROR:
-            gam_debug(DEBUG_INFO, "connection in error state\n");
+            GAM_DEBUG(DEBUG_INFO, "connection in error state\n");
             return (FALSE);
         case GAM_STATE_CLOSED:
-            gam_debug(DEBUG_INFO, "connection is closed\n");
+            GAM_DEBUG(DEBUG_INFO, "connection is closed\n");
             return (FALSE);
         case GAM_STATE_OKAY:
             break;
     }
 
     if (gam_connection_get_data(conn, (char **) &data, &size) < 0) {
-        gam_debug(DEBUG_INFO, "connection data error, disconnecting\n");
+        GAM_DEBUG(DEBUG_INFO, "connection data error, disconnecting\n");
         gam_client_conn_shutdown(source, conn);
         return (FALSE);
     }
@@ -215,15 +215,15 @@ gam_client_conn_read(GIOChannel * source, GIOCondition condition,
     if (ret < 0) {
         if (errno == EINTR)
             goto retry;
-        gam_debug(DEBUG_INFO, "failed to read() from client connection\n");
+        GAM_DEBUG(DEBUG_INFO, "failed to read() from client connection\n");
         return (FALSE);
     }
     if (ret == 0) {
-        gam_debug(DEBUG_INFO, "end from client connection\n");
+        GAM_DEBUG(DEBUG_INFO, "end from client connection\n");
         gam_client_conn_shutdown(source, conn);
         return (FALSE);
     }
-    gam_debug(DEBUG_INFO, "read %d bytes from client\n", ret);
+    GAM_DEBUG(DEBUG_INFO, "read %d bytes from client\n", ret);
 
     /* 
      * there is no garantee of alignment, that the request is complete
@@ -232,7 +232,7 @@ gam_client_conn_read(GIOChannel * source, GIOCondition condition,
      * will be a complete, fully aligned request.
      */
     if (gam_connection_data(conn, ret) < 0) {
-        gam_debug(DEBUG_INFO,
+        GAM_DEBUG(DEBUG_INFO,
                   "error in client data, closing client connection\n");
         gam_client_conn_shutdown(source, conn);
         return (FALSE);
@@ -253,7 +253,7 @@ gam_incoming_conn_read(GIOChannel * source, GIOCondition condition,
     GIOChannel *socket = NULL;
     GamConnDataPtr conn;
 
-    gam_debug(DEBUG_INFO, "gam_incoming_conn_read called\n");
+    GAM_DEBUG(DEBUG_INFO, "gam_incoming_conn_read called\n");
 
     loop = (GMainLoop *) data;
 
@@ -301,7 +301,7 @@ gam_get_socket_path(const char *session)
     if (session == NULL) {
         gam_client_id = g_getenv("GAM_CLIENT_ID");
         if (gam_client_id == NULL) {
-            gam_debug(DEBUG_INFO, "Error getting GAM_CLIENT_ID\n");
+            GAM_DEBUG(DEBUG_INFO, "Error getting GAM_CLIENT_ID\n");
         }
     } else {
         gam_client_id = session;
@@ -309,7 +309,7 @@ gam_get_socket_path(const char *session)
     user = g_get_user_name();
 
     if (user == NULL) {
-        gam_debug(DEBUG_INFO, "Error getting user informations\n");
+        GAM_DEBUG(DEBUG_INFO, "Error getting user informations\n");
         return (NULL);
     }
 #ifdef HAVE_ABSTRACT_SOCKETS
@@ -338,7 +338,7 @@ gam_get_socket_dir(void)
     user = g_get_user_name();
 
     if (user == NULL) {
-        gam_debug(DEBUG_INFO, "Error getting user informations\n");
+        GAM_DEBUG(DEBUG_INFO, "Error getting user informations\n");
         return (NULL);
     }
     ret = g_strconcat("/tmp/fam-", user, NULL);
@@ -376,7 +376,7 @@ gam_check_secure_dir(void)
 create:
     ret = mkdir(dir, 0700);
     if (ret >= 0) {
-	gam_debug(DEBUG_INFO, "Created socket directory %s\n", dir);
+	GAM_DEBUG(DEBUG_INFO, "Created socket directory %s\n", dir);
 	g_free(dir);
         return(TRUE);
     }
@@ -416,7 +416,7 @@ create:
 	    /*
 	     * all checks on existing dir seems okay
 	     */
-	    gam_debug(DEBUG_INFO, "Reusing socket directory %s\n", dir);
+	    GAM_DEBUG(DEBUG_INFO, "Reusing socket directory %s\n", dir);
 	    g_free(dir);
 	    return(TRUE);
         case EACCES:
@@ -452,7 +452,7 @@ create:
 	    return(FALSE);
 	}
     }
-    gam_debug(DEBUG_INFO, "Removed %s\n", dir);
+    GAM_DEBUG(DEBUG_INFO, "Removed %s\n", dir);
     tries++;
     if (tries < 5)
         goto create;
@@ -569,7 +569,7 @@ gam_listen_unix_socket(const char *path)
 
     fd = socket(PF_UNIX, SOCK_STREAM, 0);
     if (fd < 0) {
-        gam_debug(DEBUG_INFO, "Failed to create unix socket");
+        GAM_DEBUG(DEBUG_INFO, "Failed to create unix socket");
         return (-1);
     }
     memset(&addr, 0, sizeof(addr));
@@ -594,16 +594,16 @@ gam_listen_unix_socket(const char *path)
 #endif
 
     if (bind(fd, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-        gam_debug(DEBUG_INFO, "Failed to bind to socket %s\n", path);
+        GAM_DEBUG(DEBUG_INFO, "Failed to bind to socket %s\n", path);
         close(fd);
         return (-1);
     }
     if (listen(fd, 30 /* backlog */ ) < 0) {
-        gam_debug(DEBUG_INFO, "Failed to listen to socket %s\n", path);
+        GAM_DEBUG(DEBUG_INFO, "Failed to listen to socket %s\n", path);
         close(fd);
         return (-1);
     }
-    gam_debug(DEBUG_INFO, "Ready listening to socket %s : %d\n", path, fd);
+    GAM_DEBUG(DEBUG_INFO, "Ready listening to socket %s : %d\n", path, fd);
 
     return (fd);
 }
@@ -626,17 +626,17 @@ gam_client_conn_shutdown(GIOChannel * source, GamConnDataPtr conn)
 
     if (conn != NULL) {
         if (gam_connection_exists(conn)) {
-            gam_debug(DEBUG_INFO, "Shutting down client socket %d\n",
+            GAM_DEBUG(DEBUG_INFO, "Shutting down client socket %d\n",
                       g_io_channel_unix_get_fd(source));
             g_io_channel_shutdown(source, FALSE, &error);
             gam_connection_close(conn);
         } else {
-            gam_debug(DEBUG_INFO,
+            GAM_DEBUG(DEBUG_INFO,
                       "could not found connection on socket %d\n",
                       g_io_channel_unix_get_fd(source));
         }
     } else {
-        gam_debug(DEBUG_INFO, "Shutting down server socket %d\n",
+        GAM_DEBUG(DEBUG_INFO, "Shutting down server socket %d\n",
                   g_io_channel_unix_get_fd(source));
         g_io_channel_shutdown(source, FALSE, &error);
         g_io_channel_unref(source);
@@ -656,18 +656,18 @@ gam_conn_error(GIOChannel * source, GIOCondition condition, gpointer data)
 
     if (conn != NULL) {
         if (gam_connection_exists(conn)) {
-            gam_debug(DEBUG_INFO,
+            GAM_DEBUG(DEBUG_INFO,
                       "Error condition raised on client socket %d\n",
                       g_io_channel_unix_get_fd(source));
             g_io_channel_shutdown(source, FALSE, &error);
             gam_connection_close(conn);
         } else {
-            gam_debug(DEBUG_INFO,
+            GAM_DEBUG(DEBUG_INFO,
                       "could not found connection on socket %d\n",
                       g_io_channel_unix_get_fd(source));
         }
     } else {
-        gam_debug(DEBUG_INFO, "Error condition raised on server socket\n");
+        GAM_DEBUG(DEBUG_INFO, "Error condition raised on server socket\n");
         g_io_channel_shutdown(source, FALSE, &error);
         g_io_channel_unref(source);
     }
@@ -723,7 +723,7 @@ gam_client_create(GIOChannel * server)
 
     sock = g_io_channel_unix_get_fd(server);
     if (sock < 0) {
-        gam_debug(DEBUG_INFO, "failed to get incoming socket\n");
+        GAM_DEBUG(DEBUG_INFO, "failed to get incoming socket\n");
         return (NULL);
     }
   retry:
@@ -732,7 +732,7 @@ gam_client_create(GIOChannel * server)
     if (client < 0) {
         if (errno == EINTR)
             goto retry;
-        gam_debug(DEBUG_INFO, "failed to accept() incoming connection\n");
+        GAM_DEBUG(DEBUG_INFO, "failed to accept() incoming connection\n");
         return (NULL);
     }
     socket = g_io_channel_unix_new(client);
@@ -742,7 +742,7 @@ gam_client_create(GIOChannel * server)
         return (NULL);
     }
     g_io_channel_set_close_on_unref(socket, TRUE);
-    gam_debug(DEBUG_INFO, "accepted incoming connection: %d\n", client);
+    GAM_DEBUG(DEBUG_INFO, "accepted incoming connection: %d\n", client);
     return (socket);
 }
 
@@ -771,14 +771,14 @@ retry:
     if (written < 0) {
         if (errno == EINTR)
             goto retry;
-        gam_debug(DEBUG_INFO, "Failed to write bytes to socket %d\n", fd);
+        GAM_DEBUG(DEBUG_INFO, "Failed to write bytes to socket %d\n", fd);
         return (FALSE);
     }
     if (written != (int) len) {
-        gam_debug(DEBUG_INFO, "Wrote only %d bytes to socket %d\n",
+        GAM_DEBUG(DEBUG_INFO, "Wrote only %d bytes to socket %d\n",
                   written, fd);
         return (FALSE);
     }
-    gam_debug(DEBUG_INFO, "Wrote %d bytes to socket %d\n", written, fd);
+    GAM_DEBUG(DEBUG_INFO, "Wrote %d bytes to socket %d\n", written, fd);
     return (TRUE);
 }
