@@ -277,8 +277,13 @@ processCommand(char *line, int no)
         testState.connected = 0;
         printf("disconnected\n");
     } else if (!strcmp(command, "mondir")) {
+	if (args >= 2) {
+	    if (arg[0] != '/')
+		snprintf(filename, sizeof(filename), "%s/%s", pwd, arg);
+	    else
+		snprintf(filename, sizeof(filename), "%s", arg);
+	}
         if (args == 2) {
-	    snprintf(filename, sizeof(filename), "%s/%s", pwd, arg);
 	    ret = FAMMonitorDirectory(&(testState.fc), filename,
 				      &(testState.fr[testState.nb_requests]),
 				      NULL);
@@ -290,7 +295,6 @@ processCommand(char *line, int no)
 		        no, arg2);
 		return (-1);
 	    }
-	    snprintf(filename, sizeof(filename), "%s/%s", pwd, arg);
 	    testState.fr[testState.nb_requests].reqnum = index;
 	    ret = FAMMonitorDirectory2(&(testState.fc), filename,
 				      &(testState.fr[testState.nb_requests]));
@@ -310,7 +314,10 @@ processCommand(char *line, int no)
             fprintf(stderr, "mkdir line %d: lacks name\n", no);
             return (-1);
         }
-        snprintf(filename, sizeof(filename), "%s/%s", pwd, arg);
+	if (arg[0] != '/')
+	    snprintf(filename, sizeof(filename), "%s/%s", pwd, arg);
+	else
+	    snprintf(filename, sizeof(filename), "%s", arg);
         ret = FAMMonitorFile(&(testState.fc), filename,
                              &(testState.fr[testState.nb_requests]), NULL);
         if (ret < 0) {

@@ -306,8 +306,7 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
             } else {
                 is_dir = FALSE;
             }
-            sub = gam_subscription_new(&req->path[0], events, req->seq,
-                                       NULL, FALSE, is_dir);
+            sub = gam_subscription_new(&req->path[0], events, req->seq, is_dir);
 
             gam_subscription_set_listener(sub, conn->listener);
             gam_add_subscription(sub);

@@ -25,9 +25,19 @@ libgamin_1_la_SOURCES =					\
 	gam_data.h					\
 	gam_fork.c					\
 	gam_fork.h					\
-	gam_protocol.h
+	gam_protocol.h					\
+	gam_error.c					\
+	gam_event.c
 
-libgamin_1_la_LIBADD = $(top_builddir)/lib/libgamin_shared.a 
+gam_error.c: $(top_srcdir)/lib/gam_error.c
+	@(cp $(top_srcdir)/lib/gam_error.c gam_error.c)
+
+gam_event.c: $(top_srcdir)/lib/gam_event.c
+	@(cp $(top_srcdir)/lib/gam_event.c gam_event.c)
+
+CLEANFILES=gam_error.c gam_event.c
+
+libgamin_1_la_LIBADD =
 
 libgamin_1_la_LDFLAGS = -Wl,--version-script=gamin_sym.version \
                         -version-info @GAMIN_VERSION_INFO@

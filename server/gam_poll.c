@@ -178,6 +178,9 @@ poll_file(GamNode * node)
     struct stat sbuf;
     int stat_ret;
 
+    gam_debug(DEBUG_INFO, "Poll: poll_file for %s called\n",
+              gam_node_get_path(node));
+
     data = gam_node_get_data(node);
     if (data == NULL) {
         char real[PATH_MAX];

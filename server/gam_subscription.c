@@ -35,9 +35,7 @@ struct _GamSubscription {
     int pathlen;
 
     gboolean is_dir;
-    gboolean recursive;
     gboolean cancelled;
-    gboolean have_filter;
     regex_t reg;
 
     GamListener *listener;
@@ -59,11 +57,6 @@ struct _GamSubscription {
  *
  * @param path the path to be monitored
  * @param events the events that are accepted
- * @param filter a regular expression representing acceptable filenames.  For
- * example, ".*\\\.txt" would only allow events to occur on filenames ending in
- * ".txt".
- * @param recursive if it's a directory subscription, whether or not it should
- * be recursive
  * @param is_dir whether the subscription is for a directory or not
  * @returns the new GamSubscription
  */
@@ -71,8 +64,7 @@ GamSubscription *
 gam_subscription_new(const char *path,
                      int events,
                      int reqno,
-                     const char *filter,
-                     gboolean recursive, gboolean is_dir)
+                     gboolean is_dir)
 {
     GamSubscription *sub;
 
@@ -85,15 +77,7 @@ gam_subscription_new(const char *path,
     /* everyone accepts this */
     gam_subscription_set_event(sub, GAMIN_EVENT_EXISTS);
 
-    if (filter) {
-        if (regcomp(&sub->reg, filter, REG_EXTENDED | REG_NOSUB) == 0)
-            sub->have_filter = TRUE;
-    } else {
-        sub->have_filter = FALSE;
-    }
-
     sub->is_dir = is_dir;
-    sub->recursive = recursive;
 
     gam_debug(DEBUG_INFO, "Created subscription for %s\n", path);
     return sub;
@@ -108,9 +92,6 @@ void
 gam_subscription_free(GamSubscription * sub)
 {
     gam_debug(DEBUG_INFO, "Freeing subscription for %s\n", sub->path);
-
-    if (sub->have_filter)
-        regfree(&sub->reg);
 
     g_free(sub->path);
     g_free(sub);
@@ -138,18 +119,6 @@ int
 gam_subscription_pathlen(GamSubscription * sub)
 {
     return sub->pathlen;
-}
-
-/**
- * Tells is a GamSubscription is recursive or not
- *
- * @param sub the GamSubscription
- * @returns TRUE is the GamSubscription is recursive, FALSE otherwise
- */
-gboolean
-gam_subscription_is_recursive(GamSubscription * sub)
-{
-    return sub->recursive;
 }
 
 /**
@@ -277,17 +246,6 @@ gam_subscription_wants_event(GamSubscription * sub,
 
     if (!gam_subscription_has_event(sub, event)) {
         return FALSE;
-    }
-
-    if (sub->have_filter) {
-        gboolean ret;
-        char *base = g_path_get_basename(name);
-
-        ret = regexec(&sub->reg, base, 0, NULL, 0) == 0;
-
-        g_free(base);
-
-        return ret;
     }
 
     return TRUE;

@@ -1,3 +1,11 @@
+Thu Aug 12 13:42:22 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/Makefile.am: fix build on x86_64. Auto* is excessively
+	  arcane and buggy, end-up copying the files on the libgamin dir.
+	* server/gam_connection.c server/gam_poll.c server/gam_subscription.c
+	  server/gam_subscription.h tests/testing.c: more testing more debug
+	  messages.
+
 Wed Aug 11 13:18:04 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in lib/Makefile.am libgamin/Makefile.am libgamin/gam_fork.c
