@@ -53,6 +53,8 @@ gam_debug_report(GAMDebugEvent event, const char *value, int extra) {
         case GAMDnotifyCreate:
         case GAMDnotifyDelete:
         case GAMDnotifyChange:
+        case GAMDnotifyFlowOn:
+        case GAMDnotifyFlowOff:
 	    connlist = gamDebugNotify;
 	    break;
     }

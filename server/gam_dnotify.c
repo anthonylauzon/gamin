@@ -42,6 +42,7 @@ typedef struct {
     char *path;
     int fd;
     int refcount;
+    int busy;
 } DNotifyData;
 
 static GHashTable *path_hash = NULL;
@@ -65,6 +66,7 @@ gam_dnotify_data_new(const char *path, int fd)
     data = g_new0(DNotifyData, 1);
     data->path = g_strdup(path);
     data->fd = fd;
+    data->busy = 0;
     data->refcount = 1;
 
     return data;
@@ -175,6 +177,70 @@ gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 #ifdef GAMIN_DEBUG_API
             gam_debug_report(GAMDnotifyChange, dir, data->refcount);
 #endif
+	}
+	if ((dir != path) && (dir != NULL))
+	    g_free(dir);
+    } else if ((mode == GAMIN_FLOWCONTROLSTART) ||
+               (mode == GAMIN_FLOWCONTROLSTOP)) {
+	char *dir = (char *) path;
+
+	data = g_hash_table_lookup(path_hash, path);
+	if (!data) {
+	    dir = g_path_get_dirname(path);
+	    data = g_hash_table_lookup(path_hash, dir);
+
+            if (!data) {
+		GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
+
+		if (dir != NULL)
+		    g_free(dir);
+		G_UNLOCK(dnotify);
+		return;
+	    }
+	    GAM_DEBUG(DEBUG_INFO, "  not found using parent\n");
+        }
+        if (data != NULL) {
+	    if (mode == GAMIN_FLOWCONTROLSTART) {
+		if (data->fd >= 0) {
+		    close(data->fd);
+		    g_hash_table_remove(fd_hash, GINT_TO_POINTER(data->fd));
+		    data->fd = -1;
+		    GAM_DEBUG(DEBUG_INFO, "deactivated DNotify for %s\n",
+			      data->path);
+#ifdef GAMIN_DEBUG_API
+		    gam_debug_report(GAMDnotifyFlowOn, dir, 0);
+#endif
+		}
+		data->busy++;
+	    } else {
+	        if (data->busy > 0) {
+		    data->busy--;
+		    if (data->busy == 0) {
+			fd = open(data->path, O_RDONLY);
+			if (fd < 0) {
+			    G_UNLOCK(dnotify);
+			    GAM_DEBUG(DEBUG_INFO,
+			              "Failed to reactivate DNotify for %s\n",
+				      data->path);
+			    if ((dir != path) && (dir != NULL))
+				g_free(dir);
+			    return;
+			}
+			data->fd = fd;
+			g_hash_table_insert(fd_hash, GINT_TO_POINTER(data->fd),
+			                    data);
+			fcntl(fd, F_SETSIG, SIGRTMIN);
+			fcntl(fd, F_NOTIFY,
+			      DN_MODIFY | DN_CREATE | DN_DELETE | DN_RENAME |
+			      DN_ATTRIB | DN_MULTISHOT);
+			GAM_DEBUG(DEBUG_INFO, "Reactivated DNotify for %s\n",
+			          data->path);
+#ifdef GAMIN_DEBUG_API
+			gam_debug_report(GAMDnotifyFlowOff, path, 0);
+#endif
+		    }
+		}
+	    }
 	}
 	if ((dir != path) && (dir != NULL))
 	    g_free(dir);

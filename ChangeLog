@@ -1,3 +1,19 @@
+Wed Mar 23 10:45:20 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_poll.c: more work on the flow
+	  control especially when multiple monitors use the same dnotify
+	  watcher
+	* python/tests/Makefile.am python/tests/flood.py: added a
+	  second regression test for it.
+
+Tue Mar 22 17:21:01 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_debugging.c server/gam_debugging.h server/gam_dnotify.c
+	  server/gam_poll.c: implemented the DNotify side of the flow
+	  control processing, and the associated debug.
+	* python/tests/Makefile.am python/tests/flood.py: added a 
+	  first regression test for it.
+
 Tue Mar 22 15:22:05 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c server/gam_poll.h: more cleanup, prepare for

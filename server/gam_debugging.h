@@ -10,7 +10,9 @@ G_BEGIN_DECLS
 typedef enum {
     GAMDnotifyCreate=1,
     GAMDnotifyDelete=2,
-    GAMDnotifyChange=3
+    GAMDnotifyChange=3,
+    GAMDnotifyFlowOn=4,
+    GAMDnotifyFlowOff=5
 } GAMDebugEvent;
 
 void gam_debug_add(GamConnDataPtr conn, const char *value, int options);

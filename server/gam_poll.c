@@ -387,6 +387,39 @@ gam_poll_relist_node(GamNode * node) {
     }
 }
 
+/**
+ * gam_poll_flowon_node:
+ * @node: the node to delist
+ *
+ * This function is called when kernel monitoring flow control for a
+ * node should be started
+ */
+static void
+gam_poll_flowon_node(GamNode * node) {
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowon_node %s\n",
+              gam_node_get_path(node));
+    if (gam_node_is_dir(node))
+	trigger_dir_handler(gam_node_get_path(node), GAMIN_FLOWCONTROLSTART);
+    else
+	trigger_file_handler(gam_node_get_path(node), GAMIN_FLOWCONTROLSTART);
+}
+
+/**
+ * gam_poll_flowoff_node:
+ * @node: the node to delist
+ *
+ * This function is called when kernel monitoring flow control for a
+ * node should be started
+ */
+static void
+gam_poll_flowoff_node(GamNode * node) {
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowoff_node %s\n",
+              gam_node_get_path(node));
+    if (gam_node_is_dir(node))
+	trigger_dir_handler(gam_node_get_path(node), GAMIN_FLOWCONTROLSTOP);
+    else
+	trigger_file_handler(gam_node_get_path(node), GAMIN_FLOWCONTROLSTOP);
+}
 
 static GaminEventType
 poll_file(GamNode * node)
@@ -436,6 +469,7 @@ poll_file(GamNode * node)
             /* deleted */
             data->flags = MON_MISSING;
 
+	    gam_poll_remove_busy(node);
 	    if (gam_node_get_subscriptions(node) != NULL) {
 		gam_poll_delist_node(node);
 	        gam_poll_add_missing(node);
@@ -484,7 +518,7 @@ poll_file(GamNode * node)
 
     /*
      * load control, switch back to poll on very busy resources
-     * and back when no update has happened in 10 seconds
+     * and back when no update has happened in 5 seconds
      */
     if (current_time == data->lasttime) {
 	if (!(data->flags & MON_BUSY)) {
@@ -507,7 +541,20 @@ poll_file(GamNode * node)
 	    data->flags |= MON_BUSY;
 	    data->checks = 0;
 	    gam_poll_add_busy(node);
-	    gam_poll_delist_node(node);
+	    gam_poll_flowon_node(node);
+	    /*
+	     * DNotify can be nasty here, we will miss events for parent dir
+	     * if we are not careful about it
+	     */
+	    if (!gam_node_is_dir(node)) {
+	        GamNode *parent = gam_node_parent(node);
+
+		if ((parent != NULL) &&
+		    (gam_node_get_subscriptions(parent) != NULL)) {
+		    gam_poll_add_busy(parent);
+		    /* gam_poll_flowon_node(parent); */
+		}
+	    }
 	}
     }
 
@@ -519,7 +566,7 @@ poll_file(GamNode * node)
 	    data->flags &= ~MON_BUSY;
 	    data->checks = 0;
 	    gam_poll_remove_busy(node);
-	    gam_poll_relist_node(node);
+	    gam_poll_flowoff_node(node);
 	}
     }
 
@@ -719,7 +766,6 @@ gam_poll_scan_callback(gpointer data) {
 	 */
 	if ((data->flags == 0) && (!gam_exclude_check(data->path))) {
 	    gam_poll_remove_missing(node);
-	    gam_poll_remove_busy(node);
 	    if (gam_node_get_subscriptions(node) != NULL) {
 	        gam_poll_relist_node(node);
 	    }
@@ -766,10 +812,9 @@ gam_poll_scan_callback(gpointer data) {
 	 * mode then switch back to dnotify for monitoring.
 	 */
 	if ((data->flags == 0) && (!gam_exclude_check(data->path))) {
-	    gam_poll_remove_missing(node);
 	    gam_poll_remove_busy(node);
 	    if (gam_node_get_subscriptions(node) != NULL) {
-	        gam_poll_relist_node(node);
+		gam_poll_flowoff_node(node);
 	    }
 	}
     }
