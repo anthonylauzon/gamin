@@ -73,6 +73,12 @@ rm -fr %{buildroot}
 * @RELDATE@ Daniel Veillard <veillard@redhat.com>
 - upstream release @VERSION@
 
+* Tue Aug 24 2004 Daniel Veillard <veillard@redhat.com> 0.0.7-1
+- add support for both polling and dnotify simultaneously
+- fixes monitoring of initially missing files
+- load control on very busy resources #124361, desactivating
+  dnotify and falling back to polling for CPU drain
+
 * Thu Aug 19 2004 Daniel Veillard <veillard@redhat.com> 0.0.6-1
 - fixes simple file monitoring should close RH #129974
 - relocate gam_server in $(libexec)
