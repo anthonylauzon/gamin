@@ -48,6 +48,9 @@
       <xsl:when test="$name = '#Security'">
         <xsl:text>security.html</xsl:text>
       </xsl:when>
+      <xsl:when test="$name = '#Differences'">
+        <xsl:text>differences.html</xsl:text>
+      </xsl:when>
       <xsl:otherwise>
         <xsl:value-of select="$name"/>
       </xsl:otherwise>

@@ -1,3 +1,8 @@
+Tue Feb  8 14:40:49 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* doc/*: added a new page differences.html giving details
+	  about the differences and extensions between FAM and gamin.
+
 Tue Feb  8 11:24:00 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS doc/gamin.html doc/news.html gamin.spec.in: finishing
