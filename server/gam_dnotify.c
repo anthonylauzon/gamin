@@ -139,12 +139,17 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
 static void
 gam_dnotify_file_handler(const char *path, gboolean added)
 {
-    char *dir;
-
     gam_debug(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path, added);
-    dir = g_path_get_dirname(path);
-    gam_dnotify_directory_handler(dir, added);
-    g_free(dir);
+    
+    if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
+	gam_dnotify_directory_handler(path, added);
+    } else {
+	char *dir;
+
+	dir = g_path_get_dirname(path);
+	gam_dnotify_directory_handler(dir, added);
+	g_free(dir);
+    }
 }
 
 static void

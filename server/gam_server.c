@@ -234,6 +234,8 @@ gam_server_emit_event(const char *path, GaminEventType event, GList * subs)
     int pathlen, len;
     const char *subpath;
 
+    if ((path == NULL) || (subs == NULL))
+        return;
     pathlen = strlen(path);
 
     for (l = subs; l; l = l->next) {

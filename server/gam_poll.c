@@ -266,7 +266,8 @@ poll_file(GamNode * node)
      */
     if (current_time == data->lasttime) {
 	if (!(data->flags & MON_BUSY)) {
-	    data->checks++;
+	    if (data->sbuf.st_mtime == current_time)
+		data->checks++;
 	}
     } else {
         data->lasttime = current_time;
@@ -280,7 +281,7 @@ poll_file(GamNode * node)
 
     if ((data->checks >= 4) && (!(data->flags & MON_BUSY))) {
 	if (gam_node_get_subscriptions(node) != NULL) {
-#if 0
+#if 1
 	    fprintf(stderr, "switching %s back to polling\n", path);
 #endif
 	    data->flags |= MON_BUSY;
@@ -294,7 +295,7 @@ poll_file(GamNode * node)
     }
 
     if ((event == 0) && (data->flags & MON_BUSY) && (data->checks > 10)) {
-#if 0
+#if 1
 	fprintf(stderr, "switching %s back to kernel monitoring\n", path);
 #endif
 	data->flags &= ~MON_BUSY;
@@ -338,6 +339,10 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
 
     g_return_if_fail(dir_node != NULL);
 
+    dpath = gam_node_get_path(dir_node);
+
+    g_return_if_fail(dpath != NULL);
+
     if (!scan_for_new)
         goto scan_files;
 
@@ -354,7 +359,6 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
 
     gam_poll_emit_event(dir_node, event, dir_exist_subs);
 
-    dpath = gam_node_get_path(dir_node);
     dir = g_dir_open(dpath, 0, NULL);
 
     if (dir == NULL)
@@ -474,14 +478,33 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 
 static gboolean
 gam_poll_scan_callback(gpointer data) {
-    GList *l, *next;
+    int idx;
+
+    static int in_poll_callback = 0;
+
+    if (in_poll_callback)
+	return(TRUE);
+
+    in_poll_callback++;
 
     current_time = time(NULL);
-    for (l = missing_resources; l;) {
-	GamNode *node = (GamNode *) l->data;
-	GamPollData *data = gam_node_get_data(node);
+    for (idx = 0;;idx++) {
+	GamPollData *data;
+	GamNode *node;
+	
+	/*
+	 * do not simply walk the list as it may be modified in the callback
+	 */
+	node = (GamNode *) g_list_nth_data(missing_resources, idx);
+	
+	if (node == NULL) {
+	    break;
+	} 
+	data = gam_node_get_data(node);
+	if (data == NULL) {
+	    break;
+	} 
 
-	next = l->next;
 	gam_poll_scan_directory_internal(node, NULL, TRUE);
 	/*
 	 * if the resource exists again and is not in a special monitoring
@@ -494,8 +517,9 @@ gam_poll_scan_callback(gpointer data) {
 	    else
 		trigger_file_handler(gam_node_get_path(node), TRUE);
 	}
-	l = next;
     }
+
+    in_poll_callback = 0;
     return(TRUE);
 }
 
@@ -540,7 +564,7 @@ prune_tree(GamNode * node)
  */
 void
 gam_poll_add_missing(GamNode *node) {
-#if 0
+#if 1
     fprintf(stderr, "Adding %s to polling\n", gam_node_get_path(node));
 #endif
     gam_debug(DEBUG_INFO, "Poll adding missing node %s\n",
@@ -556,7 +580,7 @@ gam_poll_add_missing(GamNode *node) {
  */
 void
 gam_poll_remove_missing(GamNode *node) {
-#if 0
+#if 1
     fprintf(stderr, "Removing %s from polling\n", gam_node_get_path(node));
 #endif
     gam_debug(DEBUG_INFO, "Poll removing missing node %s\n",
@@ -680,29 +704,6 @@ gam_poll_remove_subscription(GamSubscription * sub)
     gam_debug(DEBUG_INFO, "Poll: removed subscription\n");
     return TRUE;
 }
-
-/*
-GamSubscription *
-gam_poll_get_subscription (GamListener *listener,
-			  const char *path)
-{
-	GamNode *node;
-	GList *l;
-
-	node = gam_tree_get_at_path (tree, path);
-	if (!node)
-		return NULL;
-
-	for (l = gam_node_get_subscriptions (node); l; l = l->next) {
-		GamSubscription *sub = l->data;
-
-		if (gam_subscription_get_listener (sub) == listener)
-			return sub;
-	}
-
-	return NULL;
-}
-*/
 
 /**
  * Stop polling all subscriptions for a given #GamListener.

@@ -1,3 +1,10 @@
+Thu Aug 26 17:28:57 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_poll.c server/gam_server.c: 
+	  lot of debugging, the server was crashing, and the poll/kernel
+	  switching was not done properly. Can still be improved for 
+	  Changed events flood, but at least it does not crash anymore.
+
 Wed Aug 25 21:35:36 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c server/gam_inotify.c server/gam_poll.c
