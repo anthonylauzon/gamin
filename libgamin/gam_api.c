@@ -1145,7 +1145,6 @@ FAMPending(FAMConnection * fc)
  * @fr: pointer to a request structure.
  *
  * This function is used to permanently stop a monitoring request.
- * the routine will free the FAMRequest structure provided.
  *
  * Returns 0 in case of success and -1 in case of error.
  */
@@ -1175,11 +1174,6 @@ FAMCancelMonitor(FAMConnection * fc, FAMRequest * fr)
      */
     ret = gamin_send_request(GAM_REQ_CANCEL, fc->fd, NULL,
                              fr, NULL, fc->client, 0);
-
-    /*
-     * TODO: check should this *really* be freed ?
-     */
-    free(fr);
 
     return (ret);
 }

@@ -440,6 +440,8 @@ gamin_data_read_event(GAMDataPtr conn, FAMEvent * event)
     if ((conn == NULL) || (conn->evn_ready != 1) || (event == NULL))
         return (-1);
 
+    memset(event, 0, sizeof(FAMEvent));
+
     evn = &(conn->event);
     event->hostname = NULL;
     strncpy(&(event->filename[0]), &(evn->path[0]), evn->pathlen);
