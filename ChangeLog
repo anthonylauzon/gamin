@@ -1,3 +1,8 @@
+Tue Mar 15 14:15:58 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c server/gam_channel.c: portability patch for
+	  Mac OS X, add #include <sys/uio.h> bug gnome #170404
+
 Tue Mar 15 13:46:44 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS configure.in gamin.spec.in doc/gamin.html doc/news.html:

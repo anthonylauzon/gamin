@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/uio.h>
 #include "fam.h"
 #include "gam_protocol.h"
 #include "gam_data.h"

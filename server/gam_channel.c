@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
+#include <sys/uio.h>
 #include "gam_error.h"
 #include "gam_connection.h"
 #include "gam_channel.h"
