@@ -1,3 +1,12 @@
+Tue Aug 24 12:05:29 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* TODO: updated reflecting new step, added reminder about 
+	  annoying cases to test
+	* server/gam_dnotify.c server/gam_poll.c: if a monitored
+	  resource generate too much kernel events switch back automatically
+	  to polling on that resources, and once things have calmed down
+	  go back to kernel monitoring after 10 seconds.
+
 Mon Aug 23 14:48:51 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* TODO: updated with fixed stuff and new problems

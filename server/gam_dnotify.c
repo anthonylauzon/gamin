@@ -80,6 +80,13 @@ gam_dnotify_directory_handler(const char *path, gboolean added)
     DNotifyData *data;
     int fd;
 
+#if 0
+    if (added)
+        fprintf(stderr, "Adding %s to dnotify\n", path);
+    else
+        fprintf(stderr, "Removing %s from dnotify\n", path);
+#endif
+
     G_LOCK(dnotify);
 
     if (added) {

@@ -1,5 +1,6 @@
 /* Gamin
  * Copyright (C) 2003 James Willcox, Corey Bowers
+ * Copyright (C) 2004 Daniel Veillard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,11 +37,20 @@
 
 #define FLAG_NEW_NODE 1 << 5
 
+
+/*
+ * Special monitoring modes
+ */
+#define MON_MISSING	1 << 0	/* The resource is missing */
+#define MON_NOKERNEL	1 << 1  /* file(system) not monitored by the kernel */
+#define MON_BUSY	1 << 2  /* Too busy to be monitored by the kernel */
+
 typedef struct {
-    struct stat sbuf;
-    char *path;
-    gboolean exists;
-    gboolean monitored;
+    struct stat sbuf;		/* The stat() informations in last check */
+    char *path;			/* The file path */
+    int flags;			/* A combination of MON_xxx flags */
+    time_t lasttime;		/* Epoch of last time checking was done */
+    int checks;			/* the number of checks in that Epoch */
 } GamPollData;
 
 static GamTree *tree = NULL;
@@ -59,6 +69,8 @@ static GamPollHandler dir_handler = NULL;
 static GamPollHandler file_handler = NULL;
 
 static int poll_mode = 0;
+
+static time_t current_time;	/* a cache for time() informations */
 
 static void
 trigger_dir_handler(const char *path, gboolean added)
@@ -105,8 +117,9 @@ gam_poll_data_new(const char *path)
     data = g_new0(GamPollData, 1);
     data->path = g_strdup(path);
 
-    data->exists = TRUE;
-    data->monitored = FALSE;
+    data->flags = 0;
+    data->lasttime = current_time;
+    data->checks = 0;
 
     return data;
 }
@@ -151,7 +164,7 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
             GaminEventType new_event = event;
 
             if (g_list_find(exist_subs, sub)) {
-                if (data && data->exists)
+                if ((data) && (!(data->flags & MON_MISSING)))
                     new_event = GAMIN_EVENT_EXISTS;
                 else
                     continue;
@@ -198,29 +211,32 @@ poll_file(GamNode * node)
                           (GDestroyNotify) gam_poll_data_destroy);
 
         stat_ret = stat(data->path, &sbuf);
-        data->exists = (stat_ret == 0);
+	if (stat_ret != 0)
+	    data->flags |= MON_MISSING;
         data->sbuf = sbuf;
 
-        if (data->exists)
+        if (stat_ret == 0)
             return 0;
         else
             return GAMIN_EVENT_DELETED;
     }
+    gam_debug(DEBUG_INFO, " at %d delta %d : %d\n", current_time,
+              current_time - data->lasttime, data->checks);
 
     event = 0;
 
     if (stat(data->path, &sbuf) != 0) {
-        if (errno == ENOENT && data->exists) {
+        if ((errno == ENOENT) && (!(data->flags & MON_MISSING))) {
             /* deleted */
-            data->exists = FALSE;
+            data->flags = MON_MISSING;
             event = GAMIN_EVENT_DELETED;
 	    if (gam_node_get_subscriptions(node) != NULL) {
 	        gam_poll_add_missing(node);
 	    }
         }
-    } else if (!data->exists) {
+    } else if (data->flags & MON_MISSING) {
         /* created */
-        data->exists = TRUE;
+        data->flags &= ~MON_MISSING;
         event = GAMIN_EVENT_CREATED;
 #ifdef linux
     } else if ((data->sbuf.st_mtim.tv_sec != sbuf.st_mtim.tv_sec) ||
@@ -243,6 +259,52 @@ poll_file(GamNode * node)
     }
 
     data->sbuf = sbuf;
+
+    /*
+     * load control, switch back to poll on very busy resources
+     * and back when no update has happened in 10 seconds
+     */
+    if (current_time == data->lasttime) {
+	if (!(data->flags & MON_BUSY)) {
+	    data->checks++;
+	}
+    } else {
+        data->lasttime = current_time;
+	if (data->flags & MON_BUSY) {
+	    if (event == 0)
+		data->checks++;
+	} else {
+	    data->checks = 0;
+	}
+    }
+
+    if ((data->checks >= 4) && (!(data->flags & MON_BUSY))) {
+	if (gam_node_get_subscriptions(node) != NULL) {
+#if 0
+	    fprintf(stderr, "switching %s back to polling\n", path);
+#endif
+	    data->flags |= MON_BUSY;
+	    data->checks = 0;
+	    gam_poll_add_missing(node);
+	    if (gam_node_is_dir(node))
+		trigger_dir_handler(gam_node_get_path(node), FALSE);
+	    else
+		trigger_file_handler(gam_node_get_path(node), FALSE);
+	}
+    }
+
+    if ((event == 0) && (data->flags & MON_BUSY) && (data->checks > 10)) {
+#if 0
+	fprintf(stderr, "switching %s back to kernel monitoring\n", path);
+#endif
+	data->flags &= ~MON_BUSY;
+	data->checks = 0;
+	gam_poll_remove_missing(node);
+	if (gam_node_is_dir(node))
+	    trigger_dir_handler(gam_node_get_path(node), TRUE);
+	else
+	    trigger_file_handler(gam_node_get_path(node), TRUE);
+    }
 
     return event;
 }
@@ -359,7 +421,7 @@ scan_files:
             /* just send the EXIST events if the node exists */
 	    data = gam_node_get_data(node);
 
-	    if (data && data->exists)
+	    if ((data) && (!(data->flags & MON_MISSING)))
 		gam_server_emit_event(gam_node_get_path(node),
 				      GAMIN_EVENT_EXISTS, exist_subs);
 
@@ -414,13 +476,18 @@ static gboolean
 gam_poll_scan_callback(gpointer data) {
     GList *l, *next;
 
+    current_time = time(NULL);
     for (l = missing_resources; l;) {
 	GamNode *node = (GamNode *) l->data;
 	GamPollData *data = gam_node_get_data(node);
 
 	next = l->next;
 	gam_poll_scan_directory_internal(node, NULL, TRUE);
-	if (data->exists) {
+	/*
+	 * if the resource exists again and is not in a special monitoring
+	 * mode then switch back to dnotify for monitoring.
+	 */
+	if (data->flags == 0) {
 	    gam_poll_remove_missing(node);
 	    if (gam_node_is_dir(node))
 		trigger_dir_handler(gam_node_get_path(node), TRUE);
@@ -473,6 +540,9 @@ prune_tree(GamNode * node)
  */
 void
 gam_poll_add_missing(GamNode *node) {
+#if 0
+    fprintf(stderr, "Adding %s to polling\n", gam_node_get_path(node));
+#endif
     gam_debug(DEBUG_INFO, "Poll adding missing node %s\n",
               gam_node_get_path(node));
     missing_resources = g_list_prepend(missing_resources, node);
@@ -486,6 +556,9 @@ gam_poll_add_missing(GamNode *node) {
  */
 void
 gam_poll_remove_missing(GamNode *node) {
+#if 0
+    fprintf(stderr, "Removing %s from polling\n", gam_node_get_path(node));
+#endif
     gam_debug(DEBUG_INFO, "Poll removing missing node %s\n",
               gam_node_get_path(node));
     missing_resources = g_list_remove_all(missing_resources, node);
@@ -669,6 +742,8 @@ gam_poll_scan_directory(const char *path, GList * exist_subs)
 
     gam_debug(DEBUG_INFO, "Poll: scanning %s: subs %d\n",
               path, exist_subs != NULL);
+
+    current_time = time(NULL);
     node = gam_tree_get_at_path(tree, path);
     if (node == NULL)
         node = gam_tree_add_at_path(tree, path, TRUE);
@@ -690,6 +765,7 @@ gam_poll_consume_subscriptions(void)
     /* check for new dir subs which need special handling
      * (specifically, sending them the EXIST event)
      */
+    current_time = time(NULL);
     G_LOCK(new_subs);
     if (new_subs != NULL) {
         /* we don't want to block the main loop */
@@ -725,7 +801,7 @@ gam_poll_consume_subscriptions(void)
 
                 gam_debug(DEBUG_INFO, "Done scanning %s\n", path);
 		data = gam_node_get_data(node);
-		if (!data->exists)
+		if (data->flags & MON_MISSING)
 		    gam_poll_add_missing(node);
             } else {
 		GaminEventType event;
