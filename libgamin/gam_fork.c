@@ -13,10 +13,31 @@
 #include "gam_error.h"
 
 /**
- * TODO: the patch is computed statically at build time, maybe more
- *       flexibility might be needed.
+ * gamin_find_server_path:
+ *
+ * Tries to find the path to the gam_server binary.
+ * 
+ * Returns path on success or NULL in case of error.
  */
-static const char *server_path = BINDIR "/gam_server";
+static const char *
+gamin_find_server_path()
+{
+	static const char *server_paths[] = {
+/** Disabled right now until we find a safe way to enable this 
+						BUILDDIR "/server/gam_server",
+ **/
+						BINDIR "/gam_server", 
+						NULL
+						};
+	int i;
+
+	for (i = 0; server_paths[i]; i++) {
+		if (access(server_paths[i], X_OK|R_OK) == 0) {
+			return server_paths[i];
+		}
+	}
+	return NULL;
+}
 
 /**
  * gamin_fork_server:
@@ -30,7 +51,12 @@ static const char *server_path = BINDIR "/gam_server";
 int
 gamin_fork_server(const char *fam_client_id)
 {
+    const char *server_path = gamin_find_server_path();
     int ret, pid, status;
+    if (!server_path) {
+	    gam_error(DEBUG_INFO, "failed to find gam_server\n");
+    }
+
 
     gam_debug(DEBUG_INFO, "Asking to launch %s with client id %s\n",
               server_path, fam_client_id);

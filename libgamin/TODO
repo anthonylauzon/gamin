@@ -1,10 +1,8 @@
  - on the client handle numbers provided by the caller.
  - merge GAMIN_EVENT_ with FAMEvents ?
  - check both ways of identification, not just server checking client.
- - path flexibility for the remote server in gam_fork.c
  - cleanup deps w.r.t. libmarmot
  - try to use getlogin and $USER to get the user name
- - test for availability of setsid(), usleep()
  - remove threading, gam_poll_init_full(), use timers instead
    of running a loop with usleep in a thread.
  - code 'cb' processing cleanup
@@ -16,6 +14,8 @@ Regression tests:
   - try the fragmented/multirequests tests on the client side
 
 Done:
+  - path flexibility for the remote server in gam_fork.c
+  - test for availability of setsid(), usleep()
   - code and file cleanup, indenting
   - removed old common dependancy
   - autostart/stop of the server side

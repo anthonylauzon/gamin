@@ -3,6 +3,7 @@ INCLUDES =						\
 	-I$(top_builddir) 				\
 	-I$(top_builddir)/libgamin			\
 	-I$(top_builddir)/protocol			\
+	-I$(top_srcdir)/lib				\
 	$(LIBGAMIN_CFLAGS)				\
 	-DBINDIR=\""$(bindir)"\"			\
 	-DG_DISABLE_DEPRECATED				\
@@ -18,16 +19,12 @@ gam_server_SOURCES =					\
 	gam_listener.h					\
 	gam_server.c					\
 	gam_server.h					\
-	gam_event.c					\
-	gam_event.h					\
 	gam_node.c					\
 	gam_node.h					\
 	gam_tree.c					\
 	gam_tree.h					\
 	gam_poll.c					\
 	gam_poll.h					\
-	gam_error.c					\
-	gam_error.h					\
 	gam_dnotify.c					\
 	gam_dnotify.h					\
 	gam_inotify.c					\
@@ -39,4 +36,4 @@ gam_server_SOURCES =					\
 
 gam_server_LDFLAGS =
 gam_server_DEPENDENCIES = $(DEPS)
-gam_server_LDADD= $(LDADDS) $(LIBGAMIN_LIBS)
+gam_server_LDADD= $(top_builddir)/lib/libgamin_shared.a $(LDADDS) $(LIBGAMIN_LIBS)

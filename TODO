@@ -1,18 +1,18 @@
  - merge GAMIN_EVENT_ with FAMEvents ?
- - path flexibility for the remote server in gam_fork.c (needed for
-   make tests)
  - try to use getlogin and $USER to get the user name
- - test for availability of setsid(), usleep()
  - doc extraction and reformatting of comments in gtk-doc style
  - handling of missing monitored resources where dnotify() won't work
- - code merge between client and server, e.g. libgamin/gam_error.[ch]
-   and server/gam_error.[ch] ?
                                                                                 
 Regression tests:
  - try all the file length on the client till error.
  - try the fragmented/multirequests tests on the client side
 
 Done:
+ - path flexibility for the remote server in gam_fork.c (needed for
+   make tests)
+ - code merge between client and server, e.g. libgamin/gam_error.[ch]
+   and server/gam_error.[ch] ?
+ - test for availability of setsid(), usleep()
  - code and file cleanup, indenting
  - removed old common dependancy
  - autostart/stop of the server side

@@ -64,12 +64,14 @@ gamin_dump_event(FAMEvent *event) {
 static char *
 gamin_get_user_name(void)
 {
-    struct passwd *pw;
+	struct passwd *pw;
 
-    pw = getpwuid(getuid());
-    if (pw != NULL)
-        return (strdup(pw->pw_name));
-    return (NULL);
+	pw = getpwuid(getuid());
+
+	if (pw != NULL)
+		return (strdup(pw->pw_name));
+
+	return (NULL);
 }
 
 /**
@@ -344,9 +346,9 @@ gamin_connect_unix_socket(const char *path)
             goto retry_start;
         }
         if (retries < MAX_RETRIES) {
+            close(fd);
             usleep(50000);
             retries++;
-            close(fd);
             goto retry_start;
         }
 

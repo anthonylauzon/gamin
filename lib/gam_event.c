@@ -17,8 +17,6 @@
  */
 
 
-#include <glib.h>
-#include "gam_event.h"
 #include "gam_event.h"
 
 /**

@@ -75,6 +75,8 @@ fi
 
 AM_CONDITIONAL(ENABLE_GTK_DOC, test x$enable_gtk_doc = xyes)
 
+AC_CHECK_FUNCS(usleep setsid getlogin_r)
+
 dnl
 dnl Start of pkg-config checks
 dnl
@@ -282,6 +284,7 @@ dnl ==========================================================================
 
 AC_OUTPUT([
 Makefile
+lib/Makefile
 libgamin/Makefile
 server/Makefile
 tests/Makefile

@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = libgamin server tests # docs
+SUBDIRS = lib libgamin server tests # docs
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gamin.pc

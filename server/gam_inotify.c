@@ -14,6 +14,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * TODO:
+ * 	Handle removal of subscriptions when we get IGNORE event
  */
 
 
@@ -91,12 +93,15 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
 	GList *subs;
 
 	subs = NULL;
+	subs = g_list_append(subs, sub);
 
         if ((data = g_hash_table_lookup(path_hash, path)) != NULL) {
             data->refcount++;
 	    data->subs = g_list_prepend(data->subs, sub);
             G_UNLOCK(inotify);
 	    gam_debug(DEBUG_INFO, "inotify updated refcount\n");
+	    gam_server_emit_event (path, GAMIN_EVENT_EXISTS, subs);
+            gam_server_emit_event (path, GAMIN_EVENT_ENDEXISTS, subs);
             return;
         }
 
@@ -111,15 +116,12 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
             return;
         }
 
-
         data = gam_inotify_data_new(path, wd);
     	data->subs = g_list_prepend(data->subs, sub);
         g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
         g_hash_table_insert(path_hash, data->path, data);
 
         gam_debug(DEBUG_INFO, "activated INotify for %s\n", path);
-
-	subs = g_list_append(subs, sub);
 
 	gam_server_emit_event (path, GAMIN_EVENT_EXISTS, subs);
 	gam_server_emit_event (path, GAMIN_EVENT_ENDEXISTS, subs);
@@ -224,9 +226,11 @@ gam_inotify_read_handler(gpointer user_data)
 	return FALSE;
     }
 
-
-    /* Need to walk data->subs list and remove this from each subscription
-    if (event.mask == IN_IGNORE) {
+    /* When we get an ignore event, we 
+     * remove all the subscriptions for this wd
+     */
+    if (event.mask == IN_IGNORED) {
+	    GList *l;
 	    data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event.wd));
 
 	    if (!data) {
@@ -234,13 +238,15 @@ gam_inotify_read_handler(gpointer user_data)
 		    return TRUE;
 		}
 
-	    g_hash_table_remove(path_hash, data->path);
-	    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
-	    gam_inotify_data_free (data);
+	    l = data->subs;
+	    data->subs = NULL;
+	    for (l = l; l; l = l->next) {
+		    GamSubscription *sub = l->data;
+		    gam_inotify_remove_subscription (sub);
+	    }
 	    G_UNLOCK(inotify);
 	    return TRUE;
     }
-    */
 
     data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event.wd));
 
