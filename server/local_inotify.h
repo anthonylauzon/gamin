@@ -1,7 +1,7 @@
 /*
  * Inode based directory notification for Linux
  *
- * Copyright (C) 2004 John McCutchan
+ * Copyright (C) 2005 John McCutchan
  */
 
 #ifndef _LINUX_INOTIFY_H
@@ -10,28 +10,18 @@
 #include <linux/types.h>
 #include <linux/limits.h>
 
-/* this size could limit things, since technically we could need PATH_MAX */
-#define INOTIFY_FILENAME_MAX	256
-
 /*
  * struct inotify_event - structure read from the inotify device for each event
  *
  * When you are watching a directory, you will receive the filename for events
- * such as IN_CREATE, IN_DELETE, IN_OPEN, IN_CLOSE, ...
- *
- * Note: When reading from the device you must provide a buffer that is a
- * multiple of sizeof(struct inotify_event)
+ * such as IN_CREATE, IN_DELETE, IN_OPEN, IN_CLOSE, ..., relative to the wd.
  */
 struct inotify_event {
-	__s32 wd;
-	__u32 mask;
-	__u32 cookie;
-	size_t len;
-#ifdef __KERNEL__
-	char *filename;
-#else
-	char filename[0];
-#endif
+	__s32 wd;	/* watch descriptor */
+	__u32 mask;	/* watch mask */
+	__u32 cookie;	/* cookie used for synchronizing two events */
+	size_t len;	/* length (including nulls) of name */
+	char name[0];	/* stub for possible name */
 };
 
 /*
@@ -40,7 +30,7 @@ struct inotify_event {
  * Pass to the inotify device via the INOTIFY_WATCH ioctl
  */
 struct inotify_watch_request {
-	char *dirname;		/* directory name */
+	char *name;		/* directory name */
 	__u32 mask;		/* event mask */
 };
 
@@ -79,10 +69,9 @@ struct inotify_watch_request {
 #include <linux/config.h>
 
 struct inotify_inode_data {
-	struct list_head watches;
-	__u32 watch_mask;
-	spinlock_t lock;
-	atomic_t count;
+	struct list_head watches;	/* list of watches on this inode */
+	spinlock_t lock;		/* lock protecting the struct */
+	atomic_t count;			/* ref count */
 };
 
 #ifdef CONFIG_INOTIFY
@@ -94,23 +83,6 @@ extern void inotify_dentry_parent_queue_event(struct dentry *, __u32, __u32,
 extern void inotify_super_block_umount(struct super_block *);
 extern void inotify_inode_is_dead(struct inode *);
 extern __u32 inotify_get_cookie(void);
-extern __u32 setattr_mask_inotify(unsigned int);
-
-/* this could be kstrdup if only we could add that to lib/string.c */
-static inline char * inotify_oldname_init(struct dentry *old_dentry)
-{
-	char *old_name;
-
-	old_name = kmalloc(strlen(old_dentry->d_name.name) + 1, GFP_KERNEL);
-	if (old_name)
-		strcpy(old_name, old_dentry->d_name.name);
-	return old_name;
-}
-
-static inline void inotify_oldname_free(const char *old_name)
-{
-	kfree(old_name);
-}
 
 #else
 
@@ -134,21 +106,7 @@ static inline void inotify_inode_is_dead(struct inode *inode)
 {
 }
 
-static inline char * inotify_oldname_init(struct dentry *old_dentry)
-{
-	return NULL;
-}
-
 static inline __u32 inotify_get_cookie(void)
-{
-	return 0;
-}
-
-static inline void inotify_oldname_free(const char *old_name)
-{
-}
-
-static inline int setattr_mask_inotify(unsigned int ia_mask)
 {
 	return 0;
 }

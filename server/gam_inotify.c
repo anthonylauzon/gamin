@@ -116,11 +116,11 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
             return;
         }
 
-	iwr.dirname = g_strdup(path);
+	iwr.name = g_strdup(path);
 	iwr.mask = 0xffffffff; // all events
 
         wd = ioctl(fd, INOTIFY_WATCH, &iwr);
-        g_free(iwr.dirname);
+        g_free(iwr.name);
 
         if (wd < 0) {
             G_UNLOCK(inotify);
@@ -204,12 +204,12 @@ static void gam_inotify_emit_event (INotifyData *data, struct inotify_event *eve
 		return;
 	}
 
-	if (event->filename[0] != '\0') {
+	if (event->name[0] != '\0') {
 		int pathlen = strlen(data->path);
 		if (data->path[pathlen-1] == '/') {
-			event_path = g_strconcat (data->path, event->filename, NULL);
+			event_path = g_strconcat (data->path, event->name, NULL);
 		} else {
-			event_path = g_strconcat (data->path, "/", event->filename, NULL);
+			event_path = g_strconcat (data->path, "/", event->name, NULL);
 		}
 	} else {
 		event_path = g_strdup (data->path);
