@@ -1,3 +1,8 @@
+Sun Oct  3 17:55:17 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* doc/* doc/internals.html doc/client_server.gif doc/server_structs.gif:
+	  added documentation about the internals, regenerated the docs.
+
 Sun Oct  3 16:11:01 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c: extra debug on client API

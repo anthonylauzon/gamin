@@ -27,6 +27,9 @@
       <xsl:when test="$name = '#Developers'">
         <xsl:text>devel.html</xsl:text>
       </xsl:when>
+      <xsl:when test="$name = '#Internals'">
+        <xsl:text>internals.html</xsl:text>
+      </xsl:when>
       <xsl:when test="$name = '#Contacts'">
         <xsl:text>contacts.html</xsl:text>
       </xsl:when>

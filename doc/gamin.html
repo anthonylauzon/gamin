@@ -326,6 +326,35 @@ running under the same UID.</p>
 <p>The client and the server checks on the first '\0' byte received that the
 other side is of the same UID.</p>
 
+<h2><a name="Internals">Internals</a></h2>
+
+<p>gamin uses a client server model, this is in a large measure justified by
+the inappropriate dnotify kernel API way to signal modification events to an
+application but also to share kernel signal when multiple application
+monitors the same resource. It also allow to fine tune and filters event flow
+in the daemon, potentially minimizing resource consumption in
+applications.</p>
+
+<p><img src="client_server.gif" alt="One server and two client connected"></p>
+
+<p>Internally the gam_server maintain various data structures:</p>
+<ul>
+  <li>A tree of monitored nodes, using both GamNode structure containing
+    specific informations (like the path, the subscriptions list for that
+    node, monitoring data and whether it's a directory), the tree itself is
+    based on a GNode N-ary tree. </li>
+  <li>Per connection data (GamConnData) one per connected socket. The data
+    includes state, connection informations (file descriptor, Glib I/O
+    Channel, pid of the application), and potential unprocessed yet data
+    request from the socket.</li>
+  <li>Listener information, keeps the list of subscriptions for the connected
+    application, this could probably be merged in the connection data.</li>
+  <li>For each path monitored by an application, a specific GamSubscription
+    structure is maintained. The subscriptions are referenced both from the
+    monitored nodes tree and from the listeners.</li>
+</ul>
+
+<p><img src="server_structs.gif" alt="the data structures present in the server"></p>
 <p></p>
 </body>
 </html>
