@@ -72,3 +72,5 @@ rm -fr %{buildroot}
 * @RELDATE@ Daniel Veillard <veillard@redhat.com>
 - upstream release @VERSION@
 
+* Wed Aug  4 2004 Daniel Veillard <veillard@redhat.com> 0.0.4-1
+- should fix KDE build problems

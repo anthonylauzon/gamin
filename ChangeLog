@@ -1,3 +1,7 @@
+Thu Aug  4 16:55:38 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: release of 0.0.4
+
 Wed Aug  4 14:34:27 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* TODO: update
