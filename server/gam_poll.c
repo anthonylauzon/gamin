@@ -557,13 +557,12 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
     for (l = children; l; l = l->next) {
         GamNode *child = (GamNode *) l->data;
 
-	if (!gam_node_get_subscriptions(child) && remove_dir) {
+	if ((!gam_node_get_subscriptions(child)) && (remove_dir) &&
+	    (!gam_tree_has_children(tree, child))) {
 	    if (missing_resources != NULL) {
 		gam_poll_remove_missing (child);
 	    }
-	    if (!gam_tree_has_children(tree, child)) {
-		gam_tree_remove(tree, child);
-	    }
+	    gam_tree_remove(tree, child);
 	} else {
 	    remove_dir = FALSE;
 	}
