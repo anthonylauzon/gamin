@@ -5,6 +5,7 @@ a subset of the FAM (File Alteration Monitor) system.
  1/ minimize the security model of FAM
  2/ simplify the code base
  3/ provide an API and ABI compatible replacement for FAM
+ 4/ try to fix some other issues like resource consumption
                                                                                 
 The project home page is (temporary) at:
   http://www.gnome.org/~veillard/gamin/

@@ -1,3 +1,7 @@
+Wed Aug 25 15:39:45 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* README doc/gamin.html: updating the documentation
+
 Wed Aug 25 10:19:00 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_server.c: applied patch from Martin Schlemmer to
