@@ -1,6 +1,5 @@
  - on the client handle numbers provided by the caller.
  - merge GAMIN_EVENT_ with FAMEvents ?
- - check both ways of identification, not just server checking client.
  - path flexibility for the remote server in gam_fork.c
  - try to use getlogin and $USER to get the user name
  - test for availability of setsid(), usleep()
@@ -22,3 +21,4 @@ Done:
    the static one still exports gamin_* symbols though
  - code 'cb' processing cleanup
  - make Copyright file for LGPL
+ - check both ways of identification, not just server checking client.
