@@ -70,6 +70,9 @@ rm -fr %{buildroot}
 
 
 %changelog
+* Sat Oct 16 2004 Daniel Veillard <veillard@redhat.com> 0.0.15-1
+- workaround to detect loops and avoid the nasty effects, see RedHat bug #132354
+
 * Sun Oct  3 2004 Daniel Veillard <veillard@redhat.com> 0.0.14-1
 - Found and fixed the annoying bug where update were not received
   should fix bugs ##132429, #133665 and #134413

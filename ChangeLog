@@ -3,6 +3,13 @@ Tue Oct 19 15:50:05 CEST 2004 Daniel Veillard <veillard@redhat.com>
 	* server/gam_poll.c server/gam_subscription.c: valgrinding
 	  a session raised a couple of problems.
 
+Sat Oct 16 18:11:39 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: workaround to detect loops and avoid the nasty
+	  effects, see RedHat bug #132354 . Getting a loop still look
+	  impossible but well it happens in practice so this should avoid
+	  most of the problems in practice until the problem is found.
+
 Wed Oct 13 00:40:32 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_node.c server/gam_node.h: adding a new API

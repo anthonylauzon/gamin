@@ -378,6 +378,13 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
     GList *children, *l;
     unsigned int exists = 0;
 
+    /*
+     * For a yet unknow reason sometimes gam_tree_get_children()
+     * returned list seems to contain a loop. The l2 is a trick to
+     * detect the loop and at least not block on looping.
+     */
+    GList *l2;
+
     g_return_if_fail(dir_node != NULL);
 
     dpath = gam_node_get_path(dir_node);
@@ -442,7 +449,25 @@ scan_files:
 	}
     }
     children = gam_tree_get_children(tree, dir_node);
+    l2 = children;
     for (l = children; l; l = l->next) {
+        /*
+	 * loop in list usual detection trick code.
+	 */
+        if (l2)
+	    l2 = l2->next;
+	if (l2 == l) {
+	    gam_error(DEBUG_INFO,
+	              "gam_poll_scan_directory_internal(%s) loop detected\n",
+		      path);
+	    break;
+	}
+        if (l2)
+	    l2 = l2->next;
+        /*
+	 * end of trick
+	 */
+
         node = (GamNode *) l->data;
 
         fevent = poll_file(node);
@@ -469,7 +494,6 @@ scan_files:
 	    if ((data) && (!(data->flags & MON_MISSING)))
 		gam_server_emit_event(gam_node_get_path(node),
 				      GAMIN_EVENT_EXISTS, exist_subs);
-
         }
     }
 
