@@ -79,6 +79,7 @@ gam_node_free(GamNode * node)
 
     g_free(node->path);
     g_list_free(node->subs);
+    node->subs = NULL;
     g_free(node);
 }
 
@@ -195,7 +196,6 @@ gam_node_add_subscription(GamNode * node, GamSubscription * sub)
         return(FALSE);
     if (!g_list_find(node->subs, sub))
         node->subs = g_list_prepend(node->subs, sub);
-
 
     return TRUE;
 }

@@ -1,3 +1,11 @@
+Fri Dec  3 16:10:03 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/Makefile.am server/gam_debug_lists.c: adding our own
+	  reduced version of glib glist.c with simplified memory allocation
+	  and poisonning of deleted list nodes to chase #132354.
+	* server/gam_connection.c server/gam_node.c server/gam_poll.c:
+	  more review and simplifiction of the use of GList APIs.
+
 Fri Dec  3 12:10:50 CET 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_connection.c server/gam_node.c server/gam_poll.c

@@ -425,10 +425,11 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
         list_intersection(exist_subs,
                           gam_node_get_subscriptions(dir_node));
 
-    if (event == 0 && !dir_exist_subs)
+    if ((event == 0) && (dir_exist_subs == NULL))
         goto scan_files;
 
     gam_poll_emit_event(dir_node, event, dir_exist_subs);
+    g_list_free(dir_exist_subs);
 
     dir = g_dir_open(dpath, 0, NULL);
 
@@ -536,7 +537,6 @@ scan_files:
     }
 
     g_list_free(children);
-    g_list_free(dir_exist_subs);
 }
 
 static gboolean

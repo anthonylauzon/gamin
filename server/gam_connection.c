@@ -92,8 +92,8 @@ gam_connection_close(GamConnDataPtr conn)
     }
     GAM_DEBUG(DEBUG_INFO, "Closing connection %d\n", conn->fd);
     g_io_channel_unref(conn->source);
+    gamConnList = g_list_remove_all(gamConnList, conn);
     g_free(conn);
-    gamConnList = g_list_delete_link(gamConnList, item);
     return (0);
 }
 
