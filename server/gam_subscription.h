@@ -35,6 +35,8 @@ void                 gam_subscription_unset_event  (GamSubscription *sub,
 gboolean             gam_subscription_has_event    (GamSubscription *sub,
 						    int              event);
 
+gboolean             gam_subscription_has_option   (GamSubscription * sub,
+						    int              option);
 void                 gam_subscription_cancel       (GamSubscription *sub);
 gboolean             gam_subscription_is_cancelled (GamSubscription *sub);
 

@@ -230,6 +230,20 @@ gam_subscription_has_event(GamSubscription * sub, int event)
 }
 
 /**
+ *  
+ * @param sub the GamSubscription
+ * @option option
+ * @returns Whether or not this subscription has that option.
+ */
+gboolean
+gam_subscription_has_option(GamSubscription * sub, int option)
+{
+    if (sub == NULL)
+        return(FALSE);
+    return((sub->options & option) != 0);
+}
+
+/**
  * Mark this GamSubscription as cancelled
  *
  * @param sub the GamSubscription
@@ -274,6 +288,8 @@ gam_subscription_wants_event(GamSubscription * sub,
                              const char *name, int is_dir_node, 
 			     GaminEventType event, int force)
 {
+    int same_path = 0;
+
     if ((sub == NULL) || (name == NULL) || (event == 0))
         return(FALSE);
     if (sub->cancelled)
@@ -285,7 +301,8 @@ gam_subscription_wants_event(GamSubscription * sub,
 	return FALSE;
 
     /* only directory listening cares for other files */
-    if ((sub->is_dir == 0) && (strcmp(name, sub->path)))
+    same_path = !strcmp(name, sub->path);
+    if ((sub->is_dir == 0) && (!same_path))
         return(FALSE);
 
     if (!gam_subscription_has_event(sub, event)) {
@@ -294,7 +311,7 @@ gam_subscription_wants_event(GamSubscription * sub,
 
     if (force)
         return TRUE;
-    if ((sub->is_dir) && (is_dir_node)) {
+    if ((sub->is_dir) && (is_dir_node) && (same_path)) {
         if ((event == GAMIN_EVENT_EXISTS) ||
 	    (event == GAMIN_EVENT_CHANGED) ||
 	    (event == GAMIN_EVENT_ENDEXISTS))

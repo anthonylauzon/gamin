@@ -1,3 +1,10 @@
+Tue Feb 15 12:57:05 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c server/gam_subscription.[ch]: cleaning up
+	  the server code, a number of bug fixes
+	* python/tests/Makefile.am python/tests/*.py: adding a bunch of
+	  new tests
+
 Fri Feb 11 14:39:16 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in python/Makefile.am python/gamin.c python/gamin.py:
