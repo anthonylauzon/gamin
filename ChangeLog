@@ -1,3 +1,8 @@
+Wed Oct 20 19:02:22 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: release 0.0.16 with latest code
+	  to try to get rid of #132354
+
 Wed Oct 20 18:46:32 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c: minimize calls to getpwuid()
