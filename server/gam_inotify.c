@@ -15,8 +15,11 @@
  * License along with this library; if not, write to the Free
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * TODO:
- * 	Handle removal of subscriptions when we get IGNORE event
- * 	The dnotify/poll hybrid backend produces more events
+ * 	- *properly* Handle removal of subscriptions when we get IGNORE event
+ * 	- this backend does not produce the same events as the dnotify/poll backend.
+ * 	for example, the dp backend allows for watching non-exist files/folders, 
+ * 	and be notified when they are created. there are more places where
+ * 	the events are not consistent.
  */
 
 
@@ -60,7 +63,6 @@ G_LOCK_DEFINE_STATIC(inotify);
 static GIOChannel *inotify_read_ioc = NULL;
 
 static gboolean have_consume_idler = FALSE;
-
 
 int fd = -1; // the device fd
 
@@ -117,8 +119,8 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
 	iwr.dirname = g_strdup(path);
 	iwr.mask = 0xffffffff; // all events
 
-        wd = ioctl(fd, INOTIFY_WATCH,&iwr);
-        g_free(iwr.dirname);	
+        wd = ioctl(fd, INOTIFY_WATCH, &iwr);
+        g_free(iwr.dirname);
 
         if (wd < 0) {
             G_UNLOCK(inotify);
@@ -130,7 +132,7 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
         g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
         g_hash_table_insert(path_hash, data->path, data);
 
-        GAM_DEBUG(DEBUG_INFO, "activated INotify for %s\n", path);
+        GAM_DEBUG(DEBUG_INFO, "added inotify watch for %s\n", path);
 
 	gam_server_emit_event (path, 0, GAMIN_EVENT_EXISTS, subs, 1);
 	gam_server_emit_event (path, 0, GAMIN_EVENT_ENDEXISTS, subs, 1);
@@ -146,24 +148,21 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
 		data->subs = g_list_remove_all (data->subs, sub);
 	}
         data->refcount--;
-	    GAM_DEBUG(DEBUG_INFO, "inotify decremeneted refcount\n");
+	    GAM_DEBUG(DEBUG_INFO, "inotify decremeneted refcount for %s\n", path);
 
         if (data->refcount == 0) {
             r = ioctl (fd, INOTIFY_IGNORE, &data->wd); 
 	    if (r < 0) {
-                GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s\n", data->path);
+                GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
             }
-            GAM_DEBUG(DEBUG_INFO, "deactivated INotify for %s\n",
-                      data->path);
+            GAM_DEBUG(DEBUG_INFO, "removed inotify watch for %s\n", data->path);
             g_hash_table_remove(path_hash, data->path);
             g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
             gam_inotify_data_free(data);
         }
     }
-
     G_UNLOCK(inotify);
 }
-
 
 static GaminEventType inotify_event_to_gamin_event (int mask) 
 {
@@ -187,6 +186,7 @@ static GaminEventType inotify_event_to_gamin_event (int mask)
 			return GAMIN_EVENT_UNKNOWN;
 	}
 }
+
 static void gam_inotify_emit_event (INotifyData *data, struct inotify_event *event)
 {
 	GaminEventType gevent;
@@ -196,93 +196,90 @@ static void gam_inotify_emit_event (INotifyData *data, struct inotify_event *eve
 		return;
 
 	gevent = inotify_event_to_gamin_event (event->mask);
-	// we got some event that GAMIN doesn't understand
+
+	// gamins event vocabulary is very small compared to inotify
+	// so we often will receieve events that have no equivelant 
+	// in gamin
 	if (gevent == GAMIN_EVENT_UNKNOWN) {
-		GAM_DEBUG(DEBUG_INFO, "inotify_emit_event got unknown event %x\n", event->mask);
 		return;
 	}
 
 	if (event->filename[0] != '\0') {
 		int pathlen = strlen(data->path);
-		GAM_DEBUG(DEBUG_INFO, "Got filename with event\n");
 		if (data->path[pathlen-1] == '/') {
 			event_path = g_strconcat (data->path, event->filename, NULL);
 		} else {
 			event_path = g_strconcat (data->path, "/", event->filename, NULL);
 		}
 	} else {
-		GAM_DEBUG(DEBUG_INFO, "Got no filename with event\n");
 		event_path = g_strdup (data->path);
 	}
 
-	GAM_DEBUG(DEBUG_INFO, "gam_inotify_emit_event() %s\n", event_path);
+	GAM_DEBUG(DEBUG_INFO, "inotify emitting event %s for %s\n", gam_event_to_string(gevent) , event_path);
 
 	gam_server_emit_event (event_path, 0, gevent, data->subs, 1);
+
+	g_free (event_path);
 }
 
 static gboolean
-gam_inotify_read_handler(gpointer user_data)
+gam_inotify_read_handler (gpointer user_data)
 {
-    char buffer[sizeof(struct inotify_event) + INOTIFY_FILENAME_MAX];
-    struct inotify_event *event;
-    INotifyData *data;
+    char *buffer;
+    int buffer_size;
+    gsize buffer_i, read_size;
 
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler()\n");
     G_LOCK(inotify);
 
-    if (g_io_channel_read_chars(inotify_read_ioc, buffer, sizeof(struct inotify_event), NULL, NULL) != G_IO_STATUS_NORMAL) {
+    buffer_size = ioctl(fd, FIONREAD);
+    if (buffer_size < 0) {
 	G_UNLOCK(inotify);
-        GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler failed\n");
+	GAM_DEBUG(DEBUG_INFO, "inotify FIONREAD < 0. kaboom!\n");
 	return FALSE;
     }
-    event = (struct inotify_event *)buffer;
-    if (event->len > 0) {
-        if ((event->len > INOTIFY_FILENAME_MAX) ||
-            (g_io_channel_read_chars(inotify_read_ioc, event->filename, event->len, NULL, NULL) != G_IO_STATUS_NORMAL)) {
-	    G_UNLOCK(inotify);
-            GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler failed\n");
-	    return FALSE;
-        }
-    } else {
-        event->filename[0] = '\0';
+
+    buffer = g_malloc(buffer_size);
+
+    if (g_io_channel_read_chars(inotify_read_ioc, (char *)buffer, buffer_size, &read_size, NULL) != G_IO_STATUS_NORMAL) {
+	G_UNLOCK(inotify);
+        GAM_DEBUG(DEBUG_INFO, "inotify failed to read events from inotify fd.\n");
+	g_free (buffer);
+	return FALSE;
     }
 
-    /* When we get an ignore event, we 
-     * remove all the subscriptions for this wd
-     */
-    if (event->mask == IN_IGNORED) {
-	    GList *l;
-	    data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
+    buffer_i = 0;
+    while (buffer_i < read_size) {
+	struct inotify_event *event;
+	gsize event_size;
+	INotifyData *data;
 
-	    if (!data) {
-		    G_UNLOCK(inotify);
-		    return TRUE;
-		}
+	event = (struct inotify_event *)&buffer[buffer_i];
+	event_size = sizeof(struct inotify_event) + event->len;
 
-	    l = data->subs;
-	    data->subs = NULL;
-	    for (l = l; l; l = l->next) {
+	data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
+	if (!data) {
+	    GAM_DEBUG(DEBUG_INFO, "inotify can't find wd %d\n", event->wd);
+	    GAM_DEBUG(DEBUG_INFO, "weird things have happened to inotify.\n");
+	} else {
+	    /* Do the shit with the event */
+	    if (event->mask == IN_IGNORED) {
+		GList *l;
+
+		l = data->subs;
+		data->subs = NULL;
+		for (l = l; l; l = l->next) {
 		    GamSubscription *sub = l->data;
 		    gam_inotify_remove_subscription (sub);
+		}
+	    } else {
+		    gam_inotify_emit_event (data, event);
 	    }
-	    G_UNLOCK(inotify);
-	    return TRUE;
+	}
+
+	buffer_i += event_size;
     }
 
-    data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
-
-    if (!data) {
-	GAM_DEBUG(DEBUG_INFO, "Could not find WD %d in hash\n", event->wd);
-        G_UNLOCK(inotify);
-        return TRUE;
-    }
-
-    gam_inotify_emit_event (data, event);
-
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify event for %s (%x) %s\n", data->path, event->mask, event->filename);
-
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_read_handler() done\n");
-
+    g_free (buffer);
     G_UNLOCK(inotify);
 
     return TRUE;
@@ -347,9 +344,9 @@ gam_inotify_consume_subscriptions(void)
 }
 
 /**
- * @defgroup INotify INotify Backend
+ * @defgroup inotify inotify backend
  * @ingroup Backends
- * @brief INotify backend API
+ * @brief inotify backend API
  *
  * Since version 2.6.X, Linux kernels have included the Linux Inode
  * Notification system (inotify).  This backend uses inotify to know when
