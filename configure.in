@@ -297,6 +297,7 @@ lib/Makefile
 libgamin/Makefile
 server/Makefile
 tests/Makefile
+doc/Makefile
 gamin.pc
 gamin.spec
 ])

@@ -1,3 +1,10 @@
+Wed Aug 25 16:38:54 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* Makefile.am NEWS configure.in doc/Makefile.am doc/contacts.html
+	  doc/devel.html doc/downloads.html doc/gamin.html doc/index.html
+	  doc/news.html doc/news.xsl doc/overview.html doc/site.xsl: building
+	  the web site, borrowing most of the XSLT code from libxml2 project
+
 Wed Aug 25 15:39:45 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* README doc/gamin.html: updating the documentation

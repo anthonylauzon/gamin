@@ -1,0 +1,23 @@
+
+        NEWS file for gamin
+
+  Note that this is automatically generated from the news webpage at:
+       http://www.gnome.org/~veillard/gamin/news.html
+
+
+0.0.7: Aug 24 2004:
+   - increased the test suite
+   - activate poll and kernel monitoring (dnotify) simultaneously
+   - fix monitoring of resources initially missing
+   - fix load problem due to dnotify on very busy resources
+
+
+0.0.6: Aug 19 2004:
+   - fix monitoring of file resources
+   - moved gam_server to $libexec since it doesn't need to be started from
+    the command line usually
+   - test and fixes on x86_64
+   - removal all thread dependancies and conditional code
+
+Daniel Veillard at 
+contacts.html
