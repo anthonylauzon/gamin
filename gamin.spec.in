@@ -74,6 +74,11 @@ rm -fr %{buildroot}
 * @RELDATE@ Daniel Veillard <veillard@redhat.com>
 - upstream release @VERSION@
 
+* Mon Sep 27 2004 Daniel Veillard <veillard@redhat.com> 0.0.11-1
+- update to the latest version of inotify
+- inotify support compiled in by default
+- fix ABI FAM compatibility problems #133162 
+
 * Tue Sep 21 2004 Daniel Veillard <veillard@redhat.com> 0.0.10-1
 - more documentation
 - Added support for a configuration file $HOME/.gaminrc

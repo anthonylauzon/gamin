@@ -1,3 +1,7 @@
+Mon Sep 27 12:47:20 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in server/Makefile.am: release 0.0.11
+
 Mon Sep 27 11:53:01 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c server/local_inotify.h: applied patch
