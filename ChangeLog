@@ -1,3 +1,8 @@
+Sun Apr  3 17:35:37 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c: applied patch from Todor Penev to fix a
+	  problem on the inotify back-end
+
 Sat Apr  2 17:41:15 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in server/Makefile.am server/gam_channel.c
