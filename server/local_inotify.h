@@ -26,28 +26,28 @@
 struct inotify_event {
 	int wd;
 	int mask;
+	int cookie;
 	char filename[INOTIFY_FILENAME_MAX];
 };
 
 /* the following are legal, implemented events */
-#define IN_ACCESS	0x00000001	/* File was accessed */
-#define IN_MODIFY	0x00000002	/* File was modified */
-#define IN_CREATE	0x00000004	/* File was created */
-#define IN_DELETE	0x00000008	/* File was deleted */
-#define IN_RENAME	0x00000010	/* File was renamed */
-#define IN_UNMOUNT	0x00000080	/* Backing filesystem was unmounted */
-#define IN_CLOSE	0x00000100	/* File was closed */
-#define IN_OPEN		0x00000200	/* File was opened */
-#define IN_MOVEDFROM	0x00000400	/* File was moved from X */
-#define IN_MOVEDTO	0x00000800	/* File was moved to Y */
-#define IN_Q_OVERFLOW	0x00001000	/* The event queued overflowed */
-
-/* the following are legal, but not yet implemented, events */
-#define IN_ATTRIB	0x00000020	/* File changed attributes */
-#define IN_MOVE		0x00000040	/* File was moved */
+#define IN_ACCESS		0x00000001	/* File was accessed */
+#define IN_MODIFY		0x00000002	/* File was modified */
+#define IN_ATTRIB		0x00000004	/* File changed attributes */
+#define IN_CLOSE		0x00000008	/* File was closed */
+#define IN_OPEN			0x00000010	/* File was opened */
+#define IN_MOVED_FROM		0x00000020	/* File was moved from X */
+#define IN_MOVED_TO		0x00000040	/* File was moved to Y */
+#define IN_DELETE_SUBDIR	0x00000080	/* Subdir was deleted */ 
+#define IN_DELETE_FILE		0x00000100	/* Subfile was deleted */
+#define IN_CREATE_SUBDIR	0x00000200	/* Subdir was created */
+#define IN_CREATE_FILE		0x00000400	/* Subfile was created */
+#define IN_DELETE_SELF		0x00000800	/* Self was deleted */
+#define IN_UNMOUNT		0x00001000	/* Backing filesystem was unmounted */
+#define IN_Q_OVERFLOW		0x00002000	/* The event queued overflowed */
+#define IN_IGNORED		0x00004000	/* File was ignored */
 
 /* special flags */
-#define IN_IGNORED	0x00000400	/* File was ignored */
 #define IN_ALL_EVENTS	0xffffffff	/* All the events */
 
 /*
@@ -81,7 +81,7 @@ struct inotify_watch_request {
 #include <linux/dcache.h>
 #include <linux/fs.h>
 
-/* Adds events to all watchers on inode that are interested in mask */
+/* Adds event to all watchers on inode that are interested in mask */
 void inotify_inode_queue_event (struct inode *inode, unsigned long mask,
 		const char *filename);
 

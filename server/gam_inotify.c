@@ -16,6 +16,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  * TODO:
  * 	Handle removal of subscriptions when we get IGNORE event
+ * 	The dnotify/poll hybrid backend produces more events
  */
 
 
@@ -167,15 +168,15 @@ static GaminEventType inotify_event_to_gamin_event (int mask)
 		case IN_MODIFY:
 			return GAMIN_EVENT_CHANGED;
 		break;
-		case IN_CREATE:
+		case IN_MOVED_TO:
+		case IN_CREATE_SUBDIR:
+		case IN_CREATE_FILE:
 			return GAMIN_EVENT_CREATED;
 		break;
-		case IN_DELETE:
+		case IN_MOVED_FROM:
+		case IN_DELETE_SUBDIR:
+		case IN_DELETE_FILE:
 			return GAMIN_EVENT_DELETED;
-		break;
-		case IN_RENAME:
-		case IN_MOVE:
-			return GAMIN_EVENT_MOVED;
 		break;
 		default:
 			return GAMIN_EVENT_UNKNOWN;
@@ -205,7 +206,7 @@ static void gam_inotify_emit_event (INotifyData *data, struct inotify_event *eve
 			event_path = g_strconcat (data->path, "/", event->filename, NULL);
 		}
 	} else {
-		gam_debug(DEBUG_INFO, "Got not filename with event\n");
+		gam_debug(DEBUG_INFO, "Got no filename with event\n");
 		event_path = g_strdup (data->path);
 	}
 

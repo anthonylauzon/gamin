@@ -1,3 +1,8 @@
+Mon Sep 27 11:53:01 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c server/local_inotify.h: applied patch
+	  for inotify 0.10 from John McCutchan
+
 Sun Sep 26 21:21:05 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c: added unimplemented entry points 
