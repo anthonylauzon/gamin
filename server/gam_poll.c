@@ -663,6 +663,9 @@ prune_tree(GamNode * node)
         GamNode *parent;
 
         parent = gam_node_parent(node);
+        if (all_resources != NULL) {
+                all_resources = g_list_remove (all_resources, node);
+        }
         gam_tree_remove(tree, node);
         prune_tree(parent);
     }
@@ -709,7 +712,6 @@ gam_poll_scan_all_callback(gpointer data) {
 		    char *parent;
 		    
 		    parent = g_path_get_dirname (path);
-		    g_print("parent %s\n",parent);
 		    node = gam_tree_get_at_path(tree, parent);
 	            if (!node) {
 	                node = gam_tree_add_at_path(tree, parent,
@@ -744,7 +746,7 @@ gam_poll_scan_all_callback(gpointer data) {
                     if (!gam_node_get_subscriptions(node)) {
                         GamNode *parent;
 
-                        if ((all_resources != NULL) && (g_list_find(all_resources, node) == NULL)) {
+                        if (all_resources != NULL) {
                             all_resources = g_list_remove (all_resources, node);
                         }
                         if (gam_tree_has_children(tree, node)) {
@@ -762,7 +764,7 @@ gam_poll_scan_all_callback(gpointer data) {
                     if (remove_directory_subscription(node, sub)) {
                         GamNode *parent;
 
-                        if ((all_resources != NULL) && (g_list_find(all_resources, node) == NULL)) {
+                        if (all_resources != NULL) {
                             all_resources = g_list_remove (all_resources, node);
                         }
                         parent = gam_node_parent(node);

@@ -1,3 +1,8 @@
+Wed Jan  5 18:32:45 CET 2005 Frederic Crozat  <fcrozat@mandrakesoft.com>
+
+	* server/gam_poll.c: (prune_tree), (gam_poll_scan_all_callback):
+	Update poll only mode to a working, non-crashing version.
+
 Wed Jan  5 16:46:15 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: patch from Frederic Crozat to add poll only
