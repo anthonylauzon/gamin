@@ -13,8 +13,8 @@ ACLOCAL_FLAGS="$ACLOCAL_FLAGS -I m4"
 
 DIE=0
 
-test -z "$AUTOMAKE" && AUTOMAKE=automake-1.7
-test -z "$ACLOCAL" && ACLOCAL=aclocal-1.7
+test -z "$AUTOMAKE" && AUTOMAKE=automake
+test -z "$ACLOCAL" && ACLOCAL=aclocal
 test -z "$AUTOCONF" && AUTOCONF=autoconf
 test -z "$AUTOHEADER" && AUTOHEADER=autoheader
 

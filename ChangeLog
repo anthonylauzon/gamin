@@ -1,3 +1,8 @@
+Fri Jun 18 14:25:04 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* autogen.sh: drop special dependancies a given version of the
+	  autotools
+
 Fri Jun 18 14:12:59 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_protocol.h server/gam_connection.h: workaround
