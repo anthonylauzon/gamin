@@ -1,3 +1,8 @@
+Wed Mar 30 12:55:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.pc.in: removing the Requires: glib-2.0 gthread-2.0 per
+	  Red Hat bug #152486
+
 Tue Mar 29 08:16:55 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* tests/Makefile.am: cleanup result files left from make tests
