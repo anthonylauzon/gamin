@@ -1,10 +1,4 @@
-2003-05-13  James Willcox  <jwillcox@gnome.org>
+Tue Jun 15 21:33:55 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
-	* *.c:  Added license info
-
-2003-05-13  James Willcox  <jwillcox@gnome.org>
-
-	* AUTHORS:
-
-	Update my email address, and start keeping a ChangeLog
-
+	* m4/gthread-supported.m4: still needed for configure.in until
+	  one got rid of any thread handling in the server code.
