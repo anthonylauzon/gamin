@@ -1,3 +1,10 @@
+Fri Sep 24 15:15:08 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in server/gam_inotify.c server/local_inotify.h: always
+	  compile in the inotify support and fallback to dnotify if we cannot
+	  find kernel support at runtime. Patch from Martin Schlemmer.
+	* server/gam_inotify.c: avoid the glib warning and use gam_debug
+
 Wed Sep 22 00:20:20 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in server/gam_excludes.c server/gam_server.c: applied

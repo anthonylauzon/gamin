@@ -27,7 +27,11 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <glib.h>
-#include "/usr/src/linux/include/linux/inotify.h"
+#ifdef HAVE_LINUX_INOTIFY_H
+#include <linux/inotify.h>
+#else
+#include "local_inotify.h"
+#endif
 #include "gam_error.h"
 #include "gam_inotify.h"
 #include "gam_tree.h"
@@ -351,7 +355,7 @@ gam_inotify_init(void)
     fd = open("/dev/inotify", O_RDONLY);
 
     if (fd < 0) {
-        g_warning("Could not open /dev/inotify\n");
+        gam_debug(DEBUG_INFO, "Could not open /dev/inotify\n");
         return FALSE;
     }
 
