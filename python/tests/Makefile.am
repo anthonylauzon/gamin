@@ -1,7 +1,8 @@
 PYTESTS=        		\
 		basic.py	\
 		basic2.py	\
-		noexists.py
+		noexists.py	\
+		multiple.py
 
 EXTRA_DIST = $(PYTESTS)
 

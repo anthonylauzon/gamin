@@ -1,3 +1,9 @@
+Fri Feb 11 12:34:39 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* python/gamin.py: fixing a bug in the bindings
+	* python/tests/Makefile.am python/tests/multiple.py: added a test
+	  for multiple monitors watching the same resource.
+
 Thu Feb 10 23:49:42 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c server/local_inotify.h: applied 

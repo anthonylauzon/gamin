@@ -91,7 +91,7 @@ class WatchMonitor:
 	    self.__req_no = ret
 
 	def _internal_callback(self, path, event):
-	    if self.data:
+	    if self.data != None:
 		self.callback (path, event, self.data)
 	    else:
 		self.callback (path, event)
