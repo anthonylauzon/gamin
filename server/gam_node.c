@@ -72,7 +72,7 @@ gam_node_free(GamNode * node)
 {
     g_return_if_fail(node != NULL);
 
-    g_assert(g_list_length(node->subs) == 0);
+    g_assert(node->subs == NULL);
 
     if (node->data_destroy && node->data)
         (*node->data_destroy) (node->data);
