@@ -1,3 +1,9 @@
+Thu Jun 17 14:32:07 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/Makefile.am libgamin/testing.c tests/Makefile.am
+	  tests/testing.c: setup the test environment
+	* tests/scenario/tst1 tests/result/tst1: add first test
+
 Thu Jun 17 00:38:33 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c libgamin/gam_fork.c libgamin/gamin.c
