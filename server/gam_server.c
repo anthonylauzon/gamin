@@ -39,10 +39,27 @@
 #ifdef ENABLE_DNOTIFY
 #include "gam_dnotify.h"
 #endif
+#ifdef ENABLE_KQUEUE
+#include "gam_kqueue.h"
+#endif
 #include "gam_excludes.h"
 
 static int poll_only = 0;
 static const char *session;
+
+/**
+ * gam_exit:
+ *
+ * Call the shutdown routine, then just exit.
+ * This function is designed to be called from a
+ * signal handler.
+ */
+void
+gam_exit(int signo) {
+	gam_shutdown();
+
+	exit(0);
+}
 
 /**
  * gam_shutdown:
@@ -87,6 +104,12 @@ gam_init_subscriptions(void)
 #ifdef ENABLE_DNOTIFY
 	if (gam_dnotify_init()) {
 	    GAM_DEBUG(DEBUG_INFO, "Using DNotify as backend\n");
+	    return(TRUE);
+	}
+#endif
+#ifdef ENABLE_KQUEUE
+	if (gam_kqueue_init()) {
+	    GAM_DEBUG(DEBUG_INFO, "Using KQueue as backend\n");
 	    return(TRUE);
 	}
 #endif
@@ -332,6 +355,10 @@ main(int argc, const char *argv[])
     }
 
     gam_error_init();
+    signal(SIGHUP, gam_exit);
+    signal(SIGINT, gam_exit);
+    signal(SIGQUIT, gam_exit);
+    signal(SIGTERM, gam_exit);
     signal(SIGPIPE, SIG_IGN);
 
     if (!gam_init_subscriptions()) {

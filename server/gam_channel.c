@@ -25,11 +25,53 @@
  * to check the server credentials early on.
  */
 static gboolean
-gam_client_conn_send_cred(GIOChannel * source, int fd)
+gam_client_conn_send_cred(int fd)
 {
     char data[2] = { 0, 0 };
+    int written;
+#if defined(HAVE_CMSGCRED) && !defined(LOCAL_CREDS)
+    struct {
+	    struct cmsghdr hdr;
+	    struct cmsgcred cred;
+    } cmsg;
+    struct iovec iov;
+    struct msghdr msg;
 
-    return(gam_client_conn_write(source, fd, &data[0], 1));
+    iov.iov_base = &data[0];
+    iov.iov_len = 1;
+
+    memset (&msg, 0, sizeof (msg));
+    msg.msg_iov = &iov;
+    msg.msg_iovlen = 1;
+
+    msg.msg_control = &cmsg;
+    msg.msg_controllen = sizeof (cmsg);
+    memset (&cmsg, 0, sizeof (cmsg));
+    cmsg.hdr.cmsg_len = sizeof (cmsg);
+    cmsg.hdr.cmsg_level = SOL_SOCKET;
+    cmsg.hdr.cmsg_type = SCM_CREDS;
+#endif
+
+retry:
+#if defined(HAVE_CMSGCRED) && !defined(LOCAL_CREDS)
+    written = sendmsg(fd, &msg, 0);
+#else
+    written = write(fd, &data[0], 1);
+#endif
+    if (written < 0) {
+        if (errno == EINTR)
+            goto retry;
+	gam_error(DEBUG_INFO,
+		  "Failed to write credential bytes to socket %d\n", fd);
+	return (-1);
+    }
+    if (written != 1) {
+	gam_error(DEBUG_INFO, "Wrote %d credential bytes to socket %d\n",
+		  written, fd);
+	return (-1);
+    }
+    GAM_DEBUG(DEBUG_INFO, "Wrote credential bytes to socket %d\n", fd);
+    return (written);
 }
 
 /**
@@ -148,7 +190,7 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
         goto failed;
     }
 
-    if (!gam_client_conn_send_cred(source, fd)) {
+    if (!gam_client_conn_send_cred(fd)) {
         GAM_DEBUG(DEBUG_INFO, "Failed to send credential byte to client\n");
         goto failed;
     }

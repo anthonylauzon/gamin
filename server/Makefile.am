@@ -47,6 +47,10 @@ if ENABLE_DNOTIFY
 gam_server_SOURCES += gam_dnotify.c gam_dnotify.h
 endif
 
+if ENABLE_KQUEUE
+gam_server_SOURCES += gam_kqueue.c gam_kqueue.h
+endif
+
 gam_server_LDFLAGS =
 gam_server_DEPENDENCIES = $(DEPS)
 gam_server_LDADD= $(top_builddir)/lib/libgamin_shared.a $(LDADDS) $(LIBGAMIN_LIBS)

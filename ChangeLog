@@ -1,3 +1,10 @@
+Sat Apr  2 17:41:15 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in server/Makefile.am server/gam_channel.c
+	  server/gam_kqueue.c server/gam_kqueue.h server/gam_server.c:
+	  applied patch from Joe Marcus Clarke, adding a kqueue based
+	  kernel backend for the BSD abd MacOS X platforms.
+
 Wed Mar 30 12:55:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.pc.in: removing the Requires: glib-2.0 gthread-2.0 per
