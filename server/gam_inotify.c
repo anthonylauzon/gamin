@@ -231,8 +231,7 @@ gam_inotify_read_handler (gpointer user_data)
 
     G_LOCK(inotify);
 
-    buffer_size = ioctl(fd, FIONREAD);
-    if (buffer_size < 0) {
+    if (ioctl(fd, FIONREAD, &buffer_size) < 0) {
 	G_UNLOCK(inotify);
 	GAM_DEBUG(DEBUG_INFO, "inotify FIONREAD < 0. kaboom!\n");
 	return FALSE;

@@ -1,3 +1,7 @@
+Sat Jan 29 20:28:36 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c: another patch from John McCutchan
+
 Fri Jan 28 23:04:47 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c: inotify 0.18 patch from John McCutchan
