@@ -40,7 +40,7 @@ extern "C" {
 /**
  * Type of FAM requests
  */
-typedef enum GAMReqType {
+typedef enum {
     GAM_REQ_FILE = 1,
     GAM_REQ_DIR = 2,
     GAM_REQ_CANCEL = 3

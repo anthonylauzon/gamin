@@ -1,3 +1,11 @@
+Fri Jun 18 14:12:59 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_protocol.h server/gam_connection.h: workaround
+	  gtk-doc parsing limitations
+	* configure.in Makefile.am gamin.spec.in libgamin/Makefile.am:
+	  emulation of libfam wasn't sufficient to compile fam-dependant
+	  code as pointed by hadess
+
 Fri Jun 18 09:42:47 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in: preparing first release of 0.0.1

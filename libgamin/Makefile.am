@@ -7,7 +7,7 @@ INCLUDES =						\
 EXTRA_DIST = 						\
 	gamin_sym.version
 
-lib_LTLIBRARIES = libgamin-1.la
+lib_LTLIBRARIES = libgamin-1.la libfam.la
 
 gaminincludedir = $(includedir)/
 gamininclude_HEADERS =	\
@@ -28,6 +28,11 @@ libgamin_1_la_LIBADD =
 libgamin_1_la_LDFLAGS = -Wl,--version-script=gamin_sym.version \
                         -version-info @GAMIN_VERSION_INFO@
 
+libfam_la_SOURCES = $(libgamin_1_la_SOURCES)
+libfam_la_LIBADD = $(libgamin_1_la_LIBADD)
+libfam_la_LDFLAGS = -Wl,--version-script=gamin_sym.version	\
+                    -version-info @FAM_VERSION_INFO@
+
 #
 # Compile a program locally to check
 #
@@ -37,10 +42,4 @@ gamin_SOURCES = gamin.c
 gamin_LDFLAGS =
 gamin_DEPENDENCIES = $(DEPS) 
 gamin_LDADD= $(LDADDS) -lgamin-1
-
-#
-# This ensure the binary replacement when using gamin to replace libfam
-#
-install-data-local:
-	cd $(libdir) && cp libgamin-1.so.$(VERSION) libfam.so.0.0.0 && ln -s libfam.so.0.0.0 libfam.so.0
 

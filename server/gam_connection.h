@@ -16,7 +16,7 @@ typedef GamConnData *GamConnDataPtr;
 /**
  * the different states the connection can be in
  */
-typedef enum GamConnState {
+typedef enum {
     GAM_STATE_ERROR = -1,	/* error condition */
     GAM_STATE_AUTH,		/* authenthication needed */
     GAM_STATE_OKAY,		/* normal state */
