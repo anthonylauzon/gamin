@@ -76,6 +76,7 @@ fi
 AM_CONDITIONAL(ENABLE_GTK_DOC, test x$enable_gtk_doc = xyes)
 
 AC_CHECK_FUNCS(usleep setsid getlogin_r)
+AC_STRUCT_ST_MTIM_NSEC
 
 dnl
 dnl Start of pkg-config checks
@@ -183,9 +184,17 @@ esac])
 
 if test x$backend = xinotify; then
     AC_DEFINE(ENABLE_INOTIFY,1,[Use inotify as backend])
+else 
+    if test x$backend = xdnotify; then
+        AC_DEFINE(ENABLE_DNOTIFY,1,[Use dnotify as backend])
+        else if test x$backend = xpolling; then
+            AC_DEFINE(ENABLE_POLLING,1,[Use polling as backend])
+        fi
+    fi
 fi
 
 AM_CONDITIONAL(ENABLE_INOTIFY, test x$backend = xinotify)
+AM_CONDITIONAL(ENABLE_DNOTIFY, test x$backend = xdnotify)
 
 dnl check for flavours of varargs macros (test from GLib)
 AC_MSG_CHECKING(for ISO C99 varargs macros in C)

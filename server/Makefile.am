@@ -28,8 +28,6 @@ gam_server_SOURCES =					\
 	gam_tree.h					\
 	gam_poll.c					\
 	gam_poll.h					\
-	gam_dnotify.c					\
-	gam_dnotify.h					\
 	gam_channel.c					\
 	gam_channel.h					\
 	gam_connection.c				\
@@ -39,6 +37,10 @@ gam_server_SOURCES =					\
 
 if ENABLE_INOTIFY
 gam_server_SOURCES += gam_inotify.c gam_inotify.h
+endif
+
+if ENABLE_DNOTIFY
+gam_server_SOURCES += gam_dnotify.c gam_dnotify.h
 endif
 
 gam_server_LDFLAGS =

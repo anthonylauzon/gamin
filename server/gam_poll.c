@@ -253,24 +253,26 @@ poll_file(GamNode * node)
         /* created */
         data->flags &= ~MON_MISSING;
         event = GAMIN_EVENT_CREATED;
-#ifdef linux
+#ifdef ST_MTIM_NSEC
     } else if ((data->sbuf.st_mtim.tv_sec != sbuf.st_mtim.tv_sec) ||
                (data->sbuf.st_mtim.tv_nsec != sbuf.st_mtim.tv_nsec) ||
                (data->sbuf.st_size != sbuf.st_size) ||
                (data->sbuf.st_ctim.tv_sec != sbuf.st_ctim.tv_sec) ||
                (data->sbuf.st_ctim.tv_nsec != sbuf.st_ctim.tv_nsec)) {
         event = GAMIN_EVENT_CHANGED;
-#else
-    } else if ((data->sbuf.st_mtime != sbuf.st_mtime) ||
-               (data->sbuf.st_size != sbuf.st_size) ||
-               (data->sbuf.st_ctime != sbuf.st_ctime)) {
-        event = GAMIN_EVENT_CHANGED;
-#endif
     } else {
 	gam_debug(DEBUG_INFO, "Poll: poll_file %s unchanged\n", path);
 	gam_debug(DEBUG_INFO, "%d %d : %d %d\n", data->sbuf.st_mtim.tv_sec,
 	          data->sbuf.st_mtim.tv_nsec, sbuf.st_mtim.tv_sec,
 		  sbuf.st_mtim.tv_nsec);
+#else
+    } else if ((data->sbuf.st_mtime != sbuf.st_mtime) ||
+               (data->sbuf.st_size != sbuf.st_size) ||
+               (data->sbuf.st_ctime != sbuf.st_ctime)) {
+        event = GAMIN_EVENT_CHANGED;
+	gam_debug(DEBUG_INFO, "%d : %d\n", data->sbuf.st_mtime,
+		  sbuf.st_mtime);
+#endif
     }
 
     data->sbuf = sbuf;
@@ -302,7 +304,7 @@ poll_file(GamNode * node)
 
     if ((data->checks >= 4) && (!(data->flags & MON_BUSY))) {
 	if (gam_node_get_subscriptions(node) != NULL) {
-#if 1
+#if 0
 	    fprintf(stderr, "switching %s back to polling\n", path);
 #endif
 	    data->flags |= MON_BUSY;
@@ -316,7 +318,7 @@ poll_file(GamNode * node)
     }
 
     if ((event == 0) && (data->flags & MON_BUSY) && (data->checks > 10)) {
-#if 1
+#if 0
 	fprintf(stderr, "switching %s back to kernel monitoring\n", path);
 #endif
 	data->flags &= ~MON_BUSY;
@@ -585,7 +587,7 @@ prune_tree(GamNode * node)
  */
 void
 gam_poll_add_missing(GamNode *node) {
-#if 1
+#if 0
     fprintf(stderr, "Adding %s to polling\n", gam_node_get_path(node));
 #endif
     gam_debug(DEBUG_INFO, "Poll adding missing node %s\n",
@@ -601,7 +603,7 @@ gam_poll_add_missing(GamNode *node) {
  */
 void
 gam_poll_remove_missing(GamNode *node) {
-#if 1
+#if 0
     fprintf(stderr, "Removing %s from polling\n", gam_node_get_path(node));
 #endif
     gam_debug(DEBUG_INFO, "Poll removing missing node %s\n",
