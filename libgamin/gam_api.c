@@ -1222,6 +1222,9 @@ FAMPending(FAMConnection * fc)
 
     GAM_DEBUG(DEBUG_INFO, "FAMPending(fd = %d)\n", fc->fd);
 
+    if (gamin_data_event_ready(conn))
+      return (1);
+
     /*
      * make sure we won't block if reading
      */

@@ -1,3 +1,10 @@
+Fri Nov 26 11:01:19 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.spec.in: real release of 0.0.18
+	* libgamin/gam_api.c: (FAMPending): only select/read
+	  when we don't have a complete event in the buffer.
+	  patch from Mark McLoughlin  <mark@skynet.ie>
+
 Thu Nov 25 16:07:04 CET 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c: fixed a const pbm
