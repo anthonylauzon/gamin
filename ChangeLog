@@ -1,3 +1,8 @@
+Thu Aug  5 16:51:33 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: release of 0.0.5
+	* doc/gamin-api.xml doc/gamin-refs.xml: rebuilt
+
 Thu Aug  5 16:23:18 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_event.h server/gam_inotify.c server/gam_server.c:

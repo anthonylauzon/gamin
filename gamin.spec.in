@@ -72,5 +72,9 @@ rm -fr %{buildroot}
 * @RELDATE@ Daniel Veillard <veillard@redhat.com>
 - upstream release @VERSION@
 
+* Thu Aug  5 2004 Daniel Veillard <veillard@redhat.com> 0.0.5-1
+- Fix a crash when the client binary forks the gam_server and an
+  atexit handler is run.
+
 * Wed Aug  4 2004 Daniel Veillard <veillard@redhat.com> 0.0.4-1
 - should fix KDE build problems

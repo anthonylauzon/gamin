@@ -50,6 +50,7 @@
     <reference name='gam_error' href='html/gamin-gam_error.html#gam_error'/>
     <reference name='gamin_data_conn_data' href='html/gamin-gam_data.html#gamin_data_conn_data'/>
     <reference name='gamin_data_del_req' href='html/gamin-gam_data.html#gamin_data_del_req'/>
+    <reference name='gamin_data_done_auth' href='html/gamin-gam_data.html#gamin_data_done_auth'/>
     <reference name='gamin_data_event_ready' href='html/gamin-gam_data.html#gamin_data_event_ready'/>
     <reference name='gamin_data_free' href='html/gamin-gam_data.html#gamin_data_free'/>
     <reference name='gamin_data_get_data' href='html/gamin-gam_data.html#gamin_data_get_data'/>
@@ -60,7 +61,6 @@
     <reference name='gamin_data_read_event' href='html/gamin-gam_data.html#gamin_data_read_event'/>
     <reference name='gamin_data_reset' href='html/gamin-gam_data.html#gamin_data_reset'/>
     <reference name='gamin_fork_server' href='html/gamin-gam_fork.html#gamin_fork_server'/>
-    <reference name='gamin_request_get_num' href='html/gamin-fam.html#gamin_request_get_num'/>
   </references>
   <alpha>
     <letter name='D'>
@@ -121,6 +121,7 @@
       <ref name='gam_error'/>
       <ref name='gamin_data_conn_data'/>
       <ref name='gamin_data_del_req'/>
+      <ref name='gamin_data_done_auth'/>
       <ref name='gamin_data_event_ready'/>
       <ref name='gamin_data_free'/>
       <ref name='gamin_data_get_data'/>
@@ -131,7 +132,6 @@
       <ref name='gamin_data_read_event'/>
       <ref name='gamin_data_reset'/>
       <ref name='gamin_fork_server'/>
-      <ref name='gamin_request_get_num'/>
     </letter>
   </alpha>
   <constructors>
@@ -171,12 +171,10 @@
       <ref name='FAMMonitorFile'/>
       <ref name='FAMMonitorFile2'/>
     </type>
-    <type name='FAMRequestPtr'>
-      <ref name='gamin_request_get_num'/>
-    </type>
     <type name='GAMDataPtr'>
       <ref name='gamin_data_conn_data'/>
       <ref name='gamin_data_del_req'/>
+      <ref name='gamin_data_done_auth'/>
       <ref name='gamin_data_event_ready'/>
       <ref name='gamin_data_free'/>
       <ref name='gamin_data_get_data'/>
@@ -239,7 +237,6 @@
       <ref name='FAMStartExecuting'/>
       <ref name='FAMStopExecuting'/>
       <ref name='FAMSuspendMonitor'/>
-      <ref name='gamin_request_get_num'/>
     </file>
     <file name='gam_data'>
       <ref name='GAMData'/>
@@ -248,6 +245,7 @@
       <ref name='GAMReqDataPtr'/>
       <ref name='gamin_data_conn_data'/>
       <ref name='gamin_data_del_req'/>
+      <ref name='gamin_data_done_auth'/>
       <ref name='gamin_data_event_ready'/>
       <ref name='gamin_data_free'/>
       <ref name='gamin_data_get_data'/>
@@ -423,6 +421,7 @@
           <ref name='gamin_data_get_request'/>
         </word>
         <word name='authentication'>
+          <ref name='gamin_data_done_auth'/>
           <ref name='gamin_data_get_data'/>
           <ref name='gamin_data_need_auth'/>
         </word>
@@ -468,6 +467,7 @@
           <ref name='gam_error'/>
         </word>
         <word name='current'>
+          <ref name='gamin_data_done_auth'/>
           <ref name='gamin_data_need_auth'/>
           <ref name='gamin_fork_server'/>
         </word>
@@ -483,6 +483,7 @@
           <ref name='GAMReqData'/>
           <ref name='gamin_data_conn_data'/>
           <ref name='gamin_data_del_req'/>
+          <ref name='gamin_data_done_auth'/>
           <ref name='gamin_data_event_ready'/>
           <ref name='gamin_data_free'/>
           <ref name='gamin_data_get_data'/>
@@ -509,6 +510,9 @@
         <word name='detected'>
           <ref name='gam_debug'/>
           <ref name='gam_error'/>
+        </word>
+        <word name='did'>
+          <ref name='gamin_data_done_auth'/>
         </word>
         <word name='directory'>
           <ref name='FAMMonitorCollection'/>
@@ -566,6 +570,7 @@
       </letter>
       <letter name='f'>
         <word name='failure'>
+          <ref name='gamin_data_done_auth'/>
           <ref name='gamin_data_get_data'/>
         </word>
         <word name='false'>
@@ -673,6 +678,8 @@
           <ref name='gam_error'/>
         </word>
       </letter>
+    </chunk>
+    <chunk name='chunk1'>
       <letter name='k'>
         <word name='keep'>
           <ref name='gamin_data_conn_data'/>
@@ -708,8 +715,6 @@
           <ref name='gam_error'/>
         </word>
       </letter>
-    </chunk>
-    <chunk name='chunk1'>
       <letter name='m'>
         <word name='macro'>
           <ref name='DEBUG_INFO'/>
@@ -948,11 +953,15 @@
           <ref name='FAMNextEvent'/>
           <ref name='gamin_data_conn_data'/>
           <ref name='gamin_data_del_req'/>
+          <ref name='gamin_data_done_auth'/>
           <ref name='gamin_data_get_data'/>
           <ref name='gamin_fork_server'/>
         </word>
         <word name='sucessed'>
           <ref name='gamin_data_get_data'/>
+        </word>
+        <word name='sucessfully'>
+          <ref name='gamin_data_done_auth'/>
         </word>
         <word name='supposedly'>
           <ref name='FAMMonitorCollection'/>
@@ -1083,8 +1092,8 @@
       </letter>
     </chunk>
     <chunks>
-      <chunk name='chunk0' start='A' end='l'/>
-      <chunk name='chunk1' start='m' end='w'/>
+      <chunk name='chunk0' start='A' end='i'/>
+      <chunk name='chunk1' start='k' end='w'/>
     </chunks>
   </index>
 </apirefs>

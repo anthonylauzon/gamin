@@ -35,7 +35,6 @@
      <exports symbol='FAMMonitorDirectory2' type='function'/>
      <exports symbol='FAMClose' type='function'/>
      <exports symbol='FAMMonitorFile2' type='function'/>
-     <exports symbol='gamin_request_get_num' type='function'/>
     </file>
     <file name='gam_data'>
      <exports symbol='GAMReqData' type='typedef'/>
@@ -43,16 +42,17 @@
      <exports symbol='GAMData' type='typedef'/>
      <exports symbol='GAMDataPtr' type='typedef'/>
      <exports symbol='GAMReqData' type='struct'/>
-     <exports symbol='gamin_data_reset' type='function'/>
      <exports symbol='gamin_data_get_request' type='function'/>
      <exports symbol='gamin_data_need_auth' type='function'/>
      <exports symbol='gamin_data_del_req' type='function'/>
-     <exports symbol='gamin_data_new' type='function'/>
+     <exports symbol='gamin_data_done_auth' type='function'/>
+     <exports symbol='gamin_data_read_event' type='function'/>
      <exports symbol='gamin_data_free' type='function'/>
      <exports symbol='gamin_data_event_ready' type='function'/>
-     <exports symbol='gamin_data_read_event' type='function'/>
+     <exports symbol='gamin_data_new' type='function'/>
      <exports symbol='gamin_data_get_data' type='function'/>
      <exports symbol='gamin_data_conn_data' type='function'/>
+     <exports symbol='gamin_data_reset' type='function'/>
      <exports symbol='gamin_data_get_reqnum' type='function'/>
     </file>
     <file name='gam_error'>
@@ -231,19 +231,19 @@
       <cond>GAM_DEBUG_ENABLED</cond>
       <info>Log a debug message, fi those are activated by the GAM_DEBUG environment</info>
       <return type='void'/>
-      <arg name='file' type='char *' info='the filename where the error was detected'/>
+      <arg name='file' type='const char *' info='the filename where the error was detected'/>
       <arg name='line' type='int' info='the line where the error was detected'/>
-      <arg name='function' type='char *' info='the function where the error was detected'/>
-      <arg name='format' type='char *' info='*printf format'/>
+      <arg name='function' type='const char *' info='the function where the error was detected'/>
+      <arg name='format' type='const char *' info='*printf format'/>
       <arg name='...' type='...' info='extra arguments'/>
     </function>
     <function name='gam_error' file='gam_error'>
       <info>Log an error, currently only stderr, but could go into syslog</info>
       <return type='void'/>
-      <arg name='file' type='char *' info='the filename where the error was detected'/>
+      <arg name='file' type='const char *' info='the filename where the error was detected'/>
       <arg name='line' type='int' info='the line where the error was detected'/>
-      <arg name='function' type='char *' info='the function where the error was detected'/>
-      <arg name='format' type='char *' info='*printf format'/>
+      <arg name='function' type='const char *' info='the function where the error was detected'/>
+      <arg name='format' type='const char *' info='*printf format'/>
       <arg name='...' type='...' info='extra arguments'/>
     </function>
     <function name='gamin_data_conn_data' file='gam_data'>
@@ -257,6 +257,11 @@
       <return type='int' info='-1 in case of error, and 0 in case of success'/>
       <arg name='conn' type='GAMDataPtr' info='a connection data structure'/>
       <arg name='reqno' type='int' info='the request number'/>
+    </function>
+    <function name='gamin_data_done_auth' file='gam_data'>
+      <info>The current connection did authentication sucessfully</info>
+      <return type='int' info='0 in case success, -1 in case of failure'/>
+      <arg name='conn' type='GAMDataPtr' info='connection data structure.'/>
     </function>
     <function name='gamin_data_event_ready' file='gam_data'>
       <info>Is there a full event ready for processing</info>
@@ -317,11 +322,6 @@
       <info>Forks and try to launch the server processing the requests for libgamin under the current process id and using the given client ID</info>
       <return type='int' info='0 in case of success or -1 in case of error.'/>
       <arg name='fam_client_id' type='const char *' info='the client ID string to use'/>
-    </function>
-    <function name='gamin_request_get_num' file='fam'>
-      <info></info>
-      <return type='int' info=''/>
-      <arg name='fr' type='FAMRequestPtr' info=''/>
     </function>
   </symbols>
 </api>
