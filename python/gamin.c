@@ -43,7 +43,7 @@ get_connection(void) {
 	                                 sizeof(FAMConnection *));
 	if (tmp == NULL)
 	    return(-1);
-	memset(&connections[max_connections], 0,
+	memset(&tmp[max_connections], 0,
 	       max_connections * sizeof(FAMConnection *));
 	max_connections *= 2;
 	connections = tmp;
@@ -98,7 +98,7 @@ get_request(void) {
 	                                 sizeof(FAMRequest *));
 	if (tmp == NULL)
 	    return(-1);
-	memset(&requests[max_requests], 0,
+	memset(&tmp[max_requests], 0,
 	       max_requests * sizeof(FAMRequest *));
 	max_requests *= 2;
 	requests = tmp;

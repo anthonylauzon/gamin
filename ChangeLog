@@ -1,3 +1,8 @@
+2005-02-01  Mark McLoughlin  <mark@skynet.ie>
+
+	* python/gamin.c: (get_connection), (get_request): memset
+	the newly re-alloced memory rather than the previous memory.
+
 Mon Jan 31 09:07:19 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS configure.in gamin.spec.in doc/*.html: made release
