@@ -18,11 +18,11 @@ dist-hook:
 check-local: tests
 
 tests: testgam
-	-@(rm -rf /tmp/test_gamin)
 	-@(unset GAM_CLIENT_ID ; unset GAM_DEBUG;			\
 	   GAMIN_DEBUG_SERVER="../server/gam_server" ;			\
 	   export GAMIN_DEBUG_SERVER ;					\
 	   for i in $(top_srcdir)/tests/scenario/*.tst ; do		\
+	   rm -rf /tmp/test_gamin ; 					\
 	   name=`basename $$i .tst`;					\
 	   if [ ! -f $(top_srcdir)/tests/result/$$name ] ; then		\
 	       echo New test file $$name ; 				\

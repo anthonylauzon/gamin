@@ -77,6 +77,8 @@ gamin_dump_event(FAMEvent *event) {
  *									*
  ************************************************************************/
 
+static char user_name[100] = "";
+
 /**
  * gamin_get_user_name:
  *
@@ -84,17 +86,22 @@ gamin_dump_event(FAMEvent *event) {
  *
  * Returns a new string or NULL in case of error.
  */
-static char *
+static const char *
 gamin_get_user_name(void)
 {
-	struct passwd *pw;
+    struct passwd *pw;
 
-	pw = getpwuid(getuid());
+    if (user_name[0] != 0)
+        return (user_name);
 
-	if (pw != NULL)
-		return (strdup(pw->pw_name));
+    pw = getpwuid(getuid());
 
-	return (NULL);
+    if (pw != NULL) {
+	strncpy(user_name, pw->pw_name, 99);
+	user_name[99] = 0;
+    }
+
+    return(user_name);
 }
 
 /**
@@ -110,7 +117,7 @@ static char *
 gamin_get_socket_path(void)
 {
     const char *fam_client_id;
-    char *user;
+    const char *user;
     char *ret;
     char path[MAXPATHLEN + 1];
 
@@ -132,7 +139,6 @@ gamin_get_socket_path(void)
 #endif
     path[MAXPATHLEN] = 0;
     ret = strdup(path);
-    free(user);
     return (ret);
 }
 

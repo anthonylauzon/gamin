@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
+#include <string.h>
 #include <glib.h>
 #include "fam.h"
 #include "gam_error.h"
@@ -75,6 +76,11 @@ static GamPollHandler file_handler = NULL;
 static int poll_mode = 0;
 
 static time_t current_time = 0;	/* a cache for time() informations */
+
+static int
+gam_errno(void) {
+    return(errno);
+}
 
 static void
 trigger_dir_handler(const char *path, gboolean added)
@@ -143,13 +149,20 @@ gam_poll_data_new(const char *path)
 {
     GamPollData *data;
 
-    data = g_new0(GamPollData, 1);
+    data = g_new(GamPollData, 1);
+    if (data == NULL)
+        return(NULL);
+    memset(data, 0, sizeof(GamPollData));
     data->path = g_strdup(path);
 
     data->flags = 0;
     if (current_time == 0)
         current_time = time(NULL);
     data->lasttime = current_time;
+#ifdef ST_MTIM_NSEC
+#endif
+    data->sbuf.st_mtim.tv_sec = current_time;
+    data->sbuf.st_mtime = current_time;
     data->checks = 0;
 
     return data;
@@ -163,12 +176,7 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
     GamNode *parent;
     GamPollData *data;
     GList *subs;
-
-    /* we only emit CREATED, DELETED and EXISTS for directories */
-    if (gam_node_is_dir(node) &&
-        !(event == GAMIN_EVENT_CREATED ||
-          event == GAMIN_EVENT_DELETED || event == GAMIN_EVENT_EXISTS))
-        return;
+    int is_dir_node = gam_node_is_dir(node);
 
     gam_debug(DEBUG_INFO, "Poll: emit events for %s\n",
               gam_node_get_path(node));
@@ -201,11 +209,13 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
                     continue;
             }
 
-            gam_server_emit_event(gam_node_get_path(node),
-                                  new_event, g_list_append(NULL, sub));
+            gam_server_emit_event(gam_node_get_path(node), is_dir_node,
+                                  new_event, g_list_append(NULL, sub), 0);
         }
     } else {
-        gam_server_emit_event(gam_node_get_path(node), event, subs);
+        
+        gam_server_emit_event(gam_node_get_path(node), is_dir_node, event,
+	                      subs, 0);
     }
 
     g_list_free(subs);
@@ -244,9 +254,11 @@ poll_file(GamNode * node)
         stat_ret = stat(data->path, &sbuf);
 	if (stat_ret != 0)
 	    data->flags |= MON_MISSING;
+	else
+	    gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
 	if (gam_exclude_check(path))
 	    data->flags |= MON_NOKERNEL;
-        data->sbuf = sbuf;
+        memcpy(&(data->sbuf), &(sbuf), sizeof(sbuf));
 
         if (stat_ret == 0)
             return 0;
@@ -258,8 +270,9 @@ poll_file(GamNode * node)
 
     event = 0;
 
-    if (stat(data->path, &sbuf) != 0) {
-        if ((errno == ENOENT) && (!(data->flags & MON_MISSING))) {
+    stat_ret = stat(data->path, &sbuf);
+    if (stat_ret != 0) {
+        if ((gam_errno() == ENOENT) && (!(data->flags & MON_MISSING))) {
             /* deleted */
             data->flags = MON_MISSING;
             event = GAMIN_EVENT_DELETED;
@@ -293,6 +306,12 @@ poll_file(GamNode * node)
 #endif
     }
 
+    /*
+     * TODO: handle the case where a file/dir is removed and replaced by 
+     *       a dir/file
+     */
+    if (stat_ret == 0)
+	gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
     data->sbuf = sbuf;
 
     /*
@@ -377,6 +396,7 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
     GList *dir_exist_subs = NULL;
     GList *children, *l;
     unsigned int exists = 0;
+    int is_dir_node;
 
     /*
      * For a yet unknow reason sometimes gam_tree_get_children()
@@ -441,11 +461,14 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
 scan_files:
 
 
+    is_dir_node = gam_node_is_dir(dir_node);
     if (scan_for_new) {
         if (exists)
-            gam_server_emit_event(dpath, GAMIN_EVENT_EXISTS, exist_subs);
+            gam_server_emit_event(dpath, is_dir_node, GAMIN_EVENT_EXISTS,
+	                          exist_subs, scan_for_new);
         else {
-            gam_server_emit_event(dpath, GAMIN_EVENT_DELETED, exist_subs);
+            gam_server_emit_event(dpath, is_dir_node, GAMIN_EVENT_DELETED,
+	                          exist_subs, scan_for_new);
 	}
     }
     children = gam_tree_get_children(tree, dir_node);
@@ -459,7 +482,7 @@ scan_files:
 	if (l2 == l) {
 	    gam_error(DEBUG_INFO,
 	              "gam_poll_scan_directory_internal(%s) loop detected\n",
-		      path);
+		      dpath);
 	    break;
 	}
         if (l2)
@@ -472,7 +495,7 @@ scan_files:
 
         fevent = poll_file(node);
 
-        if (gam_node_is_dir(node) &&
+        if (is_dir_node &&
             gam_node_has_flag(node, FLAG_NEW_NODE) &&
             gam_node_get_subscriptions(node)) {
             gam_node_unset_flag(node, FLAG_NEW_NODE);
@@ -493,12 +516,14 @@ scan_files:
 
 	    if ((data) && (!(data->flags & MON_MISSING)))
 		gam_server_emit_event(gam_node_get_path(node),
-				      GAMIN_EVENT_EXISTS, exist_subs);
+		                      gam_node_is_dir(node),
+				      GAMIN_EVENT_EXISTS, exist_subs, 0);
         }
     }
 
     if (scan_for_new) {
-        gam_server_emit_event(dpath, GAMIN_EVENT_ENDEXISTS, exist_subs);
+        gam_server_emit_event(dpath, is_dir_node, GAMIN_EVENT_ENDEXISTS,
+	                      exist_subs, 1);
     }
 
     g_list_free(children);
@@ -860,9 +885,10 @@ gam_poll_consume_subscriptions(void)
         for (l = subs; l; l = l->next) {
             GamSubscription *sub = l->data;
             GamNode *node;
-	    GamPollData *data;
+            GamPollData *data;
+            int node_is_dir;
 
-	    const char *path = gam_subscription_get_path(sub);
+            const char *path = gam_subscription_get_path(sub);
 
             node = gam_tree_get_at_path(tree, path);
             if (!node) {
@@ -872,35 +898,39 @@ gam_poll_consume_subscriptions(void)
 
             node_add_subscription(node, sub);
 
-            if (gam_node_is_dir(node)) {
+            node_is_dir = gam_node_is_dir(node);
+            if (node_is_dir) {
 
                 gam_debug(DEBUG_INFO,
-                          "Looking for existing files in: %s...\n",
-                          path);
+                          "Looking for existing files in: %s...\n", path);
 
                 gam_poll_scan_directory_internal(node, subs, TRUE);
 
                 gam_debug(DEBUG_INFO, "Done scanning %s\n", path);
             } else {
-		GaminEventType event;
+                GaminEventType event;
 
                 event = poll_file(node);
                 gam_debug(DEBUG_INFO,
-                          "New file subscription: %s event %d\n", path, event);
-		if ((event == 0) || (event == GAMIN_EVENT_EXISTS) ||
-		    (event == GAMIN_EVENT_CHANGED) ||
-		    (event == GAMIN_EVENT_CREATED)) {
-		    gam_server_emit_one_event(path, GAMIN_EVENT_EXISTS, sub);
-		} else if (event != 0) {
-		    gam_server_emit_one_event(path, GAMIN_EVENT_DELETED, sub);
-		}
-		gam_server_emit_one_event(path, GAMIN_EVENT_ENDEXISTS, sub);
-	    }
-	    data = gam_node_get_data(node);
-	    if ((data) && ((data->flags & MON_MISSING) ||
-	                   (data->flags & MON_NOKERNEL))) {
-		gam_poll_add_missing(node);
-	    }
+                          "New file subscription: %s event %d\n", path,
+                          event);
+                if ((event == 0) || (event == GAMIN_EVENT_EXISTS)
+                    || (event == GAMIN_EVENT_CHANGED)
+                    || (event == GAMIN_EVENT_CREATED)) {
+                    gam_server_emit_one_event(path, node_is_dir,
+                                              GAMIN_EVENT_EXISTS, sub, 0);
+                } else if (event != 0) {
+                    gam_server_emit_one_event(path, node_is_dir,
+                                              GAMIN_EVENT_DELETED, sub, 0);
+                }
+                gam_server_emit_one_event(path, node_is_dir,
+                                          GAMIN_EVENT_ENDEXISTS, sub, 0);
+            }
+            data = gam_node_get_data(node);
+            if ((data) && ((data->flags & MON_MISSING) ||
+                           (data->flags & MON_NOKERNEL))) {
+                gam_poll_add_missing(node);
+            }
         }
 
         g_list_free(subs);
@@ -926,34 +956,40 @@ gam_poll_consume_subscriptions(void)
             gam_debug(DEBUG_INFO, "Removing: %s\n",
                       gam_subscription_get_path(sub));
             if (node != NULL) {
-		if (!gam_node_is_dir(node)) {
-		    node_remove_subscription(node, sub);
+                if (!gam_node_is_dir(node)) {
+                    node_remove_subscription(node, sub);
 
-		    if (!gam_node_get_subscriptions(node)) {
-			GamNode *parent;
+                    if (!gam_node_get_subscriptions(node)) {
+                        GamNode *parent;
 
-			if (missing_resources != NULL) {
-			    gam_poll_remove_missing(node);
-			}
-			parent = gam_node_parent(node);
-			gam_tree_remove(tree, node);
+                        if (missing_resources != NULL) {
+                            gam_poll_remove_missing(node);
+                        }
+                        if (gam_tree_has_children(tree, node)) {
+                            fprintf(stderr,
+                                    "node %s is not dir but has children\n",
+                                    gam_node_get_path(node));
+                        } else {
+                            parent = gam_node_parent(node);
+                            gam_tree_remove(tree, node);
 
-			prune_tree(parent);
-		    }
-		} else {
-		    if (remove_directory_subscription(node, sub)) {
-			GamNode *parent;
+                            prune_tree(parent);
+                        }
+                    }
+                } else {
+                    if (remove_directory_subscription(node, sub)) {
+                        GamNode *parent;
 
-			if (missing_resources != NULL) {
-			    gam_poll_remove_missing(node);
-			}
-			parent = gam_node_parent(node);
-			gam_tree_remove(tree, node);
+                        if (missing_resources != NULL) {
+                            gam_poll_remove_missing(node);
+                        }
+                        parent = gam_node_parent(node);
+                        gam_tree_remove(tree, node);
 
-			prune_tree(parent);
-		    }
-		}
-	    }
+                        prune_tree(parent);
+                    }
+                }
+            }
 
             gam_subscription_free(sub);
         }

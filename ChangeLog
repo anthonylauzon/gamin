@@ -1,3 +1,14 @@
+Wed Oct 20 18:46:32 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c: minimize calls to getpwuid()
+	* server/gam_inotify.c server/gam_poll.c server/gam_server.c
+	  server/gam_server.h server/gam_subscription.c
+	  server/gam_subscription.h: made some changes in the quest to remove
+	  bug #132354, lot of checking debugging, valgrinding, refactored
+	  event filtering as a result, potentially fixed a tree freeing
+	  problem.
+	* tests/Makefile.am: alway reset the test directory between tests
+
 Tue Oct 19 15:50:05 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c server/gam_subscription.c: valgrinding

@@ -37,9 +37,11 @@ gboolean             gam_subscription_has_event    (GamSubscription *sub,
 void                 gam_subscription_cancel       (GamSubscription *sub);
 gboolean             gam_subscription_is_cancelled (GamSubscription *sub);
 
-gboolean             gam_subscription_wants_event  (GamSubscription    *sub,
-						    const char        *name,
-						    GaminEventType    event);
+gboolean             gam_subscription_wants_event  (GamSubscription *sub,
+						    const char      *name,
+						    int          is_dir_node,
+						    GaminEventType   event,
+						    int force);
 G_END_DECLS
 
 #endif /* __GAM_SUBSCRIPTION_H__ */

@@ -27,6 +27,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 #include <glib.h>
 #ifdef HAVE_LINUX_INOTIFY_H
 #include <linux/inotify.h>
@@ -104,8 +105,12 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
 	    data->subs = g_list_prepend(data->subs, sub);
             G_UNLOCK(inotify);
 	    gam_debug(DEBUG_INFO, "inotify updated refcount\n");
-	    gam_server_emit_event (path, GAMIN_EVENT_EXISTS, subs);
-            gam_server_emit_event (path, GAMIN_EVENT_ENDEXISTS, subs);
+	    /*
+	     * hum might need some work to check if the path is a dir,
+	     * setting 0 and forcing to bypass checks right now.
+	     */
+	    gam_server_emit_event (path, 0, GAMIN_EVENT_EXISTS, subs, 1);
+            gam_server_emit_event (path, 0, GAMIN_EVENT_ENDEXISTS, subs, 1);
             return;
         }
 
@@ -127,8 +132,8 @@ gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean adde
 
         gam_debug(DEBUG_INFO, "activated INotify for %s\n", path);
 
-	gam_server_emit_event (path, GAMIN_EVENT_EXISTS, subs);
-	gam_server_emit_event (path, GAMIN_EVENT_ENDEXISTS, subs);
+	gam_server_emit_event (path, 0, GAMIN_EVENT_EXISTS, subs, 1);
+	gam_server_emit_event (path, 0, GAMIN_EVENT_ENDEXISTS, subs, 1);
     } else {
         data = g_hash_table_lookup(path_hash, path);
 
@@ -212,7 +217,7 @@ static void gam_inotify_emit_event (INotifyData *data, struct inotify_event *eve
 
 	gam_debug(DEBUG_INFO, "gam_inotify_emit_event() %s\n", event_path);
 
-	gam_server_emit_event (event_path, gevent, data->subs);
+	gam_server_emit_event (event_path, 0, gevent, data->subs, 1);
 }
 
 static gboolean

@@ -41,6 +41,7 @@
 #endif
 #include "gam_excludes.h"
 
+static int poll_only = 0;
 static const char *session;
 
 /**
@@ -66,18 +67,20 @@ gam_init_subscriptions(void)
 {
     gam_exclude_init();
 
+    if (!poll_only) {
 #ifdef ENABLE_INOTIFY
-    if (gam_inotify_init()) {
-	gam_debug(DEBUG_INFO, "Using INotify as backend\n");
-	return(TRUE);
-    }
+	if (gam_inotify_init()) {
+	    gam_debug(DEBUG_INFO, "Using INotify as backend\n");
+	    return(TRUE);
+	}
 #endif
 #ifdef ENABLE_DNOTIFY
-    if (gam_dnotify_init()) {
-	gam_debug(DEBUG_INFO, "Using DNotify as backend\n");
-	return(TRUE);
-    }
+	if (gam_dnotify_init()) {
+	    gam_debug(DEBUG_INFO, "Using DNotify as backend\n");
+	    return(TRUE);
+	}
 #endif
+    }
     if (gam_poll_init()) {
 	gam_debug(DEBUG_INFO, "Using Poll as backend\n");
 	return(TRUE);
@@ -146,13 +149,15 @@ static GIOChannel *socket = NULL;
  * @path: the file/directory path
  * @event: the event type
  * @sub: the subscription for this event
+ * @force: try to force the event though as much as possible
  *
  * Checks which subscriptions are interested in this event and
  * make sure the event are sent to the associated clients.
  */
 void
-gam_server_emit_one_event(const char *path, GaminEventType event, 
-                          GamSubscription *sub)
+gam_server_emit_one_event(const char *path, int node_is_dir,
+                          GaminEventType event, GamSubscription *sub,
+			  int force)
 {
     int pathlen, len;
     const char *subpath;
@@ -163,7 +168,7 @@ gam_server_emit_one_event(const char *path, GaminEventType event,
 
     pathlen = strlen(path);
 
-    if (!gam_subscription_wants_event(sub, path, event))
+    if (!gam_subscription_wants_event(sub, path, node_is_dir, event, force))
 	return;
     listener = gam_subscription_get_listener(sub);
     if (listener == NULL)
@@ -198,14 +203,17 @@ gam_server_emit_one_event(const char *path, GaminEventType event,
 /**
  * gam_server_emit_event:
  * @path: the file/directory path
+ * @is_dir_node: is the target a directory
  * @event: the event type
  * @subs: the list of subscription for this event
+ * @force: force the emission of the events
  *
  * Checks which subscriptions are interested in this event and
  * make sure the event are sent to the associated clients.
  */
 void
-gam_server_emit_event(const char *path, GaminEventType event, GList * subs)
+gam_server_emit_event(const char *path, int is_dir_node, GaminEventType event,
+                      GList * subs, int force)
 {
     GList *l;
     int pathlen, len;
@@ -221,7 +229,7 @@ gam_server_emit_event(const char *path, GaminEventType event, GList * subs)
         GamConnDataPtr conn;
         int reqno;
 
-        if (!gam_subscription_wants_event(sub, path, event))
+        if (!gam_subscription_wants_event(sub, path, is_dir_node, event, force))
             continue;
         listener = gam_subscription_get_listener(sub);
         if (listener == NULL)
@@ -297,15 +305,16 @@ int
 main(int argc, const char *argv[])
 {
     GMainLoop *loop;
+    int i;
 
     if (argc > 1) {
-        if (!strcmp(argv[1], "--notimeout")) {
-	    no_timeout = 1;
-	    if (argc > 2) {
-		session = argv[2];
-	    }
-	} else {
-	    session = argv[1];
+        for (i = 1;i < argc;i++) {
+	    if (!strcmp(argv[i], "--notimeout"))
+		no_timeout = 1;
+            else if (!strcmp(argv[i], "--pollonly"))
+	        poll_only = 1;
+	    else
+		session = argv[i];
 	}
     }
 

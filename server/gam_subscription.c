@@ -254,18 +254,23 @@ gam_subscription_is_cancelled(GamSubscription * sub)
 }
 
 /**
+ * gam_subscription_wants_event:
+ * @sub: the GamSubscription
+ * @name: file name (just the base name, not the complete path)
+ * @is_dir_node: is the target a directory
+ * @event: the event
+ * @force: force the event as much as possible
+ *
  * Checks if a given path/event combination is accepted by this GamSubscription
  *
- * @param sub the GamSubscription
- * @param name file name (just the base name, not the complete path)
- * @param event the event
- * @returns TRUE if the combination is accepted, FALSE otherwise
+ * Returns TRUE if the combination is accepted, FALSE otherwise
  */
 gboolean
 gam_subscription_wants_event(GamSubscription * sub,
-                             const char *name, GaminEventType event)
+                             const char *name, int is_dir_node, 
+			     GaminEventType event, int force)
 {
-    if (sub == NULL)
+    if ((sub == NULL) || (name == NULL) || (event == 0))
         return(FALSE);
     if (sub->cancelled)
         return FALSE;
@@ -278,6 +283,14 @@ gam_subscription_wants_event(GamSubscription * sub,
         return FALSE;
     }
 
+    if (force)
+        return TRUE;
+    if ((sub->is_dir) && (is_dir_node)) {
+        if ((event == GAMIN_EVENT_EXISTS) ||
+	    (event == GAMIN_EVENT_CHANGED) ||
+	    (event == GAMIN_EVENT_ENDEXISTS))
+	    return FALSE;
+    }
     return TRUE;
 }
 

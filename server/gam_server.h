@@ -18,11 +18,15 @@ gboolean        gam_add_subscription            (GamSubscription *sub);
 gboolean        gam_remove_subscription         (GamSubscription *sub);
 int             gam_server_num_listeners        (void);
 void		gam_server_emit_one_event	(const char *path,
+						 int is_dir_node,
 						 GaminEventType event,
-						 GamSubscription *sub);
+						 GamSubscription *sub,
+						 int force);
 void            gam_server_emit_event           (const char *path,
+						 int is_dir_node,
 						 GaminEventType event,
-						 GList *subs);
+						 GList *subs,
+						 int force);
 void		gam_shutdown			(void);
 #ifdef __cplusplus
 }
