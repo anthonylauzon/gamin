@@ -1,3 +1,7 @@
+Thu Jan 13 18:29:30 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_channel.c: removing a compiler warning.
+
 Thu Jan  6 16:10:20 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS configure.in gamin.spec.in: preparing release 0.0.20

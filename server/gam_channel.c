@@ -170,7 +170,7 @@ static gboolean
 gam_client_conn_read(GIOChannel * source, GIOCondition condition,
                      gpointer info)
 {
-    GAMPacket *data;
+    char *data; /* actually a GAMPacketPtr */
     int size;
     int fd;
     int ret;
@@ -204,14 +204,14 @@ gam_client_conn_read(GIOChannel * source, GIOCondition condition,
             break;
     }
 
-    if (gam_connection_get_data(conn, (char **) &data, &size) < 0) {
+    if (gam_connection_get_data(conn, &data, &size) < 0) {
         GAM_DEBUG(DEBUG_INFO, "connection data error, disconnecting\n");
         gam_client_conn_shutdown(source, conn);
         return (FALSE);
     }
 
-  retry:
-    ret = read(fd, (char *) data, size);
+retry:
+    ret = read(fd, data, size);
     if (ret < 0) {
         if (errno == EINTR)
             goto retry;
