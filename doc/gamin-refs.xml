@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <apirefs name='gamin'>
   <references>
-    <reference name='DEBUG_INFO' href='html/gamin-gam_error.html#DEBUG_INFO'/>
     <reference name='FAMAcknowledge' href='html/gamin-fam.html#FAMAcknowledge'/>
     <reference name='FAMCONNECTION_GETFD' href='html/gamin-fam.html#FAMCONNECTION_GETFD'/>
     <reference name='FAMCancelMonitor' href='html/gamin-fam.html#FAMCancelMonitor'/>
@@ -39,15 +38,12 @@
     <reference name='GAMReqData' href='html/gamin-gam_data.html#GAMReqData'/>
     <reference name='GAMReqDataPtr' href='html/gamin-gam_data.html#GAMReqDataPtr'/>
     <reference name='GAMReqType' href='html/gamin-gam_protocol.html#GAMReqType'/>
-    <reference name='GAM_DEBUG' href='html/gamin-gam_error.html#GAM_DEBUG'/>
     <reference name='GAM_PACKET_HEADER_LEN' href='html/gamin-gam_protocol.html#GAM_PACKET_HEADER_LEN'/>
     <reference name='GAM_PROTO_VERSION' href='html/gamin-gam_protocol.html#GAM_PROTO_VERSION'/>
     <reference name='GAM_REQ_CANCEL' href='html/gamin-gam_protocol.html#GAM_REQ_CANCEL'/>
     <reference name='GAM_REQ_DIR' href='html/gamin-gam_protocol.html#GAM_REQ_DIR'/>
     <reference name='GAM_REQ_FILE' href='html/gamin-gam_protocol.html#GAM_REQ_FILE'/>
     <reference name='MAXPATHLEN' href='html/gamin-gam_protocol.html#MAXPATHLEN'/>
-    <reference name='gam_debug' href='html/gamin-gam_error.html#gam_debug'/>
-    <reference name='gam_error' href='html/gamin-gam_error.html#gam_error'/>
     <reference name='gamin_data_conn_data' href='html/gamin-gam_data.html#gamin_data_conn_data'/>
     <reference name='gamin_data_del_req' href='html/gamin-gam_data.html#gamin_data_del_req'/>
     <reference name='gamin_data_done_auth' href='html/gamin-gam_data.html#gamin_data_done_auth'/>
@@ -63,9 +59,6 @@
     <reference name='gamin_fork_server' href='html/gamin-gam_fork.html#gamin_fork_server'/>
   </references>
   <alpha>
-    <letter name='D'>
-      <ref name='DEBUG_INFO'/>
-    </letter>
     <letter name='F'>
       <ref name='FAMAcknowledge'/>
       <ref name='FAMCONNECTION_GETFD'/>
@@ -106,7 +99,6 @@
       <ref name='GAMReqData'/>
       <ref name='GAMReqDataPtr'/>
       <ref name='GAMReqType'/>
-      <ref name='GAM_DEBUG'/>
       <ref name='GAM_PACKET_HEADER_LEN'/>
       <ref name='GAM_PROTO_VERSION'/>
       <ref name='GAM_REQ_CANCEL'/>
@@ -117,8 +109,6 @@
       <ref name='MAXPATHLEN'/>
     </letter>
     <letter name='g'>
-      <ref name='gam_debug'/>
-      <ref name='gam_error'/>
       <ref name='gamin_data_conn_data'/>
       <ref name='gamin_data_del_req'/>
       <ref name='gamin_data_done_auth'/>
@@ -140,10 +130,6 @@
     </type>
   </constructors>
   <functions>
-    <type name='...'>
-      <ref name='gam_debug'/>
-      <ref name='gam_error'/>
-    </type>
     <type name='FAMConnection *'>
       <ref name='FAMCancelMonitor'/>
       <ref name='FAMClose'/>
@@ -256,12 +242,6 @@
       <ref name='gamin_data_read_event'/>
       <ref name='gamin_data_reset'/>
     </file>
-    <file name='gam_error'>
-      <ref name='DEBUG_INFO'/>
-      <ref name='GAM_DEBUG'/>
-      <ref name='gam_debug'/>
-      <ref name='gam_error'/>
-    </file>
     <file name='gam_fork'>
       <ref name='gamin_fork_server'/>
     </file>
@@ -318,19 +298,10 @@
         <word name='GAM_CLIENT_ID'>
           <ref name='FAMOpen2'/>
         </word>
-        <word name='GAM_DEBUG'>
-          <ref name='gam_debug'/>
-        </word>
         <word name='Get'>
           <ref name='gamin_data_get_data'/>
           <ref name='gamin_data_get_reqnum'/>
           <ref name='gamin_data_get_request'/>
-        </word>
-      </letter>
-      <letter name='L'>
-        <word name='Log'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
         </word>
       </letter>
       <letter name='N'>
@@ -384,10 +355,6 @@
           <ref name='FAMCONNECTION_GETFD'/>
           <ref name='FAMREQUEST_GETREQNUM'/>
         </word>
-        <word name='activated'>
-          <ref name='GAM_DEBUG'/>
-          <ref name='gam_debug'/>
-        </word>
         <word name='address'>
           <ref name='gamin_data_get_data'/>
         </word>
@@ -402,13 +369,6 @@
         </word>
         <word name='application'>
           <ref name='FAMOpen2'/>
-        </word>
-        <word name='are'>
-          <ref name='gam_debug'/>
-        </word>
-        <word name='arguments'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
         </word>
         <word name='array'>
           <ref name='gamin_data_reset'/>
@@ -437,9 +397,6 @@
         <word name='blocking'>
           <ref name='FAMNextEvent'/>
         </word>
-        <word name='but'>
-          <ref name='gam_error'/>
-        </word>
       </letter>
       <letter name='c'>
         <word name='called'>
@@ -460,19 +417,12 @@
           <ref name='gamin_data_read_event'/>
         </word>
         <word name='convenience'>
-          <ref name='DEBUG_INFO'/>
           <ref name='GAM_PACKET_HEADER_LEN'/>
-        </word>
-        <word name='could'>
-          <ref name='gam_error'/>
         </word>
         <word name='current'>
           <ref name='gamin_data_done_auth'/>
           <ref name='gamin_data_need_auth'/>
           <ref name='gamin_fork_server'/>
-        </word>
-        <word name='currently'>
-          <ref name='gam_error'/>
         </word>
       </letter>
       <letter name='d'>
@@ -494,13 +444,6 @@
           <ref name='gamin_data_read_event'/>
           <ref name='gamin_data_reset'/>
         </word>
-        <word name='debug'>
-          <ref name='GAM_DEBUG'/>
-          <ref name='gam_debug'/>
-        </word>
-        <word name='debugging'>
-          <ref name='GAM_DEBUG'/>
-        </word>
         <word name='depth'>
           <ref name='FAMMonitorCollection'/>
         </word>
@@ -508,8 +451,7 @@
           <ref name='FAMCONNECTION_GETFD'/>
         </word>
         <word name='detected'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
+          <ref name='gamin_fork_server'/>
         </word>
         <word name='did'>
           <ref name='gamin_data_done_auth'/>
@@ -523,7 +465,6 @@
       <letter name='e'>
         <word name='environment'>
           <ref name='FAMOpen2'/>
-          <ref name='gam_debug'/>
         </word>
         <word name='error'>
           <ref name='FAMCancelMonitor'/>
@@ -536,8 +477,6 @@
           <ref name='FAMOpen'/>
           <ref name='FAMOpen2'/>
           <ref name='FAMPending'/>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
           <ref name='gamin_data_conn_data'/>
           <ref name='gamin_data_del_req'/>
           <ref name='gamin_data_event_ready'/>
@@ -562,10 +501,6 @@
         </word>
         <word name='extended'>
           <ref name='FAMMonitorCollection'/>
-        </word>
-        <word name='extra'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
         </word>
       </letter>
       <letter name='f'>
@@ -598,8 +533,6 @@
           <ref name='FAMMonitorFile2'/>
           <ref name='GAMPacket'/>
           <ref name='GAMReqData'/>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
           <ref name='gamin_data_get_reqnum'/>
           <ref name='gamin_data_get_request'/>
         </word>
@@ -619,10 +552,6 @@
           <ref name='gamin_data_reset'/>
           <ref name='gamin_fork_server'/>
         </word>
-        <word name='format'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
-        </word>
         <word name='free'>
           <ref name='FAMCancelMonitor'/>
         </word>
@@ -639,8 +568,6 @@
           <ref name='FAMClose'/>
           <ref name='FAMOpen'/>
           <ref name='FAMOpen2'/>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
         </word>
       </letter>
       <letter name='g'>
@@ -665,21 +592,13 @@
         <word name='incomplete'>
           <ref name='gamin_data_conn_data'/>
         </word>
-        <word name='informations'>
-          <ref name='DEBUG_INFO'/>
-        </word>
         <word name='input'>
           <ref name='FAMNextEvent'/>
         </word>
         <word name='interface'>
           <ref name='FAMOpen2'/>
         </word>
-        <word name='into'>
-          <ref name='gam_error'/>
-        </word>
       </letter>
-    </chunk>
-    <chunk name='chunk1'>
       <letter name='k'>
         <word name='keep'>
           <ref name='gamin_data_conn_data'/>
@@ -710,24 +629,15 @@
         <word name='limit'>
           <ref name='FAMMonitorCollection'/>
         </word>
-        <word name='line'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
-        </word>
       </letter>
       <letter name='m'>
         <word name='macro'>
-          <ref name='DEBUG_INFO'/>
           <ref name='FAMCONNECTION_GETFD'/>
           <ref name='FAMREQUEST_GETREQNUM'/>
-          <ref name='GAM_DEBUG'/>
           <ref name='GAM_PACKET_HEADER_LEN'/>
         </word>
         <word name='make'>
           <ref name='gamin_data_conn_data'/>
-        </word>
-        <word name='message'>
-          <ref name='gam_debug'/>
         </word>
         <word name='monitoring'>
           <ref name='FAMCancelMonitor'/>
@@ -773,7 +683,6 @@
           <ref name='FAMMonitorDirectory2'/>
           <ref name='FAMMonitorFile'/>
           <ref name='FAMMonitorFile2'/>
-          <ref name='GAM_DEBUG'/>
           <ref name='gamin_data_need_auth'/>
         </word>
         <word name='number'>
@@ -787,11 +696,12 @@
           <ref name='gamin_data_reset'/>
         </word>
       </letter>
+    </chunk>
+    <chunk name='chunk1'>
       <letter name='o'>
         <word name='only'>
           <ref name='FAMCONNECTION_GETFD'/>
           <ref name='FAMREQUEST_GETREQNUM'/>
-          <ref name='gam_error'/>
         </word>
         <word name='open'>
           <ref name='FAMOpen'/>
@@ -840,10 +750,6 @@
         <word name='possibly'>
           <ref name='FAMNextEvent'/>
         </word>
-        <word name='printf'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
-        </word>
         <word name='process'>
           <ref name='gamin_data_conn_data'/>
           <ref name='gamin_fork_server'/>
@@ -863,9 +769,6 @@
         <word name='provided'>
           <ref name='FAMCancelMonitor'/>
           <ref name='gamin_data_get_request'/>
-        </word>
-        <word name='providing'>
-          <ref name='DEBUG_INFO'/>
         </word>
       </letter>
       <letter name='r'>
@@ -929,9 +832,6 @@
           <ref name='GAMReqData'/>
           <ref name='gamin_data_reset'/>
         </word>
-        <word name='stderr'>
-          <ref name='gam_error'/>
-        </word>
         <word name='stop'>
           <ref name='FAMCancelMonitor'/>
         </word>
@@ -966,9 +866,6 @@
         <word name='supposedly'>
           <ref name='FAMMonitorCollection'/>
         </word>
-        <word name='syslog'>
-          <ref name='gam_error'/>
-        </word>
       </letter>
       <letter name='t'>
         <word name='that'>
@@ -986,9 +883,6 @@
           <ref name='FAMMonitorCollection'/>
           <ref name='FAMMonitorDirectory'/>
           <ref name='FAMMonitorFile'/>
-        </word>
-        <word name='those'>
-          <ref name='gam_debug'/>
         </word>
         <word name='though'>
           <ref name='FAMCONNECTION_GETFD'/>
@@ -1067,17 +961,10 @@
           <ref name='FAMPending'/>
           <ref name='gamin_data_conn_data'/>
         </word>
-        <word name='was'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
-        </word>
         <word name='when'>
-          <ref name='GAM_DEBUG'/>
           <ref name='gamin_data_reset'/>
         </word>
         <word name='where'>
-          <ref name='gam_debug'/>
-          <ref name='gam_error'/>
           <ref name='gamin_data_get_request'/>
         </word>
         <word name='whose'>
@@ -1092,8 +979,8 @@
       </letter>
     </chunk>
     <chunks>
-      <chunk name='chunk0' start='A' end='i'/>
-      <chunk name='chunk1' start='k' end='w'/>
+      <chunk name='chunk0' start='A' end='n'/>
+      <chunk name='chunk1' start='o' end='w'/>
     </chunks>
   </index>
 </apirefs>

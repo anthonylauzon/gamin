@@ -26,3 +26,6 @@ rpm: clean
 
 tests: all
 	(cd tests ; $(MAKE) tests)
+	
+dist-hook:
+	(cd $(srcdir) ; tar -cf - --exclude CVS doc) | (cd $(distdir); tar xf -)

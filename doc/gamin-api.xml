@@ -55,12 +55,6 @@
      <exports symbol='gamin_data_reset' type='function'/>
      <exports symbol='gamin_data_get_reqnum' type='function'/>
     </file>
-    <file name='gam_error'>
-     <exports symbol='GAM_DEBUG' type='macro'/>
-     <exports symbol='DEBUG_INFO' type='macro'/>
-     <exports symbol='gam_debug' type='function'/>
-     <exports symbol='gam_error' type='function'/>
-    </file>
     <file name='gam_fork'>
      <exports symbol='gamin_fork_server' type='function'/>
     </file>
@@ -78,17 +72,11 @@
     </file>
   </files>
   <symbols>
-    <macro name='DEBUG_INFO' file='gam_error'>
-      <info>convenience macro providing informations</info>
-    </macro>
     <macro name='FAMCONNECTION_GETFD' file='fam'>
       <info>The only field available from the connection is the file descriptor and it should be accessed though the macro</info>
     </macro>
     <macro name='FAMREQUEST_GETREQNUM' file='fam'>
       <info>The only field available from the request is the request number and it should be accessed though the macro</info>
-    </macro>
-    <macro name='GAM_DEBUG' file='gam_error'>
-      <info>debugging macro when debug is not activated</info>
     </macro>
     <macro name='GAM_PACKET_HEADER_LEN' file='gam_protocol'>
       <info>convenience macro to provide the length of the packet header.</info>
@@ -227,25 +215,6 @@
       <arg name='fc' type='FAMConnection *' info=''/>
       <arg name='fr' type='const FAMRequest *' info=''/>
     </function>
-    <function name='gam_debug' file='gam_error'>
-      <cond>GAM_DEBUG_ENABLED</cond>
-      <info>Log a debug message, fi those are activated by the GAM_DEBUG environment</info>
-      <return type='void'/>
-      <arg name='file' type='const char *' info='the filename where the error was detected'/>
-      <arg name='line' type='int' info='the line where the error was detected'/>
-      <arg name='function' type='const char *' info='the function where the error was detected'/>
-      <arg name='format' type='const char *' info='*printf format'/>
-      <arg name='...' type='...' info='extra arguments'/>
-    </function>
-    <function name='gam_error' file='gam_error'>
-      <info>Log an error, currently only stderr, but could go into syslog</info>
-      <return type='void'/>
-      <arg name='file' type='const char *' info='the filename where the error was detected'/>
-      <arg name='line' type='int' info='the line where the error was detected'/>
-      <arg name='function' type='const char *' info='the function where the error was detected'/>
-      <arg name='format' type='const char *' info='*printf format'/>
-      <arg name='...' type='...' info='extra arguments'/>
-    </function>
     <function name='gamin_data_conn_data' file='gam_data'>
       <info>Received some incoming data, check if there is complete incoming event(s) and process it (them), otherwise make some sanity check and keep the incomplete event in the structure, waiting for more.</info>
       <return type='int' info='0 in case of success and -1 in case of error'/>
@@ -320,7 +289,7 @@
     </function>
     <function name='gamin_fork_server' file='gam_fork'>
       <info>Forks and try to launch the server processing the requests for libgamin under the current process id and using the given client ID</info>
-      <return type='int' info='0 in case of success or -1 in case of error.'/>
+      <return type='int' info='0 in case of success or -1 in case of detected error.'/>
       <arg name='fam_client_id' type='const char *' info='the client ID string to use'/>
     </function>
   </symbols>
