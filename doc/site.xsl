@@ -318,7 +318,7 @@ A:link, A:visited, A:active { text-decoration: underline }
                                         <xsl:with-param name="header" select="."/>
                                       </xsl:call-template>
                                     </xsl:for-each>
-				    <p><a href="bugs.html">Daniel Veillard</a></p>
+				    <p><a href="contacts.html">Daniel Veillard</a></p>
                                   </td>
                                 </tr>
                               </table>
