@@ -1,7 +1,7 @@
 Summary: Library providing the FAM File Alteration Monitor API
 Name: gamin
 Version: @VERSION@
-Release: 1
+Release: pre1
 License: LGPL
 Group: Development/Libraries
 Source: gamin-%{version}.tar.gz

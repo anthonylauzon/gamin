@@ -1,3 +1,7 @@
+Tue Jun 15 23:25:03 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* README gamin.spec.in: added mail archive URL, 0.0.1-pre1
+
 Tue Jun 15 21:45:20 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* README TODO: I was sure I updated the README before the
