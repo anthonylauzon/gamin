@@ -1,3 +1,10 @@
+Wed Aug 25 21:35:36 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_inotify.c server/gam_poll.c
+	  server/gam_server.c server/gam_server.h: applied patch from 
+	  Martin Schlemmer to allow fallback to dnotify if inotify
+	  back-end failed to initialize.
+
 Wed Aug 25 16:38:54 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* Makefile.am NEWS configure.in doc/Makefile.am doc/contacts.html

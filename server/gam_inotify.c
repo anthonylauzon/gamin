@@ -376,6 +376,10 @@ gam_inotify_init(void)
     int i = 0; // INOTIFY_DEBUG_INODE|INOTIFY_DEBUG_ERRORS|INOTIFY_DEBUG_EVENTS;
     ioctl(fd, INOTIFY_SETDEBUG, &i);
 
+    gam_backend_add_subscription = gam_inotify_add_subscription;
+    gam_backend_remove_subscription = gam_inotify_remove_subscription;
+    gam_backend_remove_all_for = gam_inotify_remove_all_for;
+
     return TRUE;
 }
 

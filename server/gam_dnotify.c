@@ -294,6 +294,10 @@ gam_dnotify_init(void)
 
     gam_debug(DEBUG_INFO, "dnotify initialized\n");
 
+    gam_backend_add_subscription = gam_dnotify_add_subscription;
+    gam_backend_remove_subscription = gam_dnotify_remove_subscription;
+    gam_backend_remove_all_for = gam_dnotify_remove_all_for;
+
     return TRUE;
 }
 

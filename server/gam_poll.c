@@ -586,6 +586,10 @@ gam_poll_init_full(gboolean start_scan_thread)
     }
     tree = gam_tree_new();
 
+    gam_backend_add_subscription = gam_poll_add_subscription;
+    gam_backend_remove_subscription = gam_poll_remove_subscription;
+    gam_backend_remove_all_for = gam_poll_remove_all_for;
+
     gam_debug(DEBUG_INFO, "Initialized Poll\n");
     return TRUE;
 }

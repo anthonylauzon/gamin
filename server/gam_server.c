@@ -64,12 +64,25 @@ gboolean
 gam_init_subscriptions(void)
 {
 #ifdef ENABLE_INOTIFY
-    return (gam_inotify_init());
-#elif linux
-    return (gam_dnotify_init());
-#else
-    return (gam_poll_init());
+    if (gam_inotify_init()) {
+	gam_debug(DEBUG_INFO, "Using INotify as backend\n");
+	return(TRUE);
+    }
 #endif
+#ifdef linux
+    if (gam_dnotify_init()) {
+	gam_debug(DEBUG_INFO, "Using DNotify as backend\n");
+	return(TRUE);
+    }
+#endif
+    if (gam_poll_init()) {
+	gam_debug(DEBUG_INFO, "Using Poll as backend\n");
+	return(TRUE);
+    }
+
+    gam_debug(DEBUG_INFO, "Cannot initialize any backend\n");
+
+    return(FALSE);
 }
 
 /**
@@ -113,13 +126,7 @@ gam_add_subscription(GamSubscription * sub)
 	return (gam_poll_add_subscription(sub));
     }
  ***/
-#ifdef ENABLE_INOTIFY
-    return (gam_inotify_add_subscription(sub));
-#elif linux
-    return (gam_dnotify_add_subscription(sub));
-#else
-    return (gam_poll_add_subscription(sub));
-#endif
+    return (gam_backend_add_subscription(sub));
 }
 
 /**
@@ -132,13 +139,7 @@ gam_add_subscription(GamSubscription * sub)
 gboolean
 gam_remove_subscription(GamSubscription * sub)
 {
-#ifdef ENABLE_INOTIFY
-    return (gam_inotify_remove_subscription(sub));
-#elif linux
-    return (gam_dnotify_remove_subscription(sub));
-#else
-    return (gam_poll_remove_subscription(sub));
-#endif
+    return (gam_backend_remove_subscription(sub));
 }
 
 /**
