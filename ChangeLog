@@ -1,3 +1,9 @@
+Fri Aug 20 23:31:04 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: monitoring of files appearing and disapearing
+	  should now work as expected.
+	* tests/result/7 tests/scenario/7.tst: added a specific test
+
 Thu Aug 19 23:46:13 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c: fix a problem for monitoring missing
