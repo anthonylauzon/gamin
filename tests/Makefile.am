@@ -35,4 +35,5 @@ tests: testgam
 	       echo running test $$name ;				\
 	       ./testgam $$i > result.$$name 2>/dev/null;		\
 	       diff -c $(top_srcdir)/tests/result/$$name result.$$name ;\
+	       rm -f result.$$name ;					\
 	   fi ; done )
