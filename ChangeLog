@@ -1,3 +1,8 @@
+Tue Mar 22 14:39:38 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_poll.c server/gam_poll.h: cleanups,
+	  a bit of code reorganization, adding function comments.
+
 Wed Mar 16 23:01:36 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c server/local_inotify.h: new patch from

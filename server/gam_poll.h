@@ -8,6 +8,12 @@
 
 G_BEGIN_DECLS
 
+enum pollHandlerModes {
+    GAMIN_ACTIVATE = 1,		/* Activate kernel monitoring */
+    GAMIN_DESACTIVATE = 2,	/* Desactivate kernel monitoring */
+    GAMIN_FLOWCONTROL = 3	/* Request flow control */
+};
+
 typedef void (*GamPollHandler) (const char *path, gboolean added);
 
 gboolean   gam_poll_init_full             (gboolean start_scan_thread);
@@ -25,8 +31,6 @@ void       gam_poll_set_file_handler      (GamPollHandler handler);
 
 void       gam_poll_scan_directory        (const char *path);
 
-void       gam_poll_add_missing		  (GamNode *node);
-void       gam_poll_remove_missing        (GamNode *node);
 void       gam_poll_consume_subscriptions (void);
 						 
 G_END_DECLS

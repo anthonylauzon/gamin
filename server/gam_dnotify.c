@@ -124,7 +124,7 @@ gam_dnotify_directory_handler_internal(const char *path, gboolean added)
         gam_debug_report(GAMDnotifyCreate, path, 0);
 #endif
     } else {
-	char *dir = path;
+	char *dir = (char *) path;
 
         data = g_hash_table_lookup(path_hash, path);
 

@@ -63,6 +63,7 @@ typedef struct {
 static GamTree *tree = NULL;
 static GList *new_subs = NULL;
 static GList *missing_resources = NULL;
+static GList *busy_resources = NULL;
 static GList *all_resources = NULL;
 static GamPollHandler dir_handler = NULL;
 static GamPollHandler file_handler = NULL;
@@ -78,6 +79,73 @@ gam_errno(void) {
     return(errno);
 }
 
+/**
+ * gam_poll_add_missing:
+ * @node: a missing node
+ *
+ * Add a missing node to the list for polling its creation.
+ */
+static void
+gam_poll_add_missing(GamNode *node) {
+    GAM_DEBUG(DEBUG_INFO, "Poll adding missing node %s\n",
+              gam_node_get_path(node));
+    if (g_list_find(missing_resources, node) == NULL) {
+	missing_resources = g_list_prepend(missing_resources, node);
+    } else {
+	GAM_DEBUG(DEBUG_INFO, "  already registered\n");
+    }
+}
+
+/**
+ * gam_poll_remove_missing:
+ * @node: a missing node
+ *
+ * Remove a missing node from the list.
+ */
+static void
+gam_poll_remove_missing(GamNode *node) {
+    GAM_DEBUG(DEBUG_INFO, "Poll removing missing node %s\n",
+              gam_node_get_path(node));
+    missing_resources = g_list_remove_all(missing_resources, node);
+}
+
+/**
+ * gam_poll_add_busy:
+ * @node: a busy node
+ *
+ * Add a busy node to the list for polling its creation.
+ */
+static void
+gam_poll_add_busy(GamNode *node) {
+    GAM_DEBUG(DEBUG_INFO, "Poll adding busy node %s\n",
+              gam_node_get_path(node));
+    if (g_list_find(busy_resources, node) == NULL) {
+	busy_resources = g_list_prepend(busy_resources, node);
+    } else {
+	GAM_DEBUG(DEBUG_INFO, "  already registered\n");
+    }
+}
+
+/**
+ * gam_poll_remove_busy:
+ * @node: a busy node
+ *
+ * Remove a busy node from the list.
+ */
+static void
+gam_poll_remove_busy(GamNode *node) {
+    GAM_DEBUG(DEBUG_INFO, "Poll removing busy node %s\n",
+              gam_node_get_path(node));
+    busy_resources = g_list_remove_all(busy_resources, node);
+}
+
+/**
+ * trigger_dir_handler:
+ * @path: path to the directory
+ * @added: type of kernel monitoring action
+ *
+ * Interface to the kernel monitoring layer for directories
+ */
 static void
 trigger_dir_handler(const char *path, gboolean added)
 {
@@ -85,12 +153,29 @@ trigger_dir_handler(const char *path, gboolean added)
         (*dir_handler) (path, added);
 }
 
+/**
+ * trigger_file_handler:
+ * @path: path to the file
+ * @added: type of kernel monitoring action
+ *
+ * Interface to the kernel monitoring layer for files
+ */
 static void
 trigger_file_handler(const char *path, gboolean added)
 {
     if (file_handler != NULL)
         (*file_handler) (path, added);
 }
+
+/**
+ * node_add_subscription:
+ * @node: the node tree pointer
+ * @sub: the pointer to the subscription
+ *
+ * register a subscription for this node
+ *
+ * Returns 0 in case of success and -1 in case of failure
+ */
 
 static int
 node_add_subscription(GamNode * node, GamSubscription * sub)
@@ -120,6 +205,16 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
 
     return(0);
 }
+
+/**
+ * node_remove_subscription:
+ * @node: the node tree pointer
+ * @sub: the pointer to the subscription
+ *
+ * Removes a subscription for this node
+ *
+ * Returns 0 in case of success and -1 in case of failure
+ */
 
 static int
 node_remove_subscription(GamNode * node, GamSubscription * sub)
@@ -163,6 +258,15 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
     return(0);
 }
 
+/**
+ * gam_poll_data_new:
+ * @path: the path
+ *
+ * Creates a new data block for that path
+ *
+ * Returns the pointer to the block or NULL in case of failure
+ */
+
 static GamPollData *
 gam_poll_data_new(const char *path)
 {
@@ -187,6 +291,23 @@ gam_poll_data_new(const char *path)
     data->checks = 0;
 
     return data;
+}
+
+/**
+ * gam_poll_data_destroy:
+ * @data: pointer to the data block
+ *
+ * Destroys a data block.
+ */
+
+static void
+gam_poll_data_destroy(GamPollData * data)
+{
+    if (data != NULL) {
+	if (data->path != NULL)
+	    g_free(data->path);
+	g_free(data);
+    }
 }
 
 static void
@@ -244,13 +365,6 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
     }
 
     g_list_free(subs);
-}
-
-static void
-gam_poll_data_destroy(GamPollData * data)
-{
-    g_free(data->path);
-    g_free(data);
 }
 
 /**
@@ -420,19 +534,19 @@ poll_file(GamNode * node)
 	    GAM_DEBUG(DEBUG_INFO, "switching %s back to polling\n", path);
 	    data->flags |= MON_BUSY;
 	    data->checks = 0;
-	    gam_poll_add_missing(node);
+	    gam_poll_add_busy(node);
 	    gam_poll_delist_node(node);
 	}
     }
 
-    if ((event == 0) && (data->flags & MON_BUSY) && (data->checks > 10)) {
+    if ((event == 0) && (data->flags & MON_BUSY) && (data->checks > 5)) {
 	if ((gam_node_get_subscriptions(node) != NULL) &&
 	    (!gam_exclude_check(data->path))) {
 	    GAM_DEBUG(DEBUG_INFO, "switching %s back to kernel monitoring\n",
 	              path);
 	    data->flags &= ~MON_BUSY;
 	    data->checks = 0;
-	    gam_poll_remove_missing(node);
+	    gam_poll_remove_busy(node);
 	    gam_poll_relist_node(node);
 	}
     }
@@ -562,6 +676,9 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 	    if (missing_resources != NULL) {
 		gam_poll_remove_missing (child);
 	    }
+	    if (busy_resources != NULL) {
+		gam_poll_remove_busy (child);
+	    }
 	    gam_tree_remove(tree, child);
 	} else {
 	    remove_dir = FALSE;
@@ -579,8 +696,9 @@ gam_poll_scan_callback(gpointer data) {
     static int in_poll_callback = 0;
 
 #ifdef VERBOSE_POLL
-    GAM_DEBUG(DEBUG_INFO, "gam_poll_scan_callback(): %d, %d items\n",
-              in_poll_callback, g_list_length(missing_resources));
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_scan_callback(): %d, %d missing, %d busy\n",
+              in_poll_callback, g_list_length(missing_resources),
+	      g_list_length(busy_resources));
 #endif
     if (in_poll_callback)
 	return(TRUE);
@@ -629,12 +747,60 @@ gam_poll_scan_callback(gpointer data) {
 	 */
 	if ((data->flags == 0) && (!gam_exclude_check(data->path))) {
 	    gam_poll_remove_missing(node);
+	    gam_poll_remove_busy(node);
 	    if (gam_node_get_subscriptions(node) != NULL) {
 	        gam_poll_relist_node(node);
 	    }
 	}
     }
 
+    for (idx = 0;;idx++) {
+	GamPollData *data;
+	GamNode *node;
+	
+	/*
+	 * do not simply walk the list as it may be modified in the callback
+	 */
+	node = (GamNode *) g_list_nth_data(busy_resources, idx);
+	
+	if (node == NULL) {
+#ifdef VERBOSE_POLL
+	    GAM_DEBUG(DEBUG_INFO, "  node %d == NULL\n", idx);
+#endif
+	    break;
+	} 
+	data = gam_node_get_data(node);
+	if (data == NULL) {
+#ifdef VERBOSE_POLL
+	    GAM_DEBUG(DEBUG_INFO, "  data %d == NULL\n", idx);
+#endif
+	    break;
+	} 
+
+#ifdef VERBOSE_POLL
+	GAM_DEBUG(DEBUG_INFO, "Checking busy file %s", data->path);
+#endif
+	if (node->is_dir) {
+	    gam_poll_scan_directory_internal(node);
+	} else {
+	    GaminEventType event;
+
+	    event = poll_file(node);
+	    gam_poll_emit_event(node, event, NULL);
+	}
+
+	/*
+	 * if the resource exists again and is not in a special monitoring
+	 * mode then switch back to dnotify for monitoring.
+	 */
+	if ((data->flags == 0) && (!gam_exclude_check(data->path))) {
+	    gam_poll_remove_missing(node);
+	    gam_poll_remove_busy(node);
+	    if (gam_node_get_subscriptions(node) != NULL) {
+	        gam_poll_relist_node(node);
+	    }
+	}
+    }
     in_poll_callback = 0;
     return(TRUE);
 }
@@ -656,10 +822,13 @@ prune_tree(GamNode * node)
 
         parent = gam_node_parent(node);
         if (missing_resources != NULL) {
-		gam_poll_remove_missing(node);
+	    gam_poll_remove_missing(node);
+        }
+        if (busy_resources != NULL) {
+	    gam_poll_remove_busy(node);
         }
         if (all_resources != NULL) {
-                all_resources = g_list_remove (all_resources, node);
+	    all_resources = g_list_remove (all_resources, node);
         }
 	gam_tree_remove(tree, node);
         prune_tree(parent);
@@ -739,57 +908,6 @@ gam_poll_scan_all_callback(gpointer data) {
 
     in_poll_callback = 0;
     return(TRUE);
-}
-
-
-/**
- * @defgroup Polling Polling Backend
- * @ingroup Backends
- * @brief Polling backend API
- *
- * This is the default backend used in Gamin.  It basically just calls
- * stat() on files/directories every so often to see when things change.  The
- * statting happens in a separate thread, controllable with arguments to
- * #gam_poll_init_full().
- *
- * @{
- */
-
-
-/**
- * gam_poll_add_missing:
- * @node: a missing node
- *
- * Add a missing node to the list for polling its creation.
- */
-void
-gam_poll_add_missing(GamNode *node) {
-#if 0
-    fprintf(stderr, "Adding %s to polling\n", gam_node_get_path(node));
-#endif
-    GAM_DEBUG(DEBUG_INFO, "Poll adding missing node %s\n",
-              gam_node_get_path(node));
-    if (g_list_find(missing_resources, node) == NULL) {
-	missing_resources = g_list_prepend(missing_resources, node);
-    } else {
-	GAM_DEBUG(DEBUG_INFO, "  already registered\n");
-    }
-}
-
-/**
- * gam_poll_remove_missing:
- * @node: a missing node
- *
- * Remove a missing node from the list.
- */
-void
-gam_poll_remove_missing(GamNode *node) {
-#if 0
-    fprintf(stderr, "Removing %s from polling\n", gam_node_get_path(node));
-#endif
-    GAM_DEBUG(DEBUG_INFO, "Poll removing missing node %s\n",
-              gam_node_get_path(node));
-    missing_resources = g_list_remove_all(missing_resources, node);
 }
 
 /**
@@ -889,6 +1007,9 @@ gam_poll_remove_subscription_real(GamSubscription * sub)
                 if (missing_resources != NULL) {
                     gam_poll_remove_missing(node);
                 }
+                if (busy_resources != NULL) {
+                    gam_poll_remove_busy(node);
+                }
                 if (all_resources != NULL) {
                     all_resources = g_list_remove(all_resources, node);
                 }
@@ -911,6 +1032,9 @@ gam_poll_remove_subscription_real(GamSubscription * sub)
 
                 if (missing_resources != NULL) {
                     gam_poll_remove_missing(node);
+                }
+                if (busy_resources != NULL) {
+                    gam_poll_remove_busy(node);
                 }
                 if (all_resources != NULL) {
                     all_resources = g_list_remove(all_resources, node);
