@@ -5,10 +5,17 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.20: Jan  6 2004:
+   -  Frederic Crozat seems to have found the list corruption bug
+       and provided a patch.
+   -  Frederic Crozat fixed the poll only mode.
+
+
 0.0.19: Dec  3 2004:
    -  still chasing the loop bug, made another pass at checking GList,
   added own copy with memory poisonning of GList implementation.
    -  fixed a compile issue when compiling without debug
+   -  Another internal bugfix.
 
 
 0.0.18: Nov 26 2004:

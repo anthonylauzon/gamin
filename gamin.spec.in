@@ -69,6 +69,11 @@ rm -fr %{buildroot}
 
 
 %changelog
+* Thu Jan  6 2005 Daniel Veillard <veillard@redhat.com> 0.0.20-1
+- Frederic Crozat seems to have found the GList corruption which may fix
+  #132354 and related problems
+- Frederic Crozat also fixed poll only mode
+
 * Fri Dec  3 2004 Daniel Veillard <veillard@redhat.com> 0.0.19-1
 - still chasing the loop bug, made another pass at checking GList,
   added own copy with memory poisonning of GList implementation.

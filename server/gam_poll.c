@@ -161,7 +161,9 @@ gam_poll_data_new(const char *path)
     if (current_time == 0)
         current_time = time(NULL);
     data->lasttime = current_time;
+#ifdef ST_MTIM_NSEC
     data->sbuf.st_mtim.tv_sec = current_time;
+#endif
     data->sbuf.st_mtime = current_time;
     data->checks = 0;
 

@@ -1,3 +1,10 @@
+Thu Jan  6 16:10:20 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS configure.in gamin.spec.in: preparing release 0.0.20
+	* doc/gamin.html doc/news.html: update to the web pages
+	* server/gam_poll.c: trying to fix gnome bug #161792 compilation
+	  problem.
+
 Wed Jan  5 18:40:50 CET 2005 Frederic Crozat  <fcrozat@mandrakesoft.com>
 
 	* server/gam_poll.c: (remove_directory_subscription), (prune_tree):
