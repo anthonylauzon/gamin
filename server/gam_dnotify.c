@@ -134,8 +134,10 @@ gam_dnotify_file_handler(const char *path, gboolean added)
 {
     char *dir;
 
+    gam_debug(DEBUG_INFO, "gam_dnotify_file_handler %s : %d\n", path);
     dir = g_path_get_dirname(path);
     gam_dnotify_directory_handler(dir, added);
+    gam_poll_scan_directory(path, NULL);
     g_free(dir);
 }
 
@@ -152,7 +154,7 @@ dnotify_signal_handler(int sig, siginfo_t * si, void *sig_data)
     g_io_channel_write_chars(pipe_write_ioc, "bogus", 5, NULL, NULL);
     g_io_channel_flush(pipe_write_ioc, NULL);
 
-    gam_debug(DEBUG_INFO, "signal handler\n");
+    gam_debug(DEBUG_INFO, "signal handler done\n");
 }
 
 static void
@@ -195,6 +197,7 @@ gam_dnotify_pipe_handler(gpointer user_data)
 static gboolean
 gam_dnotify_consume_subscriptions_real(gpointer data)
 {
+    gam_debug(DEBUG_INFO, "gam_dnotify_consume_subscriptions_real()\n");
     gam_poll_consume_subscriptions();
     have_consume_idler = FALSE;
     return FALSE;
@@ -208,6 +211,7 @@ gam_dnotify_consume_subscriptions(void)
     if (have_consume_idler)
         return;
 
+    gam_debug(DEBUG_INFO, "gam_dnotify_consume_subscriptions()\n");
     have_consume_idler = TRUE;
     source = g_idle_source_new();
     g_source_set_callback(source, gam_dnotify_consume_subscriptions_real,
@@ -296,6 +300,8 @@ gam_dnotify_init(void)
 gboolean
 gam_dnotify_add_subscription(GamSubscription * sub)
 {
+    gam_debug(DEBUG_INFO, "gam_dnotify_add_subscription\n");
+
     if (!gam_poll_add_subscription(sub)) {
         return FALSE;
     }
@@ -304,6 +310,7 @@ gam_dnotify_add_subscription(GamSubscription * sub)
         gam_dnotify_consume_subscriptions();
     }
 
+    gam_debug(DEBUG_INFO, "gam_dnotify_add_subscription: done\n");
     return TRUE;
 }
 
@@ -316,14 +323,15 @@ gam_dnotify_add_subscription(GamSubscription * sub)
 gboolean
 gam_dnotify_remove_subscription(GamSubscription * sub)
 {
+    gam_debug(DEBUG_INFO, "gam_dnotify_remove_subscription\n");
+
     if (!gam_poll_remove_subscription(sub)) {
         return FALSE;
     }
 
-    if (gam_subscription_is_dir(sub)) {
-        gam_dnotify_consume_subscriptions();
-    }
+    gam_dnotify_consume_subscriptions();
 
+    gam_debug(DEBUG_INFO, "gam_dnotify_remove_subscription: done\n");
     return TRUE;
 }
 

@@ -17,6 +17,7 @@
  */
 
 #include <config.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -52,10 +53,11 @@ static GList *removed_subs = NULL;
 G_LOCK_DEFINE_STATIC(removed_subs);
 
 static GList *missing_resources = NULL;
-										G_LOCK_DEFINE_STATIC(missing_resources);
 
 static GamPollHandler dir_handler = NULL;
 static GamPollHandler file_handler = NULL;
+
+static int poll_mode = 0;
 
 static void
 trigger_dir_handler(const char *path, gboolean added)
@@ -185,6 +187,7 @@ poll_file(GamNode * node)
     if (data == NULL) {
         char real[PATH_MAX];
 
+        gam_debug(DEBUG_INFO, "Poll: poll_file : new\n");
         realpath(gam_node_get_path(node), real);
         data = gam_poll_data_new(real);
 
@@ -386,6 +389,22 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
     return remove_dir;
 }
 
+static gboolean
+gam_poll_scan_callback(gpointer data) {
+    GList *l;
+
+/*****
+    printf(".");
+    fflush(stdout);
+ *****/
+    for (l = missing_resources; l; l = l->next) {
+	GamNode *node = (GamNode *) l->data;
+
+	gam_poll_scan_directory_internal(node, NULL, TRUE);
+    }
+    return(TRUE);
+}
+
 static gpointer
 gam_poll_scan_loop(gpointer data)
 {
@@ -458,10 +477,9 @@ prune_tree(GamNode * node)
  */
 void
 gam_poll_add_missing(GamNode *node) {
-    G_LOCK(missing_resources);
+    gam_debug(DEBUG_INFO, "Poll adding missing node %s\n",
+              gam_node_get_path(node));
     missing_resources = g_list_prepend(missing_resources, node);
-    G_UNLOCK(missing_resources);
-
 }
 
 /**
@@ -472,9 +490,9 @@ gam_poll_add_missing(GamNode *node) {
  */
 void
 gam_poll_remove_missing(GamNode *node) {
-    G_LOCK(missing_resources);
+    gam_debug(DEBUG_INFO, "Poll removing missing node %s\n",
+              gam_node_get_path(node));
     missing_resources = g_list_remove_all(missing_resources, node);
-    G_UNLOCK(missing_resources);
 }
 
 /**
@@ -488,8 +506,16 @@ gam_poll_remove_missing(GamNode *node) {
 gboolean
 gam_poll_init_full(gboolean start_scan_thread)
 {
-    tree = gam_tree_new();
+    if (poll_mode != 0)
+        return(FALSE);
 
+    if (!start_scan_thread) {
+        g_timeout_add(1000, gam_poll_scan_callback, NULL);
+	poll_mode = 1;
+    } else {
+	poll_mode = 2;
+    }
+    tree = gam_tree_new();
 
     gam_debug(DEBUG_INFO, "Initialized Poll\n");
     return TRUE;
@@ -518,50 +544,19 @@ gam_poll_init(void)
 gboolean
 gam_poll_add_subscription(GamSubscription * sub)
 {
-    /*
-     * node = gam_tree_get_at_path (tree, gam_subscription_get_path (sub));
-     * if (!node) {
-     * node = gam_tree_add_at_path (tree,
-     * gam_subscription_get_path (sub),
-     * gam_subscription_is_dir (sub));
-     * 
-     * if (dir_handler &&
-     * gam_subscription_is_dir (sub)) {
-     * 
-     * (*dir_handler) (gam_node_get_path (node), TRUE);
-     * 
-     * } else if (file_handler &&
-     * !gam_subscription_is_dir (sub)) {
-     * 
-     * (*file_handler) (gam_node_get_path (node), TRUE);
-     * }
-     * 
-     * } else if (gam_subscription_is_dir (sub) &&
-     * gam_subscription_is_recursive (sub)) {
-     * GList *dirs, *l;
-     * 
-     * dirs = gam_tree_get_directories (tree, node);
-     * 
-     * for (l = dirs; l; l = l->next) {
-     * GamNode *child = l->data;
-     * 
-     * gam_node_add_subscription (child, sub);
-     * }
-     * 
-     * g_list_free (dirs);
-     * }
-     * 
-     * gam_node_add_subscription (node, sub);
-     */
+    const char *path;
+    gboolean is_dir;
 
+    path = gam_subscription_get_path(sub);
+    is_dir = gam_subscription_is_dir(sub);
 
-    /*
-     * if (gam_subscription_is_dir (sub)) {
-     * G_LOCK (new_subs);
-     * new_subs = g_list_prepend (new_subs, sub);
-     * G_UNLOCK (new_subs);
-     * }
-     */
+/***
+    node = gam_tree_get_at_path(tree, path);
+
+    if (!node) {
+        node = gam_tree_add_at_path(tree, path, is_dir);
+    }
+ ***/
 
     gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
 

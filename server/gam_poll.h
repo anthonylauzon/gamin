@@ -4,6 +4,7 @@
 
 #include <glib.h>
 #include "gam_subscription.h"
+#include "gam_node.h"
 
 G_BEGIN_DECLS
 
@@ -23,8 +24,10 @@ void       gam_poll_set_directory_handler (GamPollHandler handler);
 void       gam_poll_set_file_handler      (GamPollHandler handler);
 
 void       gam_poll_scan_directory        (const char *path,
-					  GList      *exist_subs);
+					   GList      *exist_subs);
 
+void       gam_poll_add_missing		  (GamNode *node);
+void       gam_poll_remove_missing        (GamNode *node);
 void       gam_poll_consume_subscriptions (void);
 						 
 G_END_DECLS

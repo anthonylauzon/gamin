@@ -1,3 +1,8 @@
+Tue Aug 17 17:48:05 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c: working on fixing file checking notification
+	* server/gam_poll.c server/gam_poll.h: start on integrating polling
+
 Tue Aug 17 16:57:58 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_server.c: a bit of framework which looks safe too
