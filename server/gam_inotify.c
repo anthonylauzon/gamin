@@ -28,35 +28,32 @@
 #include <glib.h>
 #include "/usr/src/linux/include/linux/inotify.h"
 #include "gam_error.h"
-#include "gam_poll.h"
 #include "gam_inotify.h"
 #include "gam_tree.h"
 #include "gam_event.h"
 #include "gam_server.h"
 #include "gam_event.h"
 
-/* just pulling a value out of nowhere here...may need tweaking */
-#define MAX_QUEUE_SIZE 500
-
 typedef struct {
     char *path;
     int wd;
     int refcount;
+    GList *subs;
 } INotifyData;
 
 static GHashTable *path_hash = NULL;
 static GHashTable *wd_hash = NULL;
 
+static GList *new_subs = NULL;
+G_LOCK_DEFINE_STATIC(new_subs);
+static GList *removed_subs = NULL;
+G_LOCK_DEFINE_STATIC(removed_subs);
+
 G_LOCK_DEFINE_STATIC(inotify);
-
-static GQueue *changes = NULL;
-
-#ifdef WITH_TREADING
-static GMainContext *loop_context;
-#endif
 static GIOChannel *inotify_read_ioc = NULL;
 
 static gboolean have_consume_idler = FALSE;
+
 
 int fd = -1; // the device fd
 
@@ -69,6 +66,7 @@ gam_inotify_data_new(const char *path, int wd)
     data->path = g_strdup(path);
     data->wd = wd;
     data->refcount = 1;
+    data->subs = NULL;
 
     return data;
 }
@@ -81,7 +79,7 @@ gam_inotify_data_free(INotifyData * data)
 }
 
 static void
-gam_inotify_directory_handler(const char *path, gboolean added)
+gam_inotify_add_rm_handler(const char *path, GamSubscription *sub, gboolean added)
 {
     INotifyData *data;
     struct inotify_watch_request iwr;
@@ -90,15 +88,20 @@ gam_inotify_directory_handler(const char *path, gboolean added)
     G_LOCK(inotify);
 
     if (added) {
+	GList *subs;
+
+	subs = NULL;
 
         if ((data = g_hash_table_lookup(path_hash, path)) != NULL) {
             data->refcount++;
+	    data->subs = g_list_prepend(data->subs, sub);
             G_UNLOCK(inotify);
+	    gam_debug(DEBUG_INFO, "inotify updated refcount\n");
             return;
         }
 
 	iwr.dirname = g_strdup(path);
-	iwr.mask = IN_MODIFY|IN_CREATE|IN_DELETE|IN_RENAME|IN_ATTRIB|IN_UNMOUNT|IN_IGNORED;
+	iwr.mask = 0xffffffff; // all events
 
         wd = ioctl(fd, INOTIFY_WATCH,&iwr);
         g_free(iwr.dirname);	
@@ -110,10 +113,16 @@ gam_inotify_directory_handler(const char *path, gboolean added)
 
 
         data = gam_inotify_data_new(path, wd);
+    	data->subs = g_list_prepend(data->subs, sub);
         g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
         g_hash_table_insert(path_hash, data->path, data);
 
         gam_debug(DEBUG_INFO, "activated INotify for %s\n", path);
+
+	subs = g_list_append(subs, sub);
+
+	gam_server_emit_event (path, GAMIN_EVENT_EXISTS, subs);
+	gam_server_emit_event (path, GAMIN_EVENT_ENDEXISTS, subs);
     } else {
         data = g_hash_table_lookup(path_hash, path);
 
@@ -122,7 +131,11 @@ gam_inotify_directory_handler(const char *path, gboolean added)
             return;
         }
 
+	if (g_list_find (data->subs, sub)) {
+		data->subs = g_list_remove_all (data->subs, sub);
+	}
         data->refcount--;
+	    gam_debug(DEBUG_INFO, "inotify decremeneted refcount\n");
 
         if (data->refcount == 0) {
             r = ioctl (fd, INOTIFY_IGNORE, &data->wd); 
@@ -140,24 +153,61 @@ gam_inotify_directory_handler(const char *path, gboolean added)
     G_UNLOCK(inotify);
 }
 
-static void
-gam_inotify_file_handler(const char *path, gboolean added)
-{
-    char *dir;
 
-    dir = g_path_get_dirname(path);
-    gam_inotify_directory_handler(dir, added);
-    g_free(dir);
-}
-
-#ifdef WITH_TREADING
-static gpointer
-gam_inotify_scan_loop(gpointer data)
+static GaminEventType inotify_event_to_gamin_event (int mask) 
 {
-    g_main_loop_run(g_main_loop_new(loop_context, TRUE));
-    return (NULL);
+	switch (mask)
+	{
+		case IN_ATTRIB:
+		case IN_MODIFY:
+			return GAMIN_EVENT_CHANGED;
+		break;
+		case IN_CREATE:
+			return GAMIN_EVENT_CREATED;
+		break;
+		case IN_DELETE:
+			return GAMIN_EVENT_DELETED;
+		break;
+		case IN_RENAME:
+		case IN_MOVE:
+			return GAMIN_EVENT_MOVED;
+		break;
+		default:
+			return GAMIN_EVENT_UNKNOWN;
+	}
 }
-#endif
+static void gam_inotify_emit_event (INotifyData *data, struct inotify_event *event)
+{
+	GaminEventType gevent;
+	char *event_path;
+
+	if (!data||!event)
+		return;
+
+	gevent = inotify_event_to_gamin_event (event->mask);
+	// we got some event that GAMIN doesn't understand
+	if (gevent == GAMIN_EVENT_UNKNOWN) {
+		gam_debug(DEBUG_INFO, "inotify_emit_event got unknown event %x\n", event->mask);
+		return;
+	}
+
+	if (event->filename[0] != '\0') {
+		int pathlen = strlen(data->path);
+		gam_debug(DEBUG_INFO, "Got filename with event\n");
+		if (data->path[pathlen-1] == '/') {
+			event_path = g_strconcat (data->path, event->filename, NULL);
+		} else {
+			event_path = g_strconcat (data->path, "/", event->filename, NULL);
+		}
+	} else {
+		gam_debug(DEBUG_INFO, "Got not filename with event\n");
+		event_path = g_strdup (data->path);
+	}
+
+	gam_debug(DEBUG_INFO, "gam_inotify_emit_event() %s\n", event_path);
+
+	gam_server_emit_event (event_path, gevent, data->subs);
+}
 
 static gboolean
 gam_inotify_read_handler(gpointer user_data)
@@ -169,10 +219,28 @@ gam_inotify_read_handler(gpointer user_data)
     G_LOCK(inotify);
 
     if (g_io_channel_read_chars(inotify_read_ioc, (char *)&event, sizeof(struct inotify_event), NULL, NULL) != G_IO_STATUS_NORMAL) {
+	G_UNLOCK(inotify);
         gam_debug(DEBUG_INFO, "gam_inotify_read_handler failed\n");
 	return FALSE;
     }
 
+
+    /* Need to walk data->subs list and remove this from each subscription
+    if (event.mask == IN_IGNORE) {
+	    data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event.wd));
+
+	    if (!data) {
+		    G_UNLOCK(inotify);
+		    return TRUE;
+		}
+
+	    g_hash_table_remove(path_hash, data->path);
+	    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
+	    gam_inotify_data_free (data);
+	    G_UNLOCK(inotify);
+	    return TRUE;
+    }
+    */
 
     data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event.wd));
 
@@ -182,20 +250,9 @@ gam_inotify_read_handler(gpointer user_data)
         return TRUE;
     }
 
-    /* TODO: Handle IGNORED events (they come after UMOUNT events!) */
-    /*
-    if (event.mask & IN_IGNORED) {
-	    gam_debug(DEBUG_INFO, "Removing wd %d from hash after IN_IGNORED\n", event.wd);
-            g_hash_table_remove(path_hash, data->path);
-            g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
-            gam_inotify_data_free(data);
-	    G_UNLOCK(inotify);
-	    return TRUE;
-    }
-    */
+    gam_inotify_emit_event (data, &event);
 
-    gam_debug(DEBUG_INFO, "gam_inotify event for %s (%x)\n", data->path, event.mask);
-    gam_poll_scan_directory(data->path, NULL);
+    gam_debug(DEBUG_INFO, "gam_inotify event for %s (%x) %s\n", data->path, event.mask, event.filename);
 
     gam_debug(DEBUG_INFO, "gam_inotify_read_handler() done\n");
 
@@ -207,28 +264,59 @@ gam_inotify_read_handler(gpointer user_data)
 static gboolean
 gam_inotify_consume_subscriptions_real(gpointer data)
 {
-    gam_poll_consume_subscriptions();
-    have_consume_idler = FALSE;
-    return FALSE;
+	GList *subs, *l;
+	
+	G_LOCK(new_subs);
+	if (new_subs) {
+		subs = new_subs;
+		new_subs = NULL;
+		G_UNLOCK(new_subs);
+
+		for (l = subs; l; l = l->next) {
+			GamSubscription *sub = l->data;
+			gam_debug(DEBUG_INFO, "called gam_inotify_add_handler()\n");
+			gam_inotify_add_rm_handler (gam_subscription_get_path (sub), sub, TRUE);
+		}
+
+	} else { 
+		G_UNLOCK(new_subs);
+	}
+
+	G_LOCK(removed_subs);
+	if (removed_subs) {
+		subs = removed_subs;
+		removed_subs = NULL;
+		G_UNLOCK(removed_subs);
+
+		for (l = subs; l; l = l->next) {
+			GamSubscription *sub = l->data;
+			gam_debug(DEBUG_INFO, "called gam_inotify_rm_handler()\n");
+			gam_inotify_add_rm_handler (gam_subscription_get_path (sub), sub, FALSE);
+		}
+	} else {
+		G_UNLOCK(removed_subs);
+	}
+
+	gam_debug(DEBUG_INFO, "gam_inotify_consume_subscriptions()\n");
+
+	have_consume_idler = FALSE;
+	return FALSE;
 }
 
 static void
 gam_inotify_consume_subscriptions(void)
 {
-    GSource *source;
+	GSource *source;
 
-    if (have_consume_idler)
-        return;
+	if (have_consume_idler)
+		return;
 
-    have_consume_idler = TRUE;
-    source = g_idle_source_new();
-    g_source_set_callback(source, gam_inotify_consume_subscriptions_real,
-                          NULL, NULL);
-#ifdef WITH_TREADING
-    g_source_attach(source, loop_context);
-#else
-    g_source_attach(source, NULL);
-#endif
+	have_consume_idler = TRUE;
+
+	source = g_idle_source_new ();
+	g_source_set_callback (source, gam_inotify_consume_subscriptions_real, NULL, NULL);
+
+	g_source_attach (source, NULL);
 }
 
 /**
@@ -236,12 +324,9 @@ gam_inotify_consume_subscriptions(void)
  * @ingroup Backends
  * @brief INotify backend API
  *
- * Since version 2.X, Linux kernels have included the Linux Inode
+ * Since version 2.6.X, Linux kernels have included the Linux Inode
  * Notification system (inotify).  This backend uses inotify to know when
- * files are changed/created/deleted.  Since inotify doesn't tell us
- * exactly what event happened to which file (just that some even happened
- * in some directory), we still have to cache stat() information.  For this,
- * we can just use the code in the polling backend.
+ * files are changed/created/deleted.  
  *
  * @{
  */
@@ -258,8 +343,6 @@ gam_inotify_init(void)
 {
     GSource *source;
 
-    g_return_val_if_fail(gam_poll_init_full(FALSE), FALSE);
-
     fd = open("/dev/inotify", O_RDONLY);
 
     if (fd < 0) {
@@ -274,34 +357,18 @@ gam_inotify_init(void)
     /* Non blocking */
     g_io_channel_set_flags(inotify_read_ioc, G_IO_FLAG_NONBLOCK, NULL);
 
-#ifdef WITH_TREADING
-    loop_context = g_main_context_new();
-#endif
-
     source = g_io_create_watch(inotify_read_ioc,
                                G_IO_IN | G_IO_HUP | G_IO_ERR);
     g_source_set_callback(source, gam_inotify_read_handler, NULL, NULL);
 
-#ifdef WITH_TREADING
-    g_source_attach(source, loop_context);
-#else
     g_source_attach(source, NULL);
-#endif
-
-    changes = g_queue_new();
-
-#ifdef WITH_TREADING
-    g_thread_create(gam_inotify_scan_loop, NULL, TRUE, NULL);
-#endif
 
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
     wd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
-    gam_poll_set_directory_handler(gam_inotify_directory_handler);
-    gam_poll_set_file_handler(gam_inotify_file_handler);
 
     gam_debug(DEBUG_INFO, "inotify initialized\n");
 
-    int i = INOTIFY_DEBUG_INODE|INOTIFY_DEBUG_ERRORS|INOTIFY_DEBUG_EVENTS;
+    int i = 0; // INOTIFY_DEBUG_INODE|INOTIFY_DEBUG_ERRORS|INOTIFY_DEBUG_EVENTS;
     ioctl(fd, INOTIFY_SETDEBUG, &i);
 
     return TRUE;
@@ -316,14 +383,15 @@ gam_inotify_init(void)
 gboolean
 gam_inotify_add_subscription(GamSubscription * sub)
 {
-    if (!gam_poll_add_subscription(sub)) {
-        return FALSE;
-    }
+	gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
 
-    if (gam_subscription_is_dir(sub)) {
-        gam_inotify_consume_subscriptions();
-    }
+	G_LOCK(new_subs);
+	new_subs = g_list_prepend(new_subs, sub);
+	G_UNLOCK(new_subs);
 
+	gam_debug(DEBUG_INFO, "inotify_add_sub\n");
+
+	gam_inotify_consume_subscriptions();
     return TRUE;
 }
 
@@ -336,13 +404,24 @@ gam_inotify_add_subscription(GamSubscription * sub)
 gboolean
 gam_inotify_remove_subscription(GamSubscription * sub)
 {
-    if (!gam_poll_remove_subscription(sub)) {
-        return FALSE;
-    }
+	G_LOCK(new_subs);
+	if (g_list_find(new_subs, sub)) {
+		gam_debug(DEBUG_INFO, "removed sub found on new_subs\n");
+		new_subs = g_list_remove_all (new_subs, sub);
+		G_UNLOCK(new_subs);
+		return TRUE;
+	}
+	G_UNLOCK(new_subs);
 
-    if (gam_subscription_is_dir(sub)) {
-        gam_inotify_consume_subscriptions();
-    }
+	gam_subscription_cancel (sub);
+	gam_listener_remove_subscription(gam_subscription_get_listener(sub), sub);
+
+	G_LOCK(removed_subs);
+	removed_subs = g_list_prepend (removed_subs, sub);
+	G_UNLOCK(removed_subs);
+
+	gam_debug(DEBUG_INFO, "inotify_remove_sub\n");
+	gam_inotify_consume_subscriptions();
 
     return TRUE;
 }
@@ -356,15 +435,27 @@ gam_inotify_remove_subscription(GamSubscription * sub)
 gboolean
 gam_inotify_remove_all_for(GamListener * listener)
 {
-    if (!gam_poll_remove_all_for(listener)) {
-        return FALSE;
-    }
+	GList *subs, *l = NULL;
 
-    gam_inotify_consume_subscriptions();
+	subs = gam_listener_get_subscriptions (listener);
 
-    return TRUE;
+	for (l = subs; l; l = l->next) {
+		GamSubscription *sub = l->data;
+
+		g_assert (sub != NULL);
+
+		gam_inotify_remove_subscription (sub);
+
+	}
+
+	if (subs) {
+		g_list_free (subs);
+		gam_inotify_consume_subscriptions();
+		return TRUE;
+	} else {
+		return FALSE;
+	}
 }
 
 /** @} */
-
 #endif /* USE_INOTIFY */

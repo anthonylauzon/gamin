@@ -1,3 +1,9 @@
+Thu Aug  5 16:23:18 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_event.h server/gam_inotify.c server/gam_server.c:
+	  patches from John McCutchan, inotify back-end update and 
+	  bugfixes on error conditions in gam_server.c
+
 Thu Aug  5 11:55:59 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_fork.c: markmc pointed at a problem when forking

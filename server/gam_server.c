@@ -32,6 +32,9 @@
 #include "gam_channel.h"
 #include "gam_subscription.h"
 #include "gam_poll.h"
+#ifdef USE_INOTIFY
+#include "gam_inotify.h"
+#endif
 #ifdef linux
 #include "gam_dnotify.h"
 #endif
@@ -79,7 +82,9 @@ gam_init_subscriptions(void)
 gboolean
 gam_add_subscription(GamSubscription * sub)
 {
-#ifdef linux
+#ifdef USE_INOTIFY
+    return (gam_inotify_add_subscription(sub));
+#elif linux
     return (gam_dnotify_add_subscription(sub));
 #else
     return (gam_poll_add_subscription(sub));
@@ -96,7 +101,9 @@ gam_add_subscription(GamSubscription * sub)
 gboolean
 gam_remove_subscription(GamSubscription * sub)
 {
-#ifdef linux
+#ifdef USE_INOTIFY
+    return (gam_inotify_remove_subscription(sub));
+#elif linux
     return (gam_dnotify_remove_subscription(sub));
 #else
     return (gam_poll_remove_subscription(sub));
@@ -247,8 +254,8 @@ main(int argc, const char *argv[])
 #endif
 
     if (!gam_init_subscriptions()) {
-        g_error("Could not initialize the subscription system.\n");
-        exit(1);
+	gam_debug(DEBUG_INFO, "Could not initialize the subscription system.\n");
+        exit(0);
     }
 
     loop = g_main_loop_new(NULL, FALSE);
@@ -258,8 +265,8 @@ main(int argc, const char *argv[])
     }
 
     if (!gam_server_init(loop, session)) {
-        g_error("Couldn't initialize the server.\n");
-        exit(1);
+        gam_debug(DEBUG_INFO, "Couldn't initialize the server.\n");
+        exit(0);
     }
 
     g_main_loop_run(loop);
