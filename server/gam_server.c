@@ -55,6 +55,16 @@ gam_shutdown(void) {
 }
 
 /**
+ * gam_debug:
+ *
+ * Debug routine called when the debugging starts
+ */
+void
+gam_show_debug(void) {
+    gam_connections_debug();
+}
+
+/**
  * gam_init_subscriptions:
  *
  * Initialize the subscription checking backend, on Linux we will use
@@ -297,6 +307,7 @@ gam_server_init(GMainLoop * loop, const char *session)
      */
     if (no_timeout == 0)
 	g_timeout_add(1000, (GSourceFunc) gam_connections_check, NULL);
+    g_timeout_add(1000, (GSourceFunc) gam_error_check, NULL);
 
     return TRUE;
 }

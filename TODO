@@ -2,17 +2,26 @@
  - try to use getlogin and $USER to get the user name
  - doc extraction and reformatting of comments in gtk-doc style
  - handling of directory removal (need to poll on monitored empty dirs).
- - "make valgrind" regression tests for both client and server.
- - try to work around the fact the stat() info precision is only 1 sec
-   on ext2/ext3, especially for directories.
  - check handling of mismatched resources i.e. mondir on file
    and monfile on directories and what happen when file type change.
  - mount --bind will certainly create infinitely deep directory trees
    surely you are doing loop detection for this, for NFS and the like ? (Alan)
+ - on SIGUSR2 first output the list of clients connected and try to
+   force the glib2 main loop to output the informations at the time
+   the event are received.
+ - try to work around the fact the stat() info precision is only 1 sec
+   on ext2/ext3, especially for directories.
+ - avoid deadlock on reconnect due to event piling up in both directions.
+   probably need a protocol upgrade.
+ - handling of symlinks.
                                                                                 
 Regression tests:
  - try all the file length on the client till error.
  - try the fragmented/multirequests tests on the client side
+
+Postponed:
+ - "make valgrind" regression tests for both client and server.
+   -> valgrind doesn't work okay with dnotify
 
 Done:
  - fix "make tests" to use /tmp to avoid $pwd in the paths of the output

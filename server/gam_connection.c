@@ -558,3 +558,49 @@ gam_connections_check(void)
     }
     return (TRUE);
 }
+
+/**
+ * gam_connections_debug:
+ *
+ * Calling this function generate debugging informations about the set
+ * of existing connections.
+ */
+void
+gam_connections_debug(void) {
+    GamConnDataPtr conn;
+    GList *cur;
+
+    if (!gam_debug_active) return;
+    if (gamConnList == NULL) {
+	GAM_DEBUG(DEBUG_INFO, "No active connection\n");
+	return;
+    }
+    cur = gamConnList;
+    while (cur != NULL) {
+        conn = (GamConnDataPtr) cur->data;
+	if (conn == NULL) {
+	    GAM_DEBUG(DEBUG_INFO, "   Error: connection with no data\n");
+	} else {
+	    const char *state = "unknown";
+
+	    switch (conn->state) {
+	        case GAM_STATE_ERROR:
+		    state = "error";
+		    break;
+	        case GAM_STATE_AUTH:
+		    state = "need auth";
+		    break;
+	        case GAM_STATE_OKAY:
+		    state = "okay";
+		    break;
+	        case GAM_STATE_CLOSED:
+		    state = "closed";
+		    break;
+	    }
+	    GAM_DEBUG(DEBUG_INFO, 
+	              "   Connection fd %d to pid %d: state %s, %d read\n",
+		      conn->fd, conn->pid, state, conn->req_read);
+	}
+        cur = g_list_next(cur);
+    }
+}

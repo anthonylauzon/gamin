@@ -28,6 +28,7 @@ void            gam_server_emit_event           (const char *path,
 						 GList *subs,
 						 int force);
 void		gam_shutdown			(void);
+void		gam_show_debug			(void);
 #ifdef __cplusplus
 }
 #endif

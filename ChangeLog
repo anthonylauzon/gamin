@@ -1,3 +1,10 @@
+Wed Dec  1 15:26:20 CET 2004 Daniel Veillard <veillard@redhat.com>
+
+	* TODO: updated
+	* configure.in: minor change for compiler options
+	* lib/gam_error.[ch] libgamin/gam_api.c server/gam_connection.[ch]
+	  server/gam_server.[ch]: trying to improve debugging
+
 Fri Nov 26 11:01:19 CET 2004 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in: real release of 0.0.18

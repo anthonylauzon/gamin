@@ -7,6 +7,8 @@
 
 typedef void (*signal_handler)(int);
 
+extern void gam_show_debug(void);
+
 int gam_debug_active = 0;
 static int initialized = 0;
 static int do_debug = 0;
@@ -17,6 +19,7 @@ static void
 gam_error_handle_signal(void) {
     if (got_signal == 0)
         return;
+    got_signal = 0;
 
     if (do_debug == 0) {
        char path[50] = "/tmp/gamin_debug_XXXXXX";
@@ -26,6 +29,7 @@ gam_error_handle_signal(void) {
 	   if (debug_out != NULL) {
 	       do_debug = 1;
 	       gam_debug_active = 1;
+	       gam_show_debug();
 	   }
        }
     } else {
@@ -36,7 +40,6 @@ gam_error_handle_signal(void) {
 	   debug_out = NULL;
        }
     }
-    got_signal = 0;
 }
 
 static void 
@@ -45,6 +48,11 @@ gam_error_signal(int no) {
     gam_debug_active = -1; /* force going into gam_debug() */
 }
 
+/**
+ * gam_error_init:
+ *
+ * Initialization routine for the error and debug handling.
+ */
 void
 gam_error_init(void) {
 
@@ -62,6 +70,22 @@ gam_error_init(void) {
 	if ((prev != SIG_IGN) && (prev != SIG_DFL) && (prev != NULL))
 	    signal(SIGUSR2, prev);
     }
+}
+
+/**
+ * gam_error_init:
+ *
+ * Checking routine to call from time to time to handle asynchronous
+ * error debugging events.
+ */
+void
+gam_error_check(void) {
+    if (initialized == 0)
+        gam_error_init();
+
+    if (got_signal)
+        gam_error_handle_signal();
+
 }
 
 /**

@@ -71,6 +71,10 @@ gamin_dump_event(FAMEvent *event) {
 }
 #endif
 
+void
+gam_show_debug(void) {
+}
+
 /************************************************************************
  *									*
  *			Path for the socket connection			*

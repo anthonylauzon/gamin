@@ -64,6 +64,7 @@ void	gam_debug(const char *file, int line, const char* function,
 #define GAM_DEBUG if (gam_debug_active) gam_debug
 
 void	gam_error_init(void);
+void	gam_error_check(void);
 
 #else
 /*
