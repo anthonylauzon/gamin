@@ -631,6 +631,7 @@ retry:
     gam_debug(DEBUG_INFO,
               "Credentials: s_uid %d, c_uid %d, c_gid %d, c_pid %d\n",
               (int) s_uid, (int) c_uid, (int) c_gid, (int) c_pid);
+    gamin_data_done_auth(conn);
 
     return(0);
 
@@ -658,6 +659,7 @@ gamin_read_data(GAMDataPtr conn, int fd)
 
     ret = gamin_data_need_auth(conn);
     if (ret == 1) {
+        gam_debug(DEBUG_INFO, "Client need auth %d\n", fd);
         if (gamin_check_cred(conn, fd) < 0) {
 	    return (-1);
 	}

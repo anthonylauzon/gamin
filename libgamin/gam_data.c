@@ -475,7 +475,6 @@ gamin_data_get_data(GAMDataPtr conn, char **data, int *size)
 {
     if ((conn == NULL) || (data == NULL) || (size == NULL))
         return (-1);
-    conn->auth = 1;
     *data = (char *) &conn->event;
     *size = sizeof(GAMPacket);
     *data += conn->evn_read;
@@ -546,6 +545,22 @@ gamin_data_conn_event(GAMDataPtr conn, GAMPacketPtr evn)
               evn->seq, evn->type);
 
     return (1);
+}
+
+/**
+ * gamin_data_done_auth:
+ * @conn: connection data structure.
+ *
+ * The current connection did authentication sucessfully
+ *
+ * Returns 0 in case success, -1 in case of failure
+ */
+int
+gamin_data_done_auth(GAMDataPtr conn) {
+    if (conn == NULL)
+        return(-1);
+    conn->auth = 1;
+    return(0);
 }
 
 /**

@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/select.h>
 #include <fcntl.h>
 
 
@@ -35,6 +37,8 @@ scanCommand(char *line, char **command, char **arg, char **arg2)
 
     while (IS_BLANK(cur))
         cur++;
+    if (*cur == 0)
+        return (0);
     *command = cur;
     while ((*cur != 0) && (!IS_BLANK(cur)))
         cur++;
@@ -337,24 +341,90 @@ processCommand(char *line, int no)
     return (0);
 }
 
+static void
+debugPrompt(void) {
+    printf("> ");
+    fflush(stdout);
+}
+
+static int
+debugLoop(void) {
+    fd_set read_set;
+    int avail;
+    int fd;
+
+    debugPrompt();
+
+retry:
+    FD_ZERO(&read_set);
+    FD_SET(0, &read_set);
+    fd = 0;
+    if (testState.connected) {
+        FD_SET(testState.fc.fd, &read_set);
+	fd = testState.fc.fd;
+    }
+    avail = select(fd + 1, &read_set, NULL, NULL, NULL);
+    if (avail < 0) {
+        if (errno == EINTR)
+	    goto retry;
+	fprintf(stderr, "debugLoop: select() failed \n");
+	return (-1);
+    }
+    if (testState.connected) {
+        if (FD_ISSET(testState.fc.fd, &read_set)) {
+	    if (FAMPending(&(testState.fc)) > 0) {
+	        printf("\n");
+	        printEvents(0);
+		debugPrompt();
+	    }
+	}
+    }
+    if (!(FD_ISSET(0, &read_set))) goto retry;
+    return(0);
+}
+
 static int
 playTest(const char *filename)
 {
     FILE *f;
     char command[MAXPATHLEN + 201];
+    int clen = 0, ret;
     int no = 0;
+    int interactive = 0;
 
     testState.connected = 0;
     testState.nb_requests = 0;
-    f = fopen(filename, "r");
+    if (strcmp(filename, "-")) {
+	f = fopen(filename, "r");
+    } else {
+        f = fdopen(0, "r");
+	interactive = 1;
+    }
     if (f == NULL) {
         fprintf(stderr, "Unable to read %s\n", filename);
         return (-1);
     }
-    while (fgets(command, MAXPATHLEN + 200, f)) {
-        no++;
-        if (processCommand(command, no) < 0)
-            break;
+    if (interactive) {
+        while (debugLoop() == 0) {
+	    ret = read(0, &command[clen], MAXPATHLEN + 200 - clen);
+	    if (ret < 0)
+	        break;
+	    clen += ret;
+	    if ((clen > 0) && ((command[clen -1] == '\n') ||
+	        (command[clen -1] == '\r'))) {
+		command[clen -1] = 0;
+		no++;
+		if (processCommand(command, no) < 0)
+		    break;
+		clen = 0;
+	    }
+	}
+    } else {
+	while (fgets(command, MAXPATHLEN + 200, f)) {
+	    no++;
+	    if (processCommand(command, no) < 0)
+		break;
+	}
     }
     fclose(f);
     return (0);
@@ -364,7 +434,7 @@ int
 main(int argc, char **argv)
 {
     if (argc != 2) {
-        fprintf(stderr, "Usage: %s testfile\n", argv[0]);
+        fprintf(stderr, "Usage: %s testfile\n use - for stdin\n", argv[0]);
         exit(1);
     }
     getcwd(pwd, sizeof(pwd));

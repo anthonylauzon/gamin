@@ -75,6 +75,7 @@ int		gamin_data_del_req	(GAMDataPtr conn,
 int		gamin_data_conn_data	(GAMDataPtr conn,
 					 int len);
 int		gamin_data_need_auth	(GAMDataPtr conn);
+int		gamin_data_done_auth	(GAMDataPtr conn);
 int		gamin_data_read_event	(GAMDataPtr conn,
 					 FAMEvent *event);
 int		gamin_data_event_ready	(GAMDataPtr conn);

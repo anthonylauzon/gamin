@@ -15,7 +15,7 @@ Docdir: %{_docdir}
 
 %description
 This C library provides an API and ABI compatible file alteration
-monitor mechanism compatible with FAM but not dependant on a system wide
+monitor mechanism compatible with FAM but not dependent on a system wide
 daemon.
 
 %package devel
@@ -27,7 +27,7 @@ Provides: fam-devel
 
 %description devel
 This C library provides an API and ABI compatible file alteration
-monitor mechanism compatible with FAM but not dependant on a system wide
+monitor mechanism compatible with FAM but not dependent on a system wide
 daemon.
 
 %prep
