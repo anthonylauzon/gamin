@@ -55,6 +55,8 @@ void	gam_debug(const char *file, int line, const char* function,
                   const char* format, ...);
 #define GAM_DEBUG gam_debug
 
+void	gam_error_init(void);
+
 #else
 /*
  * no debug, redefine the macro empty content

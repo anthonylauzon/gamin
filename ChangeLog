@@ -1,3 +1,9 @@
+Sat Oct  2 14:57:58 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_server.c: code cleanup
+	* lib/gam_error.[ch] libgamin/gam_api.c: added a dynamic debugging
+	  capability using SIGUSR2
+
 Fri Oct  1 18:15:05 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in: release 0.0.13

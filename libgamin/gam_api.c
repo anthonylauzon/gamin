@@ -871,6 +871,8 @@ FAMOpen(FAMConnection * fc)
     char *socket_name;
     int fd, ret;
 
+    gam_error_init();
+
     GAM_DEBUG(DEBUG_INFO, "FAMOpen()\n");
 
     if (fc == NULL) {
@@ -922,6 +924,8 @@ int
 FAMOpen2(FAMConnection * fc, const char *appName)
 {
     int ret;
+
+    gam_error_init();
 
     GAM_DEBUG(DEBUG_INFO, "FAMOpen2()\n");
 

@@ -89,25 +89,6 @@ gam_init_subscriptions(void)
 }
 
 /**
- * gam_exists:
- * @path: a path to a filename or directory
- *
- * Check if a given path exists
- *
- * Returns TRUE if it exists and FALSE otherwise
- */
-static gboolean
-gam_exists(const char *path) {
-    struct stat sbuf;
-    int stat_ret;
-
-    stat_ret = stat(path, &sbuf);
-    if (stat_ret == 0)
-        return(TRUE);
-    return(FALSE);
-}
-
-/**
  * gam_add_subscription:
  *
  * Register a subscription to the checking backend, on Linux we will use
@@ -122,13 +103,6 @@ gam_add_subscription(GamSubscription * sub)
     if (sub == NULL)
         return(FALSE);
 
-/****
-    const char *path;
-    path = gam_subscription_get_path(sub);
-    if (!gam_exists(path)) {
-	return (gam_poll_add_subscription(sub));
-    }
- ***/
     return (gam_backend_add_subscription(sub));
 }
 

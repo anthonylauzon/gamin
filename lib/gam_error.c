@@ -2,8 +2,60 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <signal.h>
 #include "gam_error.h"
 
+typedef void (*signal_handler)(int);
+
+static int initialized = 0;
+static int do_debug = 0;
+static int got_signal = 0;
+static FILE *debug_out = NULL;
+
+static void
+gam_error_handle_signal(void) {
+    if (got_signal == 0)
+        return;
+
+    if (do_debug == 0) {
+       char path[50] = "/tmp/gamin_debug_XXXXXX";
+       int fd = mkstemp(path);
+       if (fd >= 0) {
+	   debug_out = fdopen(fd, "a");
+	   if (debug_out != NULL) 
+	       do_debug = 1;
+       }
+    } else {
+       do_debug = 0;
+       if (debug_out != NULL) {
+           fclose(debug_out);
+	   debug_out = NULL;
+       }
+    }
+    got_signal = 0;
+}
+
+static void 
+gam_error_signal(int no) {
+    got_signal = !got_signal;
+}
+
+void
+gam_error_init(void) {
+
+    if (initialized == 0) {
+	signal_handler prev;
+
+        initialized = 1;
+        if (getenv("GAM_DEBUG") != NULL)
+            do_debug = 1;
+	prev = signal(SIGUSR2, gam_error_signal);
+	/* if there is already an handler switch back to the original
+	   to avoid disturbing the application behaviour */
+	if ((prev != SIG_IGN) && (prev != SIG_DFL) && (prev != NULL))
+	    signal(SIGUSR2, prev);
+    }
+}
 
 /**
  * gam_error:
@@ -21,11 +73,19 @@ gam_error(const char *file, int line, const char *function,
 {
     va_list args;
 
+    if (initialized == 0)
+        gam_error_init();
+
+    if (got_signal)
+        gam_error_handle_signal();
+
     if ((file == NULL) || (function == NULL) || (format == NULL))
         return;
     va_start(args, format);
-    vfprintf(stderr, format, args);
+    vfprintf((debug_out ? debug_out : stderr), format, args);
     va_end(args);
+    if (debug_out)
+	fflush(debug_out);
 }
 
 /**
@@ -42,20 +102,21 @@ void
 gam_debug(const char *file, int line, const char *function,
           const char *format, ...)
 {
-    static int initialized = 0;
-    static int do_debug = 0;
     va_list args;
 
-    if (initialized == 0) {
-        initialized = 1;
-        if (getenv("GAM_DEBUG") != NULL)
-            do_debug = 1;
-    }
+    if (initialized == 0)
+        gam_error_init();
+
+    if (got_signal)
+        gam_error_handle_signal();
+
     if (do_debug == 0)
         return;
     if ((file == NULL) || (function == NULL) || (format == NULL))
         return;
     va_start(args, format);
-    vfprintf(stdout, format, args);
+    vfprintf((debug_out ? debug_out : stdout), format, args);
     va_end(args);
+    if (debug_out)
+	fflush(debug_out);
 }
