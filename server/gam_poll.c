@@ -95,11 +95,17 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
 {
     const char *path;
 
+    if ((node == NULL) || (sub == NULL))
+        return;
+
+    gam_debug(DEBUG_INFO, "node_add_subscription(%s)\n", node->path);
     gam_node_add_subscription(node, sub);
 
     path = gam_node_get_path(node);
-    if (gam_exclude_check(path))
+    if (gam_exclude_check(path)) {
+	gam_debug(DEBUG_INFO, "  gam_exclude_check: true\n");
         return;
+    }
 
     if (gam_node_is_dir(node))
         trigger_dir_handler(gam_node_get_path(node), TRUE);
@@ -113,11 +119,18 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
     const char *path;
 
+    if ((node == NULL) || (sub == NULL))
+        return;
+
+    gam_debug(DEBUG_INFO, "node_remove_subscription(%s)\n", node->path);
+
     gam_node_remove_subscription(node, sub);
 
     path = gam_node_get_path(node);
-    if (gam_exclude_check(path))
+    if (gam_exclude_check(path)) {
+	gam_debug(DEBUG_INFO, "  gam_exclude_check: true\n");
         return;
+    }
 
     if (gam_node_is_dir(node))
         trigger_dir_handler(gam_node_get_path(node), FALSE);
@@ -471,6 +484,7 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 {
     GList *children, *l;
     gboolean remove_dir;
+    
 
     node_remove_subscription(node, sub);
 
@@ -487,7 +501,7 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
                 remove_dir = FALSE;
             }
         } else {
-            node_remove_subscription(child, sub);
+            /* node_remove_subscription(child, sub); */
 
             if (!gam_node_get_subscriptions(child) && remove_dir) {
                 gam_tree_remove(tree, child);

@@ -19,7 +19,6 @@
 
 #include <config.h>
 #include <sys/types.h>
-#include <regex.h>
 #include <string.h>
 #include <glib.h>
 #include "gam_event.h"
@@ -36,7 +35,6 @@ struct _GamSubscription {
 
     gboolean is_dir;
     gboolean cancelled;
-    regex_t reg;
 
     GamListener *listener;
 };
@@ -181,6 +179,7 @@ gam_subscription_set_listener(GamSubscription * sub,
 {
     if (sub == NULL)
         return;
+    gam_debug(DEBUG_INFO, "Setting subscription listener for %s\n", sub->path);
     sub->listener = listener;
 }
 
@@ -236,6 +235,7 @@ gam_subscription_cancel(GamSubscription * sub)
 {
     if (sub == NULL)
         return;
+    gam_debug(DEBUG_INFO, "Cancelling subscription for %s\n", sub->path);
     sub->cancelled = TRUE;
 }
 
