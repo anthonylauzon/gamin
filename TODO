@@ -2,7 +2,6 @@
  - try to use getlogin and $USER to get the user name
  - doc extraction and reformatting of comments in gtk-doc style
  - handling of directory removal (need to poll on monitored empty dirs).
- - special case where dnotify is not a good idea (temporary storage)
  - "make valgrind" regression tests for both client and server.
  - fix "make tests" to use /tmp to avoid $pwd in the paths of the output
  - try to work around the fact the stat() info precision is only 1 sec
@@ -40,3 +39,4 @@ Done:
    to handle event synchronously.
  - restart the connection and monitor on the client side if the
    server exits
+ - special case where dnotify is not a good idea (temporary storage)

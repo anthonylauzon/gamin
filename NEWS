@@ -5,6 +5,19 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.9: Sep 1 2004:
+   - fix konqueror crash Red Hat bug #130967
+   - statically excludes /mnt//* /media//* from kernel monitoring to avoid
+    umount problems
+
+
+0.0.8: Aug 26 2004:
+   - inotify backend patch (Martin Schlemmer)
+   - documentation
+   - fixed 0.0.7 crashes
+   - fixed the kernel/poll detection code which was buggy
+
+
 0.0.7: Aug 24 2004:
    - increased the test suite
    - activate poll and kernel monitoring (dnotify) simultaneously
