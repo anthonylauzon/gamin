@@ -1,3 +1,11 @@
+Tue Feb  8 11:24:00 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS doc/gamin.html doc/news.html gamin.spec.in: finishing
+	  release of 0.0.23
+	* python/gamin.py: rolling back the chnge to the bindings,
+	  since it made python bindings semantic diverge from the C
+	  level with risk of recursion problems.
+
 Mon Feb  7 18:34:25 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in: preparing 0.0.23

@@ -130,8 +130,6 @@ class WatchMonitor:
         if self.objects.has_key(directory):
 	    raise(GaminException("Resource %s already monitored" % (directory)))
 
-	# flush any data from the server to avoid deadlocks
-	self.handle_events()
         obj = self.WatchObject(self, self.__no, directory, 1, callback, data)
 	self.objects[directory] = obj
 	return obj
@@ -143,8 +141,6 @@ class WatchMonitor:
         if self.objects.has_key(file):
 	    raise(GaminException("Resource %s already monitored" % (file)))
 
-	# flush any data from the server to avoid deadlocks
-	self.handle_events()
         obj = self.WatchObject(self, self.__no, file, 0, callback, data)
 	self.objects[file] = obj
 	return obj

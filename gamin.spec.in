@@ -87,6 +87,11 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
+* Tue Feb  8 2005 Daniel Veillard <veillard@redhat.com> 0.0.23-1
+- memory corruption fix from Mark on the client side
+- extending the protocol and API to allow skipping Exists and EndExists
+  events to avoid deadlock on reconnect or when they are not used.
+
 * Mon Jan 31 2005 Daniel Veillard <veillard@redhat.com> 0.0.22-1
 - bit of python bindings improvements, added test
 - fixed 3 bugs
