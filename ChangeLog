@@ -1,3 +1,7 @@
+Fri Aug  6 14:29:47 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_fork.c: avoid generating zombies
+
 Thu Aug  5 16:51:33 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in: release of 0.0.5
