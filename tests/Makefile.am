@@ -10,13 +10,10 @@ LDADD = $(top_builddir)/libgamin/libgamin-1.la
 testgam_SOURCES = testing.c
 testgam_LDFLAGS =
 testgam_DEPENDENCIES = $(DEPS)
-testgam_LDADD= $(LDADDS) -lgamin-1
+testgam_LDADD= $(LDADDS) -L$(top_builddir)/libgamin -lgamin-1
 
-#testfam_SOURCES = testing.c
-#testfam_LDFLAGS =
-#testfam_DEPENDENCIES = 
-#testfam_LDADD= -lfam
-#
+dist-hook:
+	(cd $(srcdir) ; tar -cf - --exclude CVS scenario result ) | (cd $(distdir); tar xf -)
 
 check-local: tests
 
@@ -28,9 +25,9 @@ testfam: testing.c
 	  fi )
 
 tests: testgam testfam
-	-@(for i in $(top_srcdir)/tests/scenario/* ; do			\
-	   name=`basename $$i`;						\
-	   if [ ! -f $(top_srcdir)/tests/result/$$name ] ; then	\
+	-@(for i in $(top_srcdir)/tests/scenario/*.tst ; do		\
+	   name=`basename $$i .tst`;					\
+	   if [ ! -f $(top_srcdir)/tests/result/$$name ] ; then		\
 	       echo New test file $$name ; 				\
 	       if [ -x ./testfam ] ; then 				\
 	       ./testfam $$i > $(top_srcdir)/tests/result/$$name ;	\

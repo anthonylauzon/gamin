@@ -164,7 +164,7 @@ processCommand(char *line, int no)
             return (-1);
         }
         if (arg != NULL) {
-            setenv("GAM_CLIENT_ID", arg, 0);
+            setenv("GAM_CLIENT_ID", arg, 1);
         }
         ret = FAMOpen(&(testState.fc));
         if (ret < 0) {
@@ -172,7 +172,10 @@ processCommand(char *line, int no)
             return (-1);
         }
         testState.connected = 1;
-        printf("connected\n");
+	if (arg != NULL)
+	    printf("connected to %s\n", arg);
+	else
+	    printf("connected\n");
     } else if (!strcmp(command, "disconnect")) {
         if (testState.connected == 0) {
             fprintf(stderr, "disconnect line %d: not connected\n", no);
@@ -298,8 +301,8 @@ processCommand(char *line, int no)
     } else if (!strcmp(command, "sleep")) {
         int i;
 
-        for (i = 0; (i < 10) && (FAMPending(&(testState.fc)) == 0); i++)
-            sleep(1);
+        for (i = 0; (i < 30) && (FAMPending(&(testState.fc)) == 0); i++)
+            usleep(50);
     } else {
         fprintf(stderr, "Unable to parse line %d: %s\n", no, line);
         return (-1);

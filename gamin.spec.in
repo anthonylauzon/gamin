@@ -1,13 +1,12 @@
 Summary: Library providing the FAM File Alteration Monitor API
 Name: gamin
 Version: @VERSION@
-Release: pre1
+Release: 1
 License: LGPL
 Group: Development/Libraries
 Source: gamin-%{version}.tar.gz
 BuildRoot: %{_tmppath}/%{name}-%{version}-root
-# TODO: fix the URL once a web site is built
-URL: http://veillard.com/
+URL: http://www.gnome.org/~veillard/gamin/
 Obsoletes: fam
 Provides: fam
 Provides: libfam.so.0

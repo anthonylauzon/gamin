@@ -1,3 +1,9 @@
+Fri Jun 18 09:42:47 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.spec.in: preparing first release of 0.0.1
+	* tests/Makefile.am tests/testing.c: a bit more work on the
+	  testing framework
+
 Thu Jun 17 14:32:07 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/Makefile.am libgamin/testing.c tests/Makefile.am
