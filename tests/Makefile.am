@@ -20,6 +20,8 @@ check-local: tests
 tests: testgam
 	-@(rm -rf test?)
 	-@(unset GAM_CLIENT_ID ; unset GAM_DEBUG;			\
+	   GAMIN_DEBUG_SERVER="../server/gam_server" ;			\
+	   export GAMIN_DEBUG_SERVER ;					\
 	   for i in $(top_srcdir)/tests/scenario/*.tst ; do		\
 	   name=`basename $$i .tst`;					\
 	   if [ ! -f $(top_srcdir)/tests/result/$$name ] ; then		\

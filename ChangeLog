@@ -1,3 +1,8 @@
+Thu Aug 12 19:44:02 EDT 2004 Daniel Veillard <veillard@redhat.com>
+
+	* tests/Makefile.am: use $GAMIN_DEBUG_SERVER so that regression
+	  tests can be run in a clean environment.
+
 Thu Aug 12 13:42:22 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/Makefile.am: fix build on x86_64. Auto* is excessively
