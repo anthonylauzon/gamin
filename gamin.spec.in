@@ -56,7 +56,7 @@ rm -fr %{buildroot}
 
 %doc AUTHORS ChangeLog NEWS README Copyright TODO
 %{_libdir}/lib*.so.*
-%{prefix}/bin/gam_server
+%{_bindir}/gam_server
 
 %files devel
 %defattr(-, root, root)
@@ -64,7 +64,7 @@ rm -fr %{buildroot}
 %doc AUTHORS ChangeLog NEWS README Copyright TODO
 %{_libdir}/lib*.so
 %{_libdir}/*a
-%{prefix}/include/fam.h
+%{_includedir}/fam.h
 %{_libdir}/pkgconfig/gamin.pc
 
 

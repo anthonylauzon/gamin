@@ -40,6 +40,6 @@ noinst_PROGRAMS= gamin
 
 gamin_SOURCES = gamin.c
 gamin_LDFLAGS =
-gamin_DEPENDENCIES = $(DEPS) 
-gamin_LDADD= $(LDADDS) -lgamin-1
+gamin_DEPENDENCIES = $(DEPS) libgamin-1.la
+gamin_LDADD= $(LDADDS) libgamin-1.la
 

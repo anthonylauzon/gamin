@@ -1,3 +1,8 @@
+Fri Jul 30 15:01:17 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in libgamin/Makefile.am: release 0.0.3,
+	  with makefile and spec fixups from Frederic Crozat
+
 Thu Jul 29 16:31:20 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in libgamin/gam_api.c server/gam_channel.c
