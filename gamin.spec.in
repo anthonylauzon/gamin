@@ -87,6 +87,10 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
+* Tue Mar  1 2005 Daniel Veillard <veillard@redhat.com> 0.0.25-1
+- Fix a configure problem reported by Martin Schlemmer
+- Fix the /media/* and /mnt/* mount blocking problems from 0.0.24 e.g. #142637
+- Fix the monitoring of directory using poll and not kernel
 * Fri Feb 18 2005 Daniel Veillard <veillard@redhat.com> 0.0.24-1
 - more documentation
 - lot of serious bug fixes including Gnome Desktop refresh bug

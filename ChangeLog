@@ -1,3 +1,8 @@
+Tue Mar  1 18:53:58 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS configure.in gamin.spec.in doc/gamin.html doc/news.html:
+	  prepared release of 0.0.25
+
 Tue Mar  1 18:17:06 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: fixed a problem with monitoring directories

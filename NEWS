@@ -5,6 +5,12 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.0.25: Mar  1 2005:
+   - Fix a configure problem reported by Martin Schlemmer
+   - Fix the /media/* and /mnt/* mount blocking problems from 0.0.24
+   - Fix the monitoring of directory using poll and not kernel
+
+
 0.0.24: Feb 18 2005:
    -  more documentation
    -  lot of serious bug fixes including Gnome Desktop refresh bug
