@@ -93,8 +93,6 @@ trigger_file_handler(const char *path, gboolean added)
 static int
 node_add_subscription(GamNode * node, GamSubscription * sub)
 {
-    const char *path;
-
     if ((node == NULL) || (sub == NULL))
         return(-1);
 
@@ -104,16 +102,15 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
     GAM_DEBUG(DEBUG_INFO, "node_add_subscription(%s)\n", node->path);
     gam_node_add_subscription(node, sub);
 
-    path = gam_node_get_path(node);
-    if (gam_exclude_check(path)) {
+    if (gam_exclude_check(node->path)) {
 	GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
         return(0);
     }
 
     if (gam_node_is_dir(node))
-        trigger_dir_handler(gam_node_get_path(node), TRUE);
+        trigger_dir_handler(node->path, TRUE);
     else
-        trigger_file_handler(gam_node_get_path(node), TRUE);
+        trigger_file_handler(node->path, TRUE);
 
     return(0);
 }
@@ -423,7 +420,8 @@ poll_file(GamNode * node)
     }
 
     if ((event == 0) && (data->flags & MON_BUSY) && (data->checks > 10)) {
-	if (gam_node_get_subscriptions(node) != NULL) {
+	if ((gam_node_get_subscriptions(node) != NULL) &&
+	    (!gam_exclude_check(data->path))) {
 	    GAM_DEBUG(DEBUG_INFO, "switching %s back to kernel monitoring\n",
 	              path);
 	    data->flags &= ~MON_BUSY;
@@ -622,7 +620,7 @@ gam_poll_scan_callback(gpointer data) {
 	 * if the resource exists again and is not in a special monitoring
 	 * mode then switch back to dnotify for monitoring.
 	 */
-	if (data->flags == 0) {
+	if ((data->flags == 0) && (!gam_exclude_check(data->path))) {
 	    gam_poll_remove_missing(node);
 	    if (gam_node_get_subscriptions(node) != NULL) {
 	        gam_poll_relist_node(node);

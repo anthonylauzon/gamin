@@ -1,3 +1,8 @@
+Wed Feb 23 17:44:54 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: try to avoid the /media/ mount problem
+	  in 0.0.24
+
 Fri Feb 18 15:25:23 CET 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS configure.in gamin.spec.in doc/gamin.html doc/news.html:
