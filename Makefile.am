@@ -1,6 +1,6 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = lib libgamin server tests doc
+SUBDIRS = lib libgamin server @PYTHON_SUBDIR@ tests doc
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gamin.pc

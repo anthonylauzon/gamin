@@ -9,7 +9,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-root
 URL: http://www.gnome.org/~veillard/gamin/
 Obsoletes: fam
 Provides: fam
-BuildRequires: glib2-devel
+BuildRequires: glib2-devel python python-devel
 
 %description
 This C library provides an API and ABI compatible file alteration
@@ -27,6 +27,17 @@ Provides: fam-devel
 This C library provides an API and ABI compatible file alteration
 monitor mechanism compatible with FAM but not dependent on a system wide
 daemon.
+
+%package python
+Summary: Python bindings for the gamin library
+Group: Development/Libraries
+Requires: gamin = %{version}
+Requires: %{_libdir}/python%(echo `python -c "import sys; print sys.version[0:3]"`)
+
+%description python
+The gamin-python package contains a module that allow monitoring of
+files and directories from the Python language based on the support
+of the gamin package.
 
 %prep
 %setup -q
@@ -67,6 +78,11 @@ rm -fr %{buildroot}
 %{_includedir}/fam.h
 %{_libdir}/pkgconfig/gamin.pc
 
+%files python
+%defattr(-, root, root)
+%doc AUTHORS ChangeLog NEWS README Copyright TODO
+%{_libdir}/python*/site-packages/gamin.py
+%{_libdir}/python*/site-packages/gaminmod*
 
 %changelog
 * Thu Jan  6 2005 Daniel Veillard <veillard@redhat.com> 0.0.20-1
