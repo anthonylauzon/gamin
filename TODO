@@ -1,11 +1,9 @@
- - on the client handle numbers provided by the caller.
  - merge GAMIN_EVENT_ with FAMEvents ?
  - path flexibility for the remote server in gam_fork.c
  - try to use getlogin and $USER to get the user name
  - test for availability of setsid(), usleep()
- - remove threading, gam_poll_init_full(), use timers instead
-   of running a loop with usleep in a thread.
  - doc extraction and reformatting of comments in gtk-doc style
+ - handling of missing monitored resources where dnotify() won't work
                                                                                 
 Regression tests:
  - try all the file length on the client till error.
@@ -22,3 +20,7 @@ Done:
  - code 'cb' processing cleanup
  - make Copyright file for LGPL
  - check both ways of identification, not just server checking client.
+ - on the client handle numbers provided by the caller.
+ - removed threading and locking, checked with snorp that's not really
+   needed now that there is no DBus plug nor recursion, still use a pipe
+   to handle event synchronously.

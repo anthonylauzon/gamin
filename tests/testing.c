@@ -29,7 +29,7 @@ struct testState {
                      (*(p) == '\n') || (*(p) == '\r'))
 
 static int
-scanCommand(char *line, char **command, char **arg)
+scanCommand(char *line, char **command, char **arg, char **arg2)
 {
     char *cur = line;
 
@@ -57,6 +57,17 @@ scanCommand(char *line, char **command, char **arg)
         cur++;
     if (*cur == 0)
         return (2);
+    *arg2 = cur;
+    while ((*cur != 0) && (!IS_BLANK(cur)))
+        cur++;
+    if (*cur == 0)
+        return (3);
+    *cur = 0;
+    cur++;
+    while (IS_BLANK(cur))
+        cur++;
+    if (*cur == 0)
+        return (3);
     /* too many args */
     return (-1);
 }
@@ -146,13 +157,14 @@ processCommand(char *line, int no)
     int ret, args;
     char *command = NULL;
     char *arg = NULL;
+    char *arg2 = NULL;
 
     if (line == NULL)
         return (-1);
     if (line[0] == '#')
         return (0);
 
-    args = scanCommand(line, &command, &arg);
+    args = scanCommand(line, &command, &arg, &arg2);
     if (args < 0)
         return (-1);
     if (args == 0)
@@ -189,14 +201,27 @@ processCommand(char *line, int no)
         testState.connected = 0;
         printf("disconnected\n");
     } else if (!strcmp(command, "mondir")) {
-        if (args != 2) {
-            fprintf(stderr, "mkdir line %d: lacks name\n", no);
+        if (args == 2) {
+	    snprintf(filename, sizeof(filename), "%s/%s", pwd, arg);
+	    ret = FAMMonitorDirectory(&(testState.fc), filename,
+				      &(testState.fr[testState.nb_requests]),
+				      NULL);
+        } else if (args == 3) {
+	    int index;
+
+            if (sscanf(arg2, "%d", &index) <= 0) {
+		fprintf(stderr, "mondir line %d: invalid index value %s\n",
+		        no, arg2);
+		return (-1);
+	    }
+	    snprintf(filename, sizeof(filename), "%s/%s", pwd, arg);
+	    testState.fr[testState.nb_requests].reqnum = index;
+	    ret = FAMMonitorDirectory2(&(testState.fc), filename,
+				      &(testState.fr[testState.nb_requests]));
+	} else {
+            fprintf(stderr, "mondir line %d: invalid format\n", no);
             return (-1);
-        }
-        snprintf(filename, sizeof(filename), "%s/%s", pwd, arg);
-        ret = FAMMonitorDirectory(&(testState.fc), filename,
-                                  &(testState.fr[testState.nb_requests]),
-                                  NULL);
+	}
         if (ret < 0) {
             fprintf(stderr, "mondir line %d: failed to monitor %s\n", no,
                     arg);
@@ -303,6 +328,8 @@ processCommand(char *line, int no)
 
         for (i = 0; (i < 30) && (FAMPending(&(testState.fc)) == 0); i++)
             usleep(50);
+    } else if (!strcmp(command, "wait")) {
+        sleep(1);
     } else {
         fprintf(stderr, "Unable to parse line %d: %s\n", no, line);
         return (-1);

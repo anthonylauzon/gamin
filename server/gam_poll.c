@@ -51,6 +51,9 @@ static GList *removed_subs = NULL;
 
 G_LOCK_DEFINE_STATIC(removed_subs);
 
+static GList *missing_resources = NULL;
+										G_LOCK_DEFINE_STATIC(missing_resources);
+
 static GamPollHandler dir_handler = NULL;
 static GamPollHandler file_handler = NULL;
 
@@ -119,6 +122,8 @@ gam_poll_emit_event(GamNode * node, GaminEventType event,
           event == GAMIN_EVENT_DELETED || event == GAMIN_EVENT_EXISTS))
         return;
 
+    gam_debug(DEBUG_INFO, "Poll: emit events for %s\n",
+              gam_node_get_path(node));
     subs = gam_node_get_subscriptions(node);
     if (subs)
         subs = g_list_copy(subs);
@@ -255,7 +260,11 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
     dir_exist_subs =
         list_intersection(exist_subs,
                           gam_node_get_subscriptions(dir_node));
+#ifdef WITH_RECURSIVE
     recursive = gam_node_has_recursive_sub(dir_node);
+#else
+    recursive = FALSE;
+#endif
 
     if (event == 0 && !dir_exist_subs)
         goto scan_files;
@@ -306,7 +315,7 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
 
     g_dir_close(dir);
 
-  scan_files:
+scan_files:
 
 
     if (scan_for_new) {
@@ -418,6 +427,7 @@ gam_poll_scan_loop(gpointer data)
 {
     GList *dirs, *l;
 
+    gam_debug(DEBUG_INFO, "Poll: entering gam_poll_scan_loop\n");
     for (;;) {
         g_usleep(DEFAULT_POLL_TIMEOUT * G_USEC_PER_SEC);
 
@@ -462,8 +472,6 @@ prune_tree(GamNode * node)
 
 
 
-
-
 /**
  * @defgroup Polling Polling Backend
  * @ingroup Backends
@@ -478,7 +486,32 @@ prune_tree(GamNode * node)
  */
 
 
+/**
+ * gam_poll_add_missing:
+ * @node: a missing node
+ *
+ * Add a missing node to the list for polling its creation.
+ */
+void
+gam_poll_add_missing(GamNode *node) {
+    G_LOCK(missing_resources);
+    missing_resources = g_list_prepend(missing_resources, node);
+    G_UNLOCK(missing_resources);
 
+}
+
+/**
+ * gam_poll_remove_missing:
+ * @node: a missing node
+ *
+ * Remove a missing node from the list.
+ */
+void
+gam_poll_remove_missing(GamNode *node) {
+    G_LOCK(missing_resources);
+    missing_resources = g_list_remove_all(missing_resources, node);
+    G_UNLOCK(missing_resources);
+}
 
 /**
  * Initializes the polling system.  This must be called before
@@ -493,9 +526,12 @@ gam_poll_init_full(gboolean start_scan_thread)
 {
     tree = gam_tree_new();
 
+#ifdef WITH_TREADING
     if (start_scan_thread)
         g_thread_create(gam_poll_scan_loop, NULL, TRUE, NULL);
+#endif
 
+    gam_debug(DEBUG_INFO, "Initialized Poll\n");
     return TRUE;
 }
 
@@ -573,6 +609,7 @@ gam_poll_add_subscription(GamSubscription * sub)
     new_subs = g_list_prepend(new_subs, sub);
     G_UNLOCK(new_subs);
 
+    gam_debug(DEBUG_INFO, "Poll: added subscription\n");
     return TRUE;
 }
 
@@ -612,6 +649,7 @@ gam_poll_remove_subscription(GamSubscription * sub)
     removed_subs = g_list_prepend(removed_subs, sub);
     G_UNLOCK(removed_subs);
 
+    gam_debug(DEBUG_INFO, "Poll: removed subscription\n");
     return TRUE;
 }
 
@@ -678,11 +716,13 @@ gam_poll_scan_directory(const char *path, GList * exist_subs)
 {
     GamNode *node;
 
+    gam_debug(DEBUG_INFO, "Poll: scanning %s\n", path);
     node = gam_tree_get_at_path(tree, path);
     if (node == NULL)
         node = gam_tree_add_at_path(tree, path, TRUE);
 
     gam_poll_scan_directory_internal(node, exist_subs, TRUE);
+    gam_debug(DEBUG_INFO, "Poll: scanning %s done\n", path);
 }
 
 /**

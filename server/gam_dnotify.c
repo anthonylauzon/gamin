@@ -49,7 +49,9 @@ G_LOCK_DEFINE_STATIC(dnotify);
 /* TODO: GQueue is not signal-safe, need to use something else */
 static GQueue *changes = NULL;
 
+#ifdef WITH_TREADING
 static GMainContext *loop_context;
+#endif
 static GIOChannel *pipe_read_ioc = NULL;
 static GIOChannel *pipe_write_ioc = NULL;
 
@@ -162,12 +164,14 @@ overflow_signal_handler(int sig, siginfo_t * si, void *sig_data)
     gam_debug(DEBUG_INFO, "**** signal queue overflow ***\n");
 }
 
+#ifdef WITH_TREADING
 static gpointer
 gam_dnotify_scan_loop(gpointer data)
 {
     g_main_loop_run(g_main_loop_new(loop_context, TRUE));
     return (NULL);
 }
+#endif
 
 static gboolean
 gam_dnotify_pipe_handler(gpointer user_data)
@@ -177,6 +181,7 @@ gam_dnotify_pipe_handler(gpointer user_data)
     gpointer fd;
     int i;
 
+    gam_debug(DEBUG_INFO, "gam_dnotify_pipe_handler()\n");
     g_io_channel_read_chars(pipe_read_ioc, buf, sizeof(buf), NULL, NULL);
 
     i = 0;
@@ -195,6 +200,7 @@ gam_dnotify_pipe_handler(gpointer user_data)
         i++;
     }
 
+    gam_debug(DEBUG_INFO, "gam_dnotify_pipe_handler() done\n");
     return TRUE;
 }
 
@@ -218,7 +224,11 @@ gam_dnotify_consume_subscriptions(void)
     source = g_idle_source_new();
     g_source_set_callback(source, gam_dnotify_consume_subscriptions_real,
                           NULL, NULL);
+#ifdef WITH_TREADING
     g_source_attach(source, loop_context);
+#else
+    g_source_attach(source, NULL);
+#endif
 }
 
 /**
@@ -263,12 +273,19 @@ gam_dnotify_init(void)
     g_io_channel_set_flags(pipe_read_ioc, G_IO_FLAG_NONBLOCK, NULL);
     g_io_channel_set_flags(pipe_write_ioc, G_IO_FLAG_NONBLOCK, NULL);
 
+#ifdef WITH_TREADING
     loop_context = g_main_context_new();
+#endif
 
     source = g_io_create_watch(pipe_read_ioc,
                                G_IO_IN | G_IO_HUP | G_IO_ERR);
     g_source_set_callback(source, gam_dnotify_pipe_handler, NULL, NULL);
+
+#ifdef WITH_TREADING
     g_source_attach(source, loop_context);
+#else
+    g_source_attach(source, NULL);
+#endif
 
     /* setup some signal stuff */
     act.sa_sigaction = dnotify_signal_handler;
@@ -283,7 +300,9 @@ gam_dnotify_init(void)
 
     changes = g_queue_new();
 
+#ifdef WITH_TREADING
     g_thread_create(gam_dnotify_scan_loop, NULL, TRUE, NULL);
+#endif
 
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
     fd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);

@@ -271,10 +271,12 @@ gamin_write_byte(int fd, const char *data, size_t len)
  * @filename,: the filename for the file or directory
  * @fr: the fam request
  * @userData: user data associated to this request
+ * @has_reqnum: indicate if fr already has a request number
  */
 static int
 gamin_send_request(GAMReqType type, int fd, const char *filename,
-                   FAMRequest * fr, void *userData, GAMDataPtr data)
+                   FAMRequest * fr, void *userData, GAMDataPtr data,
+		   int has_reqnum)
 {
     int reqnum;
     size_t len, tlen;
@@ -284,11 +286,19 @@ gamin_send_request(GAMReqType type, int fd, const char *filename,
     if (filename == NULL) {
         len = 0;
         reqnum = fr->reqnum;
-    } else {
+    } else if (has_reqnum == 0) {
         len = strlen(filename);
         if (len > MAXPATHLEN)
             return (-1);
         reqnum = gamin_data_get_reqnum(data, (int) type, userData);
+        if (reqnum < 0)
+            return (-1);
+    } else {
+        len = strlen(filename);
+        if (len > MAXPATHLEN)
+            return (-1);
+        reqnum = gamin_data_get_request(data, (int) type, userData,
+	                                fr->reqnum);
         if (reqnum < 0)
             return (-1);
     }
@@ -609,7 +619,7 @@ FAMMonitorDirectory(FAMConnection * fc, const char *filename,
     if ((fc->fd < 0) || (fc->client == NULL))
         return (-1);
     return (gamin_send_request(GAM_REQ_DIR, fc->fd, filename,
-                               fr, userData, fc->client));
+                               fr, userData, fc->client, 0));
 }
 
 /**
@@ -626,10 +636,19 @@ int
 FAMMonitorDirectory2(FAMConnection * fc, const char *filename,
                      FAMRequest * fr)
 {
+    if ((fc == NULL) || (filename == NULL) || (fr == NULL))
+        return (-1);
+
     GAM_DEBUG(DEBUG_INFO, "FAMMonitorDirectory2(%s, %d)\n",
               filename, fr->reqnum);
 
-    return (FAMMonitorDirectory(fc, filename, fr, NULL));
+    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN))
+        return (-1);
+    if ((fc->fd < 0) || (fc->client == NULL))
+        return (-1);
+
+    return (gamin_send_request(GAM_REQ_DIR, fc->fd, filename,
+                               fr, NULL, fc->client, 1));
 }
 
 /**
@@ -657,7 +676,7 @@ FAMMonitorFile(FAMConnection * fc, const char *filename,
     if ((fc->fd < 0) || (fc->client == NULL))
         return (-1);
     return (gamin_send_request(GAM_REQ_FILE, fc->fd, filename,
-                               fr, userData, fc->client));
+                               fr, userData, fc->client, 0));
 }
 
 /**
@@ -673,9 +692,17 @@ FAMMonitorFile(FAMConnection * fc, const char *filename,
 int
 FAMMonitorFile2(FAMConnection * fc, const char *filename, FAMRequest * fr)
 {
+    if ((fc == NULL) || (filename == NULL) || (fr == NULL))
+        return (-1);
+
     GAM_DEBUG(DEBUG_INFO, "FAMMonitorFile2(%s, %d)\n", filename, fr->reqnum);
 
-    return (FAMMonitorFile(fc, filename, fr, NULL));
+    if ((filename[0] != '/') || (strlen(filename) >= MAXPATHLEN))
+        return (-1);
+    if ((fc->fd < 0) || (fc->client == NULL))
+        return (-1);
+    return (gamin_send_request(GAM_REQ_FILE, fc->fd, filename,
+                               fr, NULL, fc->client, 1));
 }
 
 /**
@@ -819,7 +846,7 @@ FAMCancelMonitor(FAMConnection * fc, FAMRequest * fr)
      * send destruction message to the server
      */
     ret = gamin_send_request(GAM_REQ_CANCEL, fc->fd, NULL,
-                             fr, NULL, fc->client);
+                             fr, NULL, fc->client, 0);
 
     /*
      * TODO: check should this *really* be freed ?

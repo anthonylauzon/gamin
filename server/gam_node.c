@@ -58,7 +58,9 @@ gam_node_new(const char *path, GamSubscription * sub, gboolean is_dir)
     node->data = NULL;
     node->data_destroy = NULL;
     node->flags = 0;
+#ifdef WITH_TREADING
     node->lock = g_mutex_new();
+#endif
 
     return node;
 }
@@ -80,7 +82,9 @@ gam_node_free(GamNode * node)
 
     g_free(node->path);
     g_list_free(node->subs);
+#ifdef WITH_TREADING
     g_mutex_free(node->lock);
+#endif
     g_free(node);
 }
 
@@ -207,6 +211,7 @@ gam_node_copy_subscriptions(GamNode * src,
     GamSubscription *sub;
     int i = 0;
 
+
     gam_node_lock(src);
     for (l = gam_node_get_subscriptions(src); l; l = l->next) {
         sub = (GamSubscription *) l->data;
@@ -229,6 +234,7 @@ gam_node_copy_subscriptions(GamNode * src,
 gboolean
 gam_node_has_recursive_sub(GamNode * node)
 {
+#ifdef WITH_RECURSIVE
     GList *l;
 
     /* gam_node_lock (node); */
@@ -241,7 +247,7 @@ gam_node_has_recursive_sub(GamNode * node)
     }
 
     /* gam_node_unlock (node); */
-
+#endif
     return FALSE;
 }
 

@@ -185,6 +185,12 @@ gamin_data_add_req2(GAMDataPtr conn, int type, void *userData, int reqno)
     if (idx < 0)
         return (NULL);
 
+    if ((idx < conn->req_nr) && (conn->req_tab[idx] != NULL) &&
+        (conn->req_tab[idx]->reqno == reqno)) {
+        gam_error(DEBUG_INFO, "Request %d already exists\n", reqno);
+        return (NULL);
+    }
+
     req = gamin_allocate_request(conn);
     if (req == NULL)
         return (NULL);
@@ -194,11 +200,16 @@ gamin_data_add_req2(GAMDataPtr conn, int type, void *userData, int reqno)
     req->state = REQ_INIT;
 
     /*
-     * we can add at the end because we can garantee reqno is always
-     * increasing.
+     * insert the request at the indicated slot
      */
-    req->reqno = conn->reqno++;
-    conn->req_tab[conn->req_nr++] = req;
+    req->reqno = reqno;
+    if ((idx < conn->req_nr) && (conn->req_tab[idx] != NULL) &&
+        (conn->req_tab[idx]->reqno < reqno)) idx++;
+    if (idx < conn->req_nr)
+	memmove(&(conn->req_tab[idx + 1]), &(conn->req_tab[idx]),
+		(conn->req_nr - idx) * sizeof(GAMReqDataPtr));
+    conn->req_tab[idx] = req;
+    conn->req_nr++;
 
     return (req);
 }

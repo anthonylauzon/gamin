@@ -1,3 +1,15 @@
+Tue Jul 13 15:41:24 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_data.c libgamin/gam_api.c: fixed FAMMonitorDirectory2()
+	  and FAMMonitorFile2() they should now implement the correct behaviour
+	* server/gam_dnotify.c server/gam_node.c server/gam_node.h
+	  server/gam_poll.c server/gam_server.c server/gam_tree.c: removed
+	  threading and locking, this should still work for the current
+	  constraints
+	* tests/testing.c: adding wait and updated to allow
+	  FAMMonitorDirectory2 testing with an extra arg to mondir
+	* TODO: updated
+
 Fri Jun 18 15:28:32 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/fam.h libgamin/gam_api.c: the new version of the
