@@ -783,6 +783,10 @@ gam_poll_scan_directory(const char *path, GList * exist_subs)
     node = gam_tree_get_at_path(tree, path);
     if (node == NULL)
         node = gam_tree_add_at_path(tree, path, TRUE);
+    if (node == NULL) {
+	gam_error(DEBUG_INFO, "gam_tree_add_at_path(%s) returned NULL\n", path);
+	return;
+    }
 
     gam_poll_scan_directory_internal(node, exist_subs, TRUE);
     gam_debug(DEBUG_INFO, "Poll: scanning %s done\n", path);

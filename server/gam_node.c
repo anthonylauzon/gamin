@@ -93,6 +93,8 @@ gam_node_parent(GamNode * node)
 {
     GamNode *ret = NULL;
 
+    if (!node)
+        return(NULL);
     if (node->node && node->node->parent)
         ret = (GamNode *) node->node->parent->data;
 
@@ -108,7 +110,8 @@ gam_node_parent(GamNode * node)
 gboolean
 gam_node_is_dir(GamNode * node)
 {
-    if (node == NULL) return(FALSE);
+    if (node == NULL)
+        return(FALSE);
     return(node->is_dir);
 }
 
@@ -121,6 +124,8 @@ gam_node_is_dir(GamNode * node)
 void
 gam_node_set_is_dir(GamNode * node, gboolean is_dir)
 {
+    if (!node)
+        return(NULL);
     node->is_dir = is_dir;
 }
 
@@ -133,6 +138,8 @@ gam_node_set_is_dir(GamNode * node, gboolean is_dir)
 G_CONST_RETURN char *
 gam_node_get_path(GamNode * node)
 {
+    if (!node)
+        return(NULL);
     return node->path;
 }
 
@@ -145,6 +152,8 @@ gam_node_get_path(GamNode * node)
 GList *
 gam_node_get_subscriptions(GamNode * node)
 {
+    if (!node)
+        return(NULL);
     return node->subs;
 }
 
@@ -158,6 +167,8 @@ gboolean
 gam_node_add_subscription(GamNode * node, GamSubscription * sub)
 {
 
+    if (!node)
+        return(FALSE);
     if (!g_list_find(node->subs, sub))
         node->subs = g_list_prepend(node->subs, sub);
 
@@ -175,6 +186,8 @@ gam_node_add_subscription(GamNode * node, GamSubscription * sub)
 gboolean
 gam_node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
+    if (!node)
+        return(FALSE);
     node->subs = g_list_remove(node->subs, sub);
 
     return TRUE;
@@ -198,6 +211,8 @@ gam_node_copy_subscriptions(GamNode * src,
     int i = 0;
 
 
+    if ((!src) || (!dest))
+        return(0);
     for (l = gam_node_get_subscriptions(src); l; l = l->next) {
         sub = (GamSubscription *) l->data;
         if (!filter || (filter && (*filter) (sub))) {
@@ -210,30 +225,6 @@ gam_node_copy_subscriptions(GamNode * src,
 }
 
 /**
- * Checks whether a node has a recursive subscription
- *
- * @param node the node
- * @returns TRUE if the node has a recursive subscription, FALSE otherwise
- */
-gboolean
-gam_node_has_recursive_sub(GamNode * node)
-{
-#ifdef WITH_RECURSIVE
-    GList *l;
-
-
-    for (l = gam_node_get_subscriptions(node); l; l = l->next) {
-        GamSubscription *sub = (GamSubscription *) l->data;
-
-        if (gam_subscription_is_recursive(sub))
-            return TRUE;
-    }
-
-#endif
-    return FALSE;
-}
-
-/**
  * Attaches some arbitrary data to the node
  *
  * @param node the node
@@ -243,6 +234,8 @@ gam_node_has_recursive_sub(GamNode * node)
 void
 gam_node_set_data(GamNode * node, gpointer data, GDestroyNotify destroy)
 {
+    if (node == NULL)
+        return;
 
     node->data = data;
     node->data_destroy = destroy;
@@ -258,6 +251,8 @@ gam_node_set_data(GamNode * node, gpointer data, GDestroyNotify destroy)
 gpointer
 gam_node_get_data(GamNode * node)
 {
+    if (node == NULL)
+        return(NULL);
     return node->data;
 }
 
@@ -270,6 +265,8 @@ gam_node_get_data(GamNode * node)
 void
 gam_node_set_node(GamNode * node, GNode * gnode)
 {
+    if (node == NULL)
+        return(NULL);
     node->node = gnode;
 }
 
@@ -282,6 +279,8 @@ gam_node_set_node(GamNode * node, GNode * gnode)
 GNode *
 gam_node_get_node(GamNode * node)
 {
+    if (node == NULL)
+        return(NULL);
     return node->node;
 }
 
@@ -294,6 +293,8 @@ gam_node_get_node(GamNode * node)
 void
 gam_node_set_flag(GamNode * node, int flag)
 {
+    if (node == NULL)
+        return;
     node->flags |= flag;
 }
 
@@ -306,6 +307,8 @@ gam_node_set_flag(GamNode * node, int flag)
 void
 gam_node_unset_flag(GamNode * node, int flag)
 {
+    if (node == NULL)
+        return;
     node->flags &= ~flag;
 }
 
@@ -319,6 +322,8 @@ gam_node_unset_flag(GamNode * node, int flag)
 gboolean
 gam_node_has_flag(GamNode * node, int flag)
 {
+    if (node == NULL)
+        return(FALSE);
     return node->flags & flag;
 }
 

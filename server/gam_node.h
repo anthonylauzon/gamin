@@ -53,8 +53,6 @@ int                   gam_node_copy_subscriptions  (GamNode         *src,
 						   GamNode         *dest,
 						   GamSubFilterFunc filter);
 
-gboolean              gam_node_has_recursive_sub   (GamNode         *node);
-
 void                  gam_node_set_node            (GamNode         *node,
 						   GNode          *gnode);
 GNode                *gam_node_get_node            (GamNode         *node);

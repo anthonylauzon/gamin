@@ -91,6 +91,8 @@ gam_subscription_new(const char *path,
 void
 gam_subscription_free(GamSubscription * sub)
 {
+    if (sub == NULL)
+        return;
     gam_debug(DEBUG_INFO, "Freeing subscription for %s\n", sub->path);
 
     g_free(sub->path);
@@ -106,18 +108,22 @@ gam_subscription_free(GamSubscription * sub)
 gboolean
 gam_subscription_is_dir(GamSubscription * sub)
 {
+    if (sub == NULL)
+        return(FALSE);
     return sub->is_dir;
 }
 
 /**
- * Tells if a GamSubscription is for a directory or not
+ * Provide the path len for a GamSubscription
  *
  * @param sub the GamSubscription
- * @returns TRUE if the subscription is for a directory, FALSE otherwise
+ * @returns the path len for the subscription
  */
 int
 gam_subscription_pathlen(GamSubscription * sub)
 {
+    if (sub == NULL)
+        return(-1);
     return sub->pathlen;
 }
 
@@ -130,6 +136,8 @@ gam_subscription_pathlen(GamSubscription * sub)
 G_CONST_RETURN char *
 gam_subscription_get_path(GamSubscription * sub)
 {
+    if (sub == NULL)
+        return(NULL);
     return sub->path;
 }
 
@@ -142,6 +150,8 @@ gam_subscription_get_path(GamSubscription * sub)
 int
 gam_subscription_get_reqno(GamSubscription * sub)
 {
+    if (sub == NULL)
+        return(-1);
     return sub->reqno;
 }
 
@@ -154,6 +164,8 @@ gam_subscription_get_reqno(GamSubscription * sub)
 GamListener *
 gam_subscription_get_listener(GamSubscription * sub)
 {
+    if (sub == NULL)
+        return(NULL);
     return sub->listener;
 }
 
@@ -167,6 +179,8 @@ void
 gam_subscription_set_listener(GamSubscription * sub,
                               GamListener * listener)
 {
+    if (sub == NULL)
+        return;
     sub->listener = listener;
 }
 
@@ -179,6 +193,8 @@ gam_subscription_set_listener(GamSubscription * sub,
 void
 gam_subscription_set_event(GamSubscription * sub, int event)
 {
+    if (sub == NULL)
+        return;
     sub->events |= event;
 }
 
@@ -191,6 +207,8 @@ gam_subscription_set_event(GamSubscription * sub, int event)
 void
 gam_subscription_unset_event(GamSubscription * sub, int event)
 {
+    if (sub == NULL)
+        return;
     sub->events &= ~event;
 }
 
@@ -203,7 +221,9 @@ gam_subscription_unset_event(GamSubscription * sub, int event)
 gboolean
 gam_subscription_has_event(GamSubscription * sub, int event)
 {
-    return sub->events & event;
+    if (sub == NULL)
+        return(FALSE);
+    return((sub->events & event) != 0);
 }
 
 /**
@@ -214,6 +234,8 @@ gam_subscription_has_event(GamSubscription * sub, int event)
 void
 gam_subscription_cancel(GamSubscription * sub)
 {
+    if (sub == NULL)
+        return;
     sub->cancelled = TRUE;
 }
 
@@ -226,6 +248,8 @@ gam_subscription_cancel(GamSubscription * sub)
 gboolean
 gam_subscription_is_cancelled(GamSubscription * sub)
 {
+    if (sub == NULL)
+        return(TRUE);
     return sub->cancelled == TRUE;
 }
 
@@ -241,6 +265,8 @@ gboolean
 gam_subscription_wants_event(GamSubscription * sub,
                              const char *name, GaminEventType event)
 {
+    if (sub == NULL)
+        return(FALSE);
     if (sub->cancelled)
         return FALSE;
 

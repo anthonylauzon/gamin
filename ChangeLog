@@ -1,3 +1,8 @@
+Fri Oct  1 01:13:52 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_node.[hc] server/gam_poll.c server/gam_subscription.[ch]:
+	  cleanup and be more defensive.
+
 Thu Sep 30 15:34:19 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in: release 0.0.12

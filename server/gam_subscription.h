@@ -18,8 +18,6 @@ void                 gam_subscription_free         (GamSubscription *sub);
 gboolean             gam_subscription_is_dir       (GamSubscription *sub);
 int                  gam_subscription_pathlen      (GamSubscription *sub);
 
-gboolean             gam_subscription_is_recursive (GamSubscription *sub);
-
 int                  gam_subscription_get_reqno    (GamSubscription *sub);
 
 G_CONST_RETURN char *gam_subscription_get_path     (GamSubscription *sub);
