@@ -1,3 +1,10 @@
+Sun Oct  3 19:43:23 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in: release of 0.0.14
+	* server/gam_excludes.c: added /dev/ and /proc/ in the list of the
+	  excludes.
+	* doc/Makefile.am: fixed the Makefile for new images and html.
+
 Sun Oct  3 19:05:14 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* doc/debug.html doc/gamin.html doc/internals.html doc/security.html:

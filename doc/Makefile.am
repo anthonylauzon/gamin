@@ -1,9 +1,11 @@
 ## Process this file with automake to produce Makefile.in
+EXTRA_DIST= client_server.fig  client_server.gif \
+	    server_structs.fig  server_structs.gif
 
 all: web $(top_srcdir)/NEWS
 
 PAGES= contacts.html downloads.html index.html overview.html \
-       devel.html news.html
+       devel.html news.html using.html security.html internals.html
 
 web: $(PAGES)
 

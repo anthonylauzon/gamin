@@ -22,6 +22,8 @@ static char *static_excludes[] = {
 #ifdef HAVE_LINUX
     "/media/*",
     "/mnt/*",
+    "/dev/*",
+    "/proc/*",
 #endif
     NULL
 };
