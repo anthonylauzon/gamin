@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "gam_error.h"
 
+
 /**
  * gam_error:
  * @file: the filename where the error was detected
@@ -15,7 +16,8 @@
  * Log an error, currently only stderr, but could go into syslog
  */
 void
-gam_error(char *file, int line, char* function, char* format, ...)
+gam_error(const char *file, int line, const char *function,
+          const char *format, ...)
 {
     va_list args;
 
@@ -23,7 +25,7 @@ gam_error(char *file, int line, char* function, char* format, ...)
         return;
     va_start(args, format);
     vfprintf(stderr, format, args);
-    va_end (args);
+    va_end(args);
 }
 
 /**
@@ -37,7 +39,8 @@ gam_error(char *file, int line, char* function, char* format, ...)
  * Log a debug message, fi those are activated by the GAM_DEBUG environment
  */
 void
-gam_debug(char *file, int line, char* function, char* format, ...)
+gam_debug(const char *file, int line, const char *function,
+          const char *format, ...)
 {
     static int initialized = 0;
     static int do_debug = 0;
@@ -46,7 +49,7 @@ gam_debug(char *file, int line, char* function, char* format, ...)
     if (initialized == 0) {
         initialized = 1;
         if (getenv("GAM_DEBUG") != NULL)
-	    do_debug = 1;
+            do_debug = 1;
     }
     if (do_debug == 0)
         return;
@@ -54,6 +57,5 @@ gam_debug(char *file, int line, char* function, char* format, ...)
         return;
     va_start(args, format);
     vfprintf(stdout, format, args);
-    va_end (args);
+    va_end(args);
 }
-

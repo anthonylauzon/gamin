@@ -36,13 +36,15 @@ extern "C" {
 #endif
 #define DEBUG_INFO __FILE__, __LINE__, __FUNCTION__
 
-void	gam_error(char *file, int line, char* function, char* format, ...);
+void	gam_error(const char *file, int line, const char* function,
+                  const char* format, ...);
 
 #ifdef GAM_DEBUG_ENABLED
 /*
  * debug activated
  */
-void	gam_debug(char *file, int line, char* function, char* format, ...);
+void	gam_debug(const char *file, int line, const char* function,
+                  const char* format, ...);
 #define GAM_DEBUG gam_debug
 
 #else

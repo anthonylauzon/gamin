@@ -1,3 +1,12 @@
+Wed Aug  4 14:34:27 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* TODO: update
+	* libgamin/gam_error.c libgamin/gam_error.h server/gam_error.c
+	  server/gam_error.h: cleanup some warnings when compiling
+	  on Fedora Core
+	* server/gam_poll.c: unused variable
+	* tests/Makefile.am: cleanup before running "make tests"
+
 Wed Aug  4 13:14:02 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/fam.h: fix a bug compiling KDE reported by than

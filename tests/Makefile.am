@@ -18,6 +18,7 @@ dist-hook:
 check-local: tests
 
 tests: testgam
+	-@(rm -rf test?)
 	-@(for i in $(top_srcdir)/tests/scenario/*.tst ; do		\
 	   name=`basename $$i .tst`;					\
 	   if [ ! -f $(top_srcdir)/tests/result/$$name ] ; then		\

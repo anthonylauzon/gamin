@@ -204,7 +204,7 @@ gam_client_conn_read(GIOChannel * source, GIOCondition condition,
             break;
     }
 
-    if (gam_connection_get_data(conn, (char **) (&data), &size) < 0) {
+    if (gam_connection_get_data(conn, (char **) &data, &size) < 0) {
         gam_debug(DEBUG_INFO, "connection data error, disconnecting\n");
         gam_client_conn_shutdown(source, conn);
         return (FALSE);

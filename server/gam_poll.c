@@ -245,7 +245,7 @@ gam_poll_scan_directory_internal(GamNode * dir_node, GList * exist_subs,
     GaminEventType event = 0, fevent;
     GList *dir_exist_subs = NULL;
     GList *children, *l;
-    unsigned int i, exists = 0;
+    unsigned int exists = 0;
 
     g_return_if_fail(dir_node != NULL);
 
