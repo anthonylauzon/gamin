@@ -16,5 +16,16 @@ see the following URL for subscription informations:
 and the on-line archives:
   http://mail.gnome.org/archives/gamin-list/
                                                                                 
+From an historical point of view, gamin builds from the marmot project
+authored by James Willcox and Corey Bowers and then heavilly modified
+to turn it into a minimalist FAM replacement (French litterate will
+appreciate the filiation from fam to marmot and gamin)
+
+This library is available under the terms of the GNU LIBRARY GENERAL
+PUBLIC LICENSE, and a copy of it should be found in the source under the
+COPYING file. 
+
 Daniel Veillard
+veillard@redhat.com
+
 $date$
