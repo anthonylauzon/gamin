@@ -62,7 +62,8 @@
 	  </li>
 	</xsl:if>
       </xsl:for-each>
-      <li><a href="ChangeLog.html">ChangeLog</a></li>
+      <!-- disabled at this point
+      <li><a href="ChangeLog.html">ChangeLog</a></li> -->
     </ul>
   </xsl:variable>
   <xsl:variable name="related">
