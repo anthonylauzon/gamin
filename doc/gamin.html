@@ -180,8 +180,13 @@ see examples in tests/scenario/ .</p>
 <p>This will be created as user feedback is provided.</p>
 
 <h2><a name="Debug">Debugging Gamin</a></h2>
+<ul>
+  <li><a href="#Debugging">Debugging support in gamin</a></li>
+  <li><a href="#Debugging1">Debugging a running program</a></li>
+  <li><a href="#Debugging2">Debugging and testing client</a></li>
+</ul>
 
-<h3>Debugging support in gamin:</h3>
+<h3><a name="Debugging">Debugging support in gamin</a>:</h3>
 
 <p>Both the client and server side, if compiled with debug support accept an
 environment variable <strong>GAM_DEBUG</strong> which is set will make them
@@ -214,7 +219,15 @@ SIG33         No        Yes     Yes             Real-time event 33
 
 <p>even better add it to your <strong>$HOME/.gdbinit</strong> .</p>
 
-<h3>Debugging and testing program:</h3>
+<h3><a name="Debugging1">Debugging a running program</a>:</h3>
+
+<p>Both the gam_server and client of the gamin library can get switched
+dynamically to a debug mode by sending them a signal SIGUSR2. In that case
+the program or library switches to verbose debugging and outputs the traces
+to a new file /tmp/gamin_debug_XXXXXX . Sending the signal again to the
+application or the server should switch off debugging. </p>
+
+<h3><a name="Debugging2">Debugging and testing client</a>:</h3>
 
 <p>A debugging client program called <strong>testgam</strong> is also
 available in the tests subdirectory. It allow to use the interface and
@@ -259,7 +272,7 @@ server as they arrive.</p>
 
 <p>While gamin still use a server to provide the service (ideally if the
 kernel had a proper interface a library only implementation should be doable
-and probably better), it tries to avoid security hazard associated to
+and possibly better), it tries to avoid security hazard associated to
 contacting an external server process:</p>
 <ul>
   <li>the server runs under the same privilege level as the client, by
@@ -342,7 +355,7 @@ applications.</p>
   <li>A tree of monitored nodes, using both GamNode structure containing
     specific informations (like the path, the subscriptions list for that
     node, monitoring data and whether it's a directory), the tree itself is
-    based on a GNode N-ary tree. </li>
+    based on a GNode N-ary tree.</li>
   <li>Per connection data (GamConnData) one per connected socket. The data
     includes state, connection informations (file descriptor, Glib I/O
     Channel, pid of the application), and potential unprocessed yet data
@@ -354,7 +367,9 @@ applications.</p>
     monitored nodes tree and from the listeners.</li>
 </ul>
 
-<p><img src="server_structs.gif" alt="the data structures present in the server"></p>
+<p><img src="server_structs.gif"
+alt="the data structures present in the server"></p>
+
 <p></p>
 </body>
 </html>

@@ -15,7 +15,7 @@ in the daemon, potentially minimizing resource consumption in
 applications.</p><p><img src="client_server.gif" alt="One server and two client connected" /></p><p>Internally the gam_server maintain various data structures:</p><ul><li>A tree of monitored nodes, using both GamNode structure containing
     specific informations (like the path, the subscriptions list for that
     node, monitoring data and whether it's a directory), the tree itself is
-    based on a GNode N-ary tree. </li>
+    based on a GNode N-ary tree.</li>
   <li>Per connection data (GamConnData) one per connected socket. The data
     includes state, connection informations (file descriptor, Glib I/O
     Channel, pid of the application), and potential unprocessed yet data

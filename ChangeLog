@@ -1,3 +1,9 @@
+Sun Oct  3 19:05:14 CEST 2004 Daniel Veillard <veillard@redhat.com>
+
+	* doc/debug.html doc/gamin.html doc/internals.html doc/security.html:
+	  more documentation cleanup, includes how to switch a running
+	  application to debugging.
+
 Sun Oct  3 17:55:17 CEST 2004 Daniel Veillard <veillard@redhat.com>
 
 	* doc/* doc/internals.html doc/client_server.gif doc/server_structs.gif:
