@@ -74,7 +74,7 @@ static GamPollHandler file_handler = NULL;
 
 static int poll_mode = 0;
 
-static time_t current_time;	/* a cache for time() informations */
+static time_t current_time = 0;	/* a cache for time() informations */
 
 static void
 trigger_dir_handler(const char *path, gboolean added)
@@ -147,6 +147,8 @@ gam_poll_data_new(const char *path)
     data->path = g_strdup(path);
 
     data->flags = 0;
+    if (current_time == 0)
+        current_time = time(NULL);
     data->lasttime = current_time;
     data->checks = 0;
 

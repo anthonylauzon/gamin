@@ -271,7 +271,7 @@ gam_subscription_wants_event(GamSubscription * sub,
         return FALSE;
 
     /* only directory listening cares for other files */
-    if ((sub->is_dir == 0) && (name[sub->pathlen] != 0))
+    if ((sub->is_dir == 0) && (strcmp(name, sub->path)))
         return(FALSE);
 
     if (!gam_subscription_has_event(sub, event)) {
