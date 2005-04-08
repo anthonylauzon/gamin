@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 #
 # Checking DNotify registration/dregistration when monitoring a
-# directory as a directory and also watching the parent directory,
-# then stop watching the children directory and check we are still watching
-# the parent one correctly
+# file as a file and the parent directory, then stop monitoring the
+# file and check we are still monitoring the parent directory
 #
 import gamin
 import time
@@ -15,7 +14,7 @@ ok = 1
 top = 0
 top2 = 0
 dbg = 0
-db_expect = [ 51, 51, 52, 52 ]
+db_expect = [ 51, 53, 53, 52 ]
 expect = [gamin.GAMExists, gamin.GAMExists, gamin.GAMEndExist,
           gamin.GAMCreated]
 expect2 = [gamin.GAMExists, gamin.GAMEndExist ]
@@ -47,12 +46,12 @@ def callback2(path, event, which):
 
 shutil.rmtree ("temp_dir", True)
 os.mkdir ("temp_dir")
-os.mkdir ("temp_dir/a")
+open("temp_dir/a", "w").close()
 
 mon = gamin.WatchMonitor()
 mon._debug_object("notify", debug, 0)
 mon.watch_directory("temp_dir", callback, 0)
-mon.watch_directory("temp_dir/a", callback2, 0)
+mon.watch_file("temp_dir/a", callback2, 0)
 time.sleep(1)
 mon.handle_events()
 mon.stop_watch("temp_dir/a")

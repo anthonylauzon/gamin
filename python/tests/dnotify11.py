@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #
 # Checking DNotify registration/dregistration when monitoring a
-# directory as a directory and also watching the parent directory,
-# then stop watching the children directory and check we are still watching
-# the parent one correctly
+# file as a file and the parent directory, then remove the file and
+# stop monitoring the file then check we are still monitoring the
+# parent directory
 #
 import gamin
 import time
@@ -15,10 +15,10 @@ ok = 1
 top = 0
 top2 = 0
 dbg = 0
-db_expect = [ 51, 51, 52, 52 ]
+db_expect = [ 51, 53, 53, 52 ]
 expect = [gamin.GAMExists, gamin.GAMExists, gamin.GAMEndExist,
-          gamin.GAMCreated]
-expect2 = [gamin.GAMExists, gamin.GAMEndExist ]
+          gamin.GAMDeleted, gamin.GAMCreated]
+expect2 = [gamin.GAMExists, gamin.GAMEndExist, gamin.GAMDeleted ]
 
 def debug(path, type, data):
     global dbg, db_expect, ok
@@ -47,12 +47,15 @@ def callback2(path, event, which):
 
 shutil.rmtree ("temp_dir", True)
 os.mkdir ("temp_dir")
-os.mkdir ("temp_dir/a")
+open("temp_dir/a", "w").close()
 
 mon = gamin.WatchMonitor()
 mon._debug_object("notify", debug, 0)
 mon.watch_directory("temp_dir", callback, 0)
-mon.watch_directory("temp_dir/a", callback2, 0)
+mon.watch_file("temp_dir/a", callback2, 0)
+time.sleep(1)
+mon.handle_events()
+os.unlink("temp_dir/a")
 time.sleep(1)
 mon.handle_events()
 mon.stop_watch("temp_dir/a")
@@ -68,10 +71,10 @@ mon.disconnect()
 del mon
 shutil.rmtree ("temp_dir", True)
 
-if top != 4:
-    print "Error: monitor got %d events insteads of 4" % (top)
-elif top2 != 2:
-    print "Error: monitor got %d events insteads of 2" % (top2)
+if top != 5:
+    print "Error: monitor got %d events insteads of 5" % (top)
+elif top2 != 3:
+    print "Error: monitor got %d events insteads of 3" % (top2)
 elif dbg != 4 and gamin.has_debug_api == 1:
     print "Error: debug got %d events insteads of 4" % (dbg)
 elif ok == 1:

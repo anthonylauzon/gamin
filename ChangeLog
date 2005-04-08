@@ -1,3 +1,9 @@
+Fri Apr  8 08:05:30 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: more fixes
+	* python/tests/Makefile.am python/tests/dnotify1[01].py: more
+	  regression tests
+
 Thu Apr  7 11:10:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c: applied patch gamin_inotify_recursive2 from

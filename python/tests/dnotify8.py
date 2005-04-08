@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 #
 # Checking DNotify registration/dregistration when monitoring a
-# file as a file, then remove the file, then recreate it as a file
+# directory as a directory and also watching the parent directory,
+# then remove the children directory and check we are still watching
+# the parent one correctly
 #
 import gamin
 import time

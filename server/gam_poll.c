@@ -220,6 +220,7 @@ static int
 node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
     const char *path;
+    GamPollData *data;
 
     if ((node == NULL) || (sub == NULL))
         return(-1);
@@ -230,9 +231,11 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
     GAM_DEBUG(DEBUG_INFO, "node_remove_subscription(%s)\n", node->path);
 
     gam_node_remove_subscription(node, sub);
+    data = gam_node_get_data(node);
 
     path = gam_node_get_path(node);
-    if (gam_exclude_check(path)) {
+    if (((data != NULL) && (data->flags != 0)) ||
+        (gam_exclude_check(path))) {
 	GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
         return(0);
     }
@@ -1065,9 +1068,12 @@ gam_poll_remove_subscription_real(GamSubscription * sub)
                             gam_node_get_path(node));
                 } else {
                     parent = gam_node_parent(node);
-                    gam_tree_remove(tree, node);
+		    if ((parent != NULL) &&
+		        (!gam_node_has_dir_subscriptions(parent))) {
+			gam_tree_remove(tree, node);
 
-                    prune_tree(parent);
+			prune_tree(parent);
+		    }
                 }
             }
         } else {
