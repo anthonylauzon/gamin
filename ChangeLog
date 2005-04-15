@@ -1,3 +1,10 @@
+Fri Apr 15 14:18:53 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_debugging.h server/gam_inotify.c server/gam_inotify.h:
+	  applied patch from John McCutchan to align inotify and dnotify 
+	  back-end behaviours.
+
+
 Fri Apr  8 08:05:30 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: more fixes

@@ -1,6 +1,5 @@
-
-#ifndef __MD_INOTIFY_H__
-#define __MD_INOTIFY_H__
+#ifndef __GAM_INOTIFY_H__
+#define __GAM_INOTIFY_H__
 
 #include <glib.h>
 #include "gam_poll.h"
@@ -15,4 +14,4 @@ gboolean   gam_inotify_remove_all_for        (GamListener *listener);
 
 G_END_DECLS
 
-#endif /* __MD_INOTIFY_H__ */
+#endif /* __GAM_INOTIFY_H__ */
