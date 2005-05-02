@@ -52,14 +52,11 @@ typedef struct {
     int refcount;
     GList *subs;
     int busy;
-
-    gboolean dirty;
-    GTimer *poll_timer;
+	gboolean deactivated;
 } inotify_data_t;
 
 static GHashTable *path_hash = NULL;
 static GHashTable *wd_hash = NULL;
-static GList *dirty_list = NULL;
 
 G_LOCK_DEFINE_STATIC(inotify);
 
@@ -149,8 +146,6 @@ gam_inotify_data_new(const char *path, int wd)
     data->wd = wd;
     data->busy = 0;
     data->refcount = 1;
-    data->dirty = FALSE;
-    data->poll_timer = g_timer_new ();
 
     return data;
 }
@@ -161,7 +156,6 @@ gam_inotify_data_free(inotify_data_t * data)
     if (data->refcount != 0)
 	GAM_DEBUG(DEBUG_INFO, "gam_inotify_data_free called with reffed data.\n");
     g_free(data->path);
-    g_timer_destroy (data->poll_timer);
     g_free(data);
 }
 
@@ -301,8 +295,7 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 		    if (ioctl (inotify_device_fd, INOTIFY_IGNORE, &data->wd) < 0) {
 			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
 		    }
-		    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
-		    data->wd = -1;
+		    data->deactivated = TRUE;
 		    GAM_DEBUG(DEBUG_INFO, "deactivated inotify for %s\n",
 			      data->path);
 #ifdef GAMIN_DEBUG_API
@@ -331,8 +324,13 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 			path_wd = ioctl (inotify_device_fd, INOTIFY_WATCH, &iwr);
 			close (path_fd);
 
-			data->wd = path_wd;
+			/* Remove the old wd from the hash table */
+		    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
 
+			data->wd = path_wd;
+			data->deactivated = FALSE;
+
+			/* Insert the new wd into the hash table */
 			g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd),
 			                    data);
 			GAM_DEBUG(DEBUG_INFO, "Reactivated inotify for %s\n",
@@ -389,34 +387,6 @@ gam_inotify_file_handler(const char *path, pollHandlerMode mode)
     }
 }
 
-/* Must be called with inotify lock locked */
-static void
-gam_inotify_dirty_list_cleaner ()
-{
-    GList *l;
-
-    /* Here we walk the old dirty list and create a new one. 
-     * if we don't poll a node on the old list, we add it to the new one */
-
-    l = dirty_list;
-    dirty_list = NULL;
-
-    for (l = l; l; l = l->next) {
-	inotify_data_t *data = l->data;
-
-	g_assert (data->dirty);
-
-	if (g_timer_elapsed (data->poll_timer, NULL) >= MIN_POLL_TIME) {
-	    data->dirty = FALSE;
-	    gam_poll_scan_directory (data->path);
-	} else {
-	    dirty_list = g_list_append (dirty_list, data);
-	}
-    }
-
-    g_list_free (l);
-}
-
 static gboolean
 gam_inotify_read_handler(gpointer user_data)
 {
@@ -460,8 +430,10 @@ gam_inotify_read_handler(gpointer user_data)
 	if (!data) {
 	    GAM_DEBUG(DEBUG_INFO, "inotify can't find wd %d\n", event->wd);
 	} else {
-	    if (event->mask == IN_IGNORED || event->mask == IN_UNMOUNT) {
+	    if (event->mask == IN_IGNORED) {
 		GList *l;
+
+		GAM_DEBUG(DEBUG_INFO, "inotify ignoring wd %d\n", event->wd);
 
 		l = data->subs;
 		data->subs = NULL;
@@ -475,16 +447,9 @@ gam_inotify_read_handler(gpointer user_data)
 		    GAM_DEBUG(DEBUG_INFO, "poll was requested for event = ");
 		    print_mask (event->mask);
 		    gam_poll_scan_directory (data->path);
-#if 0
-		    /* if node isn't dirty */
-		    if (!data->dirty) {
-			/* Put this node on the dirty list */
-			data->dirty = TRUE;
-			g_timer_start(data->poll_timer);
-			dirty_list = g_list_append (dirty_list, data);
-		    }
-#endif
 		}
+	    } else if (event->mask == IN_Q_OVERFLOW) {
+		GAM_DEBUG(DEBUG_INFO, "inotify queue over flowed\n");
 	    }
 	}
 

@@ -1,3 +1,8 @@
+Mon May  2 10:10:05 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c server/local_inotify.h: applied patch 2 from
+	  John McCutchan for inotify 0.23
+
 Fri Apr 15 14:18:53 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_debugging.h server/gam_inotify.c server/gam_inotify.h:
