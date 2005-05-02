@@ -252,6 +252,33 @@ if test x$kqueue = xtrue; then
 	backends="${backends}, kqueue"
 fi
 
+dnl pthread support for reentrance of the client library.
+AC_ARG_WITH(threads,
+[  --with-threads          add multithread support(on)])
+
+if test "$with_threads" = "no" ; then
+    echo Disabling multithreaded support
+else
+    echo Enabling multithreaded support
+
+    AC_CHECK_HEADER(pthread.h,
+	AC_CHECK_LIB(pthread, pthread_mutexattr_settype,[
+	   THREAD_LIBS="-lpthread"
+	   AC_DEFINE([HAVE_LIBPTHREAD], [], [Define if pthread library is there (-lpthread)])
+	   AC_DEFINE([HAVE_PTHREAD_H], [], [Define if <pthread.h> is there])
+	   WITH_THREADS="1"]))
+fi
+
+dnl Use weak symbols on linux/gcc to avoid imposing libpthreads to apps
+if test x$os = xlinux-gnu -a x$WITH_THREADS = x1 ; then
+    if test "${CC}" = "gcc" ; then
+        echo Use weak symbols !
+        THREAD_LIBS=
+    fi
+fi	
+AC_SUBST(THREAD_LIBS)
+AC_SUBST(WITH_THREADS)
+
 dnl check for flavours of varargs macros (test from GLib)
 AC_MSG_CHECKING(for ISO C99 varargs macros in C)
 AC_TRY_COMPILE([],[

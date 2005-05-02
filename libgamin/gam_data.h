@@ -53,6 +53,8 @@ struct GAMReqData {
 typedef struct GAMData GAMData;
 typedef GAMData *GAMDataPtr;
 
+void		gamin_data_lock		(GAMDataPtr data);
+void 		gamin_data_unlock	(GAMDataPtr data);
 
 GAMDataPtr	gamin_data_new		(void);
 void		gamin_data_free		(GAMDataPtr conn);

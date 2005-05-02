@@ -40,12 +40,12 @@ CLEANFILES=gam_error.c gam_event.c
 libgamin_1_la_LIBADD =
 
 libgamin_1_la_LDFLAGS = -Wl,--version-script=gamin_sym.version \
-                        -version-info @GAMIN_VERSION_INFO@
+                        -version-info @GAMIN_VERSION_INFO@ @THREAD_LIBS@
 
 libfam_la_SOURCES = $(libgamin_1_la_SOURCES)
 libfam_la_LIBADD = $(libgamin_1_la_LIBADD)
 libfam_la_LDFLAGS = -Wl,--version-script=gamin_sym.version	\
-                    -version-info @FAM_VERSION_INFO@
+                    -version-info @FAM_VERSION_INFO@ @THREAD_LIBS@
 
 #
 # Compile a program locally to check

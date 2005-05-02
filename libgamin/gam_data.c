@@ -14,6 +14,39 @@
 #include "gam_error.h"
 #include "config.h"
 
+#ifdef HAVE_PTHREAD_H
+#include <pthread.h>
+
+static int is_threaded = -1;
+#endif
+
+/*
+ * Use weak symbols on gcc/linux to avoid forcing link with pthreads for
+ * non threaded apps using the gamin library.
+ * patches to extends this to other platforms/compilers welcome, note that
+ * this also affects configure.in
+ * #pragma weak .... might be more portable but may not work from shared
+ * libraries.
+ */
+#ifdef __GNUC__
+#ifdef linux
+#if (__GNUC__ == 3 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 3)
+extern int pthread_mutexattr_init(pthread_mutexattr_t *attr)
+           __attribute((weak));
+extern int pthread_mutexattr_settype (pthread_mutexattr_t *__attr, int __kind)
+           __attribute((weak));
+extern int pthread_mutexattr_init (pthread_mutexattr_t *__attr)
+           __attribute((weak));
+extern int pthread_mutex_lock (pthread_mutex_t *__mutex)
+           __attribute((weak));
+extern int pthread_mutex_unlock (pthread_mutex_t *__mutex)
+           __attribute((weak));
+extern int pthread_mutexattr_destroy (pthread_mutexattr_t *__attr)
+           __attribute((weak));
+#endif
+#endif /* linux */
+#endif /* __GNUC__ */
+
 #define FAM_EVENT_SIZE (sizeof(FAMEvent))
 
 #ifdef GAMIN_DEBUG_API
@@ -50,8 +83,28 @@ struct GAMData {
     int req_nr;                 /* the number of running requests */
     int req_max;                /* the size of req_tab */
     GAMReqDataPtr *req_tab;     /* pointer to the array of requests */
+
+#ifdef HAVE_PTHREAD_H
+    pthread_mutex_t lock;	/* mutex protecting this structure,
+				   it's connection, and everything related */
+#endif
 };
 
+void gamin_data_lock(GAMDataPtr data)
+{
+#ifdef HAVE_PTHREAD_H
+    if (is_threaded > 0)
+	pthread_mutex_lock(&data->lock);
+#endif
+}
+
+void gamin_data_unlock(GAMDataPtr data)
+{
+#ifdef HAVE_PTHREAD_H
+    if (is_threaded > 0)
+	pthread_mutex_unlock(&data->lock);
+#endif
+}
 /************************************************************************
  *									*
  *		Request Data handling					*
@@ -363,11 +416,38 @@ GAMDataPtr
 gamin_data_new(void)
 {
     GAMDataPtr ret;
+#ifdef HAVE_PTHREAD_H
+    pthread_mutexattr_t attr;
+#endif
 
     ret = (GAMDataPtr) malloc(sizeof(GAMData));
     if (ret == NULL)
         return (NULL);
     memset(ret, 0, sizeof(GAMData));
+    
+#ifdef HAVE_PTHREAD_H
+    if (is_threaded == -1) {
+        if ((pthread_mutexattr_init != NULL) &&
+	    (pthread_mutexattr_settype != NULL) &&
+	    (pthread_mutex_init != NULL) &&
+	    (pthread_mutexattr_destroy != NULL) &&
+	    (pthread_mutex_lock != NULL) &&
+	    (pthread_mutex_unlock != NULL) &&
+	    (pthread_mutexattr_destroy != NULL)) {
+	    is_threaded = 1;
+	    GAM_DEBUG(DEBUG_INFO, "Activating thread safety\n");
+	} else {
+	    GAM_DEBUG(DEBUG_INFO, "Not activating thread safety\n");
+	}
+    }
+    if (is_threaded > 0) {
+	pthread_mutexattr_init(&attr);
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+	pthread_mutex_init(&ret->lock, &attr);
+	pthread_mutexattr_destroy(&attr);
+    }
+#endif
+
     ret->auth = 0;
     ret->reqno = 1;
     ret->evn_ready = 0;
@@ -398,6 +478,12 @@ gamin_data_free(GAMDataPtr conn)
         }
         free(conn->req_tab);
     }
+
+#ifdef HAVE_PTHREAD_H
+    pthread_mutex_unlock(&conn->lock);
+    pthread_mutex_destroy(&conn->lock);
+#endif
+
     free(conn);
 }
 

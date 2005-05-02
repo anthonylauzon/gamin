@@ -1036,6 +1036,8 @@ FAMClose(FAMConnection * fc)
 
     GAM_DEBUG(DEBUG_INFO, "FAMClose()\n");
 
+    gamin_data_lock(fc->client);
+
     ret = close(fc->fd);
     fc->fd = -1;
     gamin_data_free(fc->client);
@@ -1057,6 +1059,8 @@ int
 FAMMonitorDirectory(FAMConnection * fc, const char *filename,
                     FAMRequest * fr, void *userData)
 {
+    int retval;
+     
     if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
 	GAM_DEBUG(DEBUG_INFO, "FAMMonitorDirectory() arg error\n");
         FAMErrno = FAM_ARG;
@@ -1073,8 +1077,13 @@ FAMMonitorDirectory(FAMConnection * fc, const char *filename,
         FAMErrno = FAM_ARG;
         return (-1);
     }
-    return (gamin_send_request(GAM_REQ_DIR, fc->fd, filename,
+    
+    gamin_data_lock(fc->client);
+    retval = (gamin_send_request(GAM_REQ_DIR, fc->fd, filename,
                                fr, userData, fc->client, 0));
+    gamin_data_unlock(fc->client);
+
+    return retval;
 }
 
 /**
@@ -1091,6 +1100,8 @@ int
 FAMMonitorDirectory2(FAMConnection * fc, const char *filename,
                      FAMRequest * fr)
 {
+    int retval;
+
     if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
 	GAM_DEBUG(DEBUG_INFO, "FAMMonitorDirectory2() arg error\n");
         FAMErrno = FAM_ARG;
@@ -1109,8 +1120,12 @@ FAMMonitorDirectory2(FAMConnection * fc, const char *filename,
         return (-1);
     }
 
-    return (gamin_send_request(GAM_REQ_DIR, fc->fd, filename,
+    gamin_data_lock(fc->client);
+    retval = (gamin_send_request(GAM_REQ_DIR, fc->fd, filename,
                                fr, NULL, fc->client, 1));
+    gamin_data_unlock(fc->client);
+
+    return retval;
 }
 
 /**
@@ -1128,6 +1143,8 @@ int
 FAMMonitorFile(FAMConnection * fc, const char *filename,
                FAMRequest * fr, void *userData)
 {
+    int retval;
+
     if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
 	GAM_DEBUG(DEBUG_INFO, "FAMMonitorFile() arg error\n");
         FAMErrno = FAM_ARG;
@@ -1144,8 +1161,13 @@ FAMMonitorFile(FAMConnection * fc, const char *filename,
         FAMErrno = FAM_ARG;
         return (-1);
     }
-    return (gamin_send_request(GAM_REQ_FILE, fc->fd, filename,
+
+    gamin_data_lock(fc->client);
+    retval =  (gamin_send_request(GAM_REQ_FILE, fc->fd, filename,
                                fr, userData, fc->client, 0));
+    gamin_data_unlock(fc->client);
+
+    return retval;
 }
 
 /**
@@ -1161,6 +1183,8 @@ FAMMonitorFile(FAMConnection * fc, const char *filename,
 int
 FAMMonitorFile2(FAMConnection * fc, const char *filename, FAMRequest * fr)
 {
+    int retval;
+
     if ((fc == NULL) || (filename == NULL) || (fr == NULL)) {
 	GAM_DEBUG(DEBUG_INFO, "FAMMonitorFile2() arg error\n");
         FAMErrno = FAM_ARG;
@@ -1177,8 +1201,13 @@ FAMMonitorFile2(FAMConnection * fc, const char *filename, FAMRequest * fr)
         FAMErrno = FAM_ARG;
         return (-1);
     }
-    return (gamin_send_request(GAM_REQ_FILE, fc->fd, filename,
+
+    gamin_data_lock(fc->client);
+    retval = (gamin_send_request(GAM_REQ_FILE, fc->fd, filename,
                                fr, NULL, fc->client, 1));
+    gamin_data_unlock(fc->client);
+
+    return retval;
 }
 
 /**
@@ -1247,6 +1276,8 @@ FAMNextEvent(FAMConnection * fc, FAMEvent * fe)
         return (-1);
     }
 
+    // FIXME: drop and reacquire lock while blocked?
+    gamin_data_lock(conn);
     if (!gamin_data_event_ready(conn)) {
         if (gamin_read_data(conn, fc->fd, 1) < 0) {
 	    gamin_try_reconnect(conn, fc->fd);
@@ -1255,6 +1286,8 @@ FAMNextEvent(FAMConnection * fc, FAMEvent * fe)
 	}
     }
     ret = gamin_data_read_event(conn, fe);
+    gamin_data_unlock(conn);
+
     if (ret < 0) {
         FAMErrno = FAM_CONNECT;
         return (ret);
@@ -1294,8 +1327,11 @@ FAMPending(FAMConnection * fc)
 
     GAM_DEBUG(DEBUG_INFO, "FAMPending(fd = %d)\n", fc->fd);
 
-    if (gamin_data_event_ready(conn))
-      return (1);
+    gamin_data_lock(conn);
+    if (gamin_data_event_ready(conn)) {
+	 gamin_data_unlock(conn);
+	 return (1);
+    }
 
     /*
      * make sure we won't block if reading
@@ -1309,7 +1345,10 @@ FAMPending(FAMConnection * fc)
 	}
     }
 
-    return (gamin_data_event_ready(conn));
+    ret = (gamin_data_event_ready(conn));
+    gamin_data_unlock(conn);
+
+    return ret;
 }
 
 /**
@@ -1344,6 +1383,7 @@ FAMCancelMonitor(FAMConnection * fc, const FAMRequest * fr)
      * destroy the request internally
      */
     conn = fc->client;
+    gamin_data_lock(conn);
     ret = gamin_data_del_req(conn, fr->reqnum);
     if (ret < 0) {
         FAMErrno = FAM_ARG;
@@ -1355,6 +1395,7 @@ FAMCancelMonitor(FAMConnection * fc, const FAMRequest * fr)
      */
     ret = gamin_send_request(GAM_REQ_CANCEL, fc->fd, NULL,
                              (FAMRequest *) fr, NULL, fc->client, 0);
+    gamin_data_unlock(conn);
 
     if (ret != 0) {
         FAMErrno = FAM_CONNECT;
@@ -1417,7 +1458,9 @@ int FAMNoExists(FAMConnection *fc) {
     }
     conn = fc->client;
 
+    gamin_data_lock(conn);
     ret = gamin_data_no_exists(conn);
+    gamin_data_unlock(conn);
     if (ret < 0) {
 	GAM_DEBUG(DEBUG_INFO, "FAMNoExists() arg error\n");
         FAMErrno = FAM_ARG;
@@ -1464,8 +1507,11 @@ FAMDebug(FAMConnection *fc, const char *filename, FAMRequest * fr,
     /*
      * send debug message to the server
      */
+    gamin_data_lock(fc->client);
     ret = gamin_send_request(GAM_REQ_DEBUG, fc->fd, filename,
 			     fr, userData, fc->client, 0);
+    gamin_data_unlock(fc->client);
+
     if (debug_reqno == -1) {
         debug_reqno = fr->reqnum;
 	debug_userData = userData;

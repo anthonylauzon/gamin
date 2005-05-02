@@ -1,3 +1,11 @@
+Mon May  2 16:15:22 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in libgamin/Makefile.am libgamin/gam_api.c
+	  libgamin/gam_data.[ch]: applied patch from Nicholas Miell in
+	  RH bug #154785 to make the client side thread-safe, also used
+	  gcc weak symbol support on Linux to not force pthread library
+	  onto the programs using the library.
+
 Mon May  2 10:10:05 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c server/local_inotify.h: applied patch 2 from
