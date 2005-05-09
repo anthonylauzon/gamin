@@ -17,7 +17,7 @@
  */
 
 
-#include <config.h>
+#include "server_config.h"
 #include <sys/types.h>
 #include <string.h>
 #include <glib.h>

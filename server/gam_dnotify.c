@@ -17,7 +17,7 @@
  */
 
 
-#include <config.h>
+#include "server_config.h"
 #define _GNU_SOURCE
 #include <fcntl.h>
 #include <signal.h>

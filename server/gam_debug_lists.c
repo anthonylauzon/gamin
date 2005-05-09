@@ -24,7 +24,7 @@
  * GLib at ftp://ftp.gtk.org/pub/gtk/. 
  */
 
-#include "config.h"
+#include "server_config.h"
 #include <string.h> /* for memset() debug */
 #include "glib.h"
 

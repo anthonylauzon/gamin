@@ -1,3 +1,4 @@
+#include "server_config.h"
 #include <string.h>
 #include "gam_debugging.h"
 #include "gam_connection.h"

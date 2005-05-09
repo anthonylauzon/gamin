@@ -17,7 +17,7 @@
  */
 
 
-#include <config.h>
+#include "server_config.h"
 #include <string.h>
 #include <glib.h>
 #include "gam_event.h"

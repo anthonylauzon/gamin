@@ -1,3 +1,10 @@
+Mon May  9 15:45:22 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/server_config.h server/*.c: force compilation with
+	  big file support, some cleanups too, fixes bug #167898
+	* python/tests/Makefile.am python/tests/bigfile.py: added a 
+	  specific regression test.
+
 Mon May  9 12:49:36 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: found bug #302737 from Frederic Crozat,

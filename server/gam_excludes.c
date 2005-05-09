@@ -1,4 +1,4 @@
-#include "config.h"
+#include "server_config.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>

@@ -18,7 +18,7 @@
  */
 
 
-#include <config.h>
+#include "server_config.h"
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>

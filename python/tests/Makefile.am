@@ -5,6 +5,7 @@ PYTESTS=        		\
 		basic4.py	\
 		basic5.py	\
 		basic6.py	\
+		bigfile.py	\
 		noexists.py	\
 		dnotify.py	\
 		dnotify2.py	\

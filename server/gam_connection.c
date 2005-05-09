@@ -1,3 +1,4 @@
+#include "server_config.h"
 #include <string.h>             /* for memmove */
 #include <stdlib.h>             /* for exit() */
 #include <time.h>
