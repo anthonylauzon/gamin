@@ -1,3 +1,8 @@
+Mon May  9 12:15:35 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* python/tests/dnotify12.py python/tests/dnotify13.py: tests
+	  trying to chase the Desktop nautilus refresh bug tracked with alex
+
 Mon May  9 12:11:49 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_data.c: added more debugging
