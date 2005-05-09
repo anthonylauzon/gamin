@@ -1185,7 +1185,10 @@ gam_poll_first_scan_dir(GamSubscription *sub, GamNode *dir_node,
     if (!g_file_test (dpath, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
 	GAM_DEBUG(DEBUG_INFO, "Monitoring missing dir: %s\n", dpath);
 	gam_server_emit_event(dpath, 1, GAMIN_EVENT_DELETED, subs, 1);
-	node = gam_node_new(dpath, NULL, TRUE);
+	node = gam_tree_get_at_path(tree, dpath);
+	if (!node) {
+	    node = gam_tree_add_at_path(tree, dpath, 1);
+	}
 	if (node == NULL) {
 	    gam_error(DEBUG_INFO, "Failed to allocate node for: %s\n", dpath);
 	    goto done;

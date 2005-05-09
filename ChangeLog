@@ -1,3 +1,8 @@
+Mon May  9 12:49:36 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_poll.c: found bug #302737 from Frederic Crozat,
+	  creating a node duplicate, broke the unicity of node <->path
+
 Mon May  9 12:15:35 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* python/tests/dnotify12.py python/tests/dnotify13.py: tests
