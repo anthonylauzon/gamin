@@ -54,7 +54,7 @@ static const char *session;
  * This function is designed to be called from a
  * signal handler.
  */
-void
+static void
 gam_exit(int signo) {
 	gam_shutdown();
 

@@ -260,6 +260,8 @@ gamin_data_add_req2(GAMDataPtr conn, const char *filename, int type,
     conn->req_tab[idx] = req;
     conn->req_nr++;
 
+    GAM_DEBUG(DEBUG_INFO, "Allocated request %d\n", reqno);
+
     return (req);
 }
 
@@ -371,6 +373,9 @@ gamin_data_del_req(GAMDataPtr conn, int reqno)
         memmove(&conn->req_tab[idx], &conn->req_tab[idx + 1],
                 (conn->req_nr - idx) * sizeof(GAMReqDataPtr));
     }
+
+    GAM_DEBUG(DEBUG_INFO, "Removed request %d\n", reqno);
+
     return (0);
 }
 

@@ -13,9 +13,9 @@ expect = [gamin.GAMExists, gamin.GAMExists, gamin.GAMEndExist,
 
 def callback(path, event):
     global top, expect, ok
-#    print "Got callback: %s, %s" % (path, event)
+    print "Got callback: %s, %s" % (path, event)
     if expect[top] != event:
-        print "Error got event %d exected %d" % (event, expect[top])
+        print "Error got event %d expected %d" % (event, expect[top])
 	ok = 0
     top = top + 1
 

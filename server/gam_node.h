@@ -3,6 +3,8 @@
 #define __GAM_NODE_H__
 
 #include <glib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "gam_event.h"
 #include "gam_subscription.h"
 
@@ -13,16 +15,18 @@ typedef struct _GamNode GamNode;
 typedef gboolean (*GamSubFilterFunc) (GamSubscription *sub);
 
 struct _GamNode {
-	char *path;
+        /* the node informations proper */
+	char *path;		/* The file path */
+	GList *subs;		/* the list of subscriptions */
+	GNode *node;		/* pointer in the tree */
+	gboolean is_dir;	/* is that a directory or expected to be one */
+	int flags;		/* generic flags */
 
-	GList *subs;
-	gpointer data;
-	GDestroyNotify data_destroy;
-
-	int flags;
-
-	GNode *node;
-	gboolean is_dir;
+        /* what used to be stored in a separate data structure */
+	int pflags;		/* A combination of MON_xxx flags */
+	time_t lasttime;	/* Epoch of last time checking was done */
+	int checks;		/* the number of checks in that Epoch */
+	struct stat sbuf;	/* The stat() informations in last check */
 };
 
 

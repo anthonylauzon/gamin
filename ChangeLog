@@ -1,3 +1,11 @@
+Mon May  9 12:11:49 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_data.c: added more debugging
+	* server/gam_node.c server/gam_node.h server/gam_poll.c:
+	  simplification removing an extra indirection of GamNodeData
+	  keeping them directly in GamNode
+	* server/gam_server.c: removed a warning
+
 Mon May  2 16:15:22 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in libgamin/Makefile.am libgamin/gam_api.c

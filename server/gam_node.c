@@ -24,16 +24,6 @@
 #include "gam_node.h"
 
 /**
- * @defgroup GamNode GamNode
- * @ingroup Daemon
- * @brief GamNode API.
- *
- * A node represents a single file or directory.
- * 
- * @{
- */
-
-/**
  * Create a new node
  *
  * @param path the path the node will represent
@@ -55,8 +45,6 @@ gam_node_new(const char *path, GamSubscription * sub, gboolean is_dir)
         node->subs = NULL;
 
     node->is_dir = is_dir;
-    node->data = NULL;
-    node->data_destroy = NULL;
     node->flags = 0;
 
     return node;
@@ -73,9 +61,6 @@ gam_node_free(GamNode * node)
     g_return_if_fail(node != NULL);
 
     g_assert(node->subs == NULL);
-
-    if (node->data_destroy && node->data)
-        (*node->data_destroy) (node->data);
 
     g_free(node->path);
     g_list_free(node->subs);
@@ -215,38 +200,6 @@ gam_node_remove_subscription(GamNode * node, GamSubscription * sub)
     node->subs = g_list_remove_all(node->subs, sub);
 
     return TRUE;
-}
-
-/**
- * Attaches some arbitrary data to the node
- *
- * @param node the node
- * @param data a pointer to some data
- * @param destroy a function to destroy the data when the node is freed, or NULL
- */
-void
-gam_node_set_data(GamNode * node, gpointer data, GDestroyNotify destroy)
-{
-    if (node == NULL)
-        return;
-
-    node->data = data;
-    node->data_destroy = destroy;
-
-}
-
-/**
- * Retrieves the data attached to the node
- *
- * @param node the node
- * @returns the data, or NULL
- */
-gpointer
-gam_node_get_data(GamNode * node)
-{
-    if (node == NULL)
-        return(NULL);
-    return node->data;
 }
 
 /**
