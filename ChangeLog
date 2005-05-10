@@ -1,3 +1,9 @@
+Tue May 10 11:29:40 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c server/local_inotify.h: applied patch
+	  inotify 0.23-6 from Daniel Drake for inotify support in
+	  bug #303615
+
 Tue May 10 11:25:42 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/Makefile.am: oops forgot to add to source as pointed

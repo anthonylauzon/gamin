@@ -66,7 +66,7 @@ static gboolean have_consume_idler = FALSE;
 
 static int inotify_device_fd = -1;
 
-static guint should_poll_mask = IN_MODIFY|IN_ATTRIB|IN_CLOSE_WRITE|IN_MOVED_FROM|IN_MOVED_TO|IN_DELETE_SUBDIR|IN_DELETE_FILE|IN_CREATE_SUBDIR|IN_CREATE_FILE|IN_DELETE_SELF|IN_UNMOUNT;
+static guint should_poll_mask = IN_MODIFY|IN_ATTRIB|IN_CLOSE_WRITE|IN_MOVED_FROM|IN_MOVED_TO|IN_DELETE|IN_CREATE|IN_DELETE_SELF|IN_UNMOUNT;
 
 static void print_mask(int mask)
 {
@@ -102,21 +102,13 @@ static void print_mask(int mask)
     {
         GAM_DEBUG(DEBUG_INFO, "MOVE_TO\n");
     }
-    if (mask & IN_DELETE_SUBDIR)
+    if (mask & IN_DELETE)
     {
-        GAM_DEBUG(DEBUG_INFO, "DELETE_SUBDIR\n");
+        GAM_DEBUG(DEBUG_INFO, "DELETE\n");
     }
-    if (mask & IN_DELETE_FILE)
-    {
-        GAM_DEBUG(DEBUG_INFO, "DELETE_FILE\n");
-    }
-    if (mask & IN_CREATE_SUBDIR)
+    if (mask & IN_CREATE)
     {
         GAM_DEBUG(DEBUG_INFO, "CREATE_SUBDIR\n");
-    }
-    if (mask & IN_CREATE_FILE)
-    {
-        GAM_DEBUG(DEBUG_INFO, "CREATE_FILE\n");
     }
     if (mask & IN_DELETE_SELF)
     {
