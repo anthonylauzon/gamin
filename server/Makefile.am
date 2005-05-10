@@ -37,7 +37,8 @@ gam_server_SOURCES =					\
 	gam_excludes.c					\
 	gam_excludes.h					\
 	local_inotify.h					\
-	gam_debug_lists.c
+	gam_debug_lists.c				\
+	server_config.h
 
 if ENABLE_INOTIFY
 gam_server_SOURCES += gam_inotify.c gam_inotify.h

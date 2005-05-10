@@ -1,3 +1,8 @@
+Tue May 10 11:25:42 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/Makefile.am: oops forgot to add to source as pointed
+	  by Daniel Drake in #303612
+
 Mon May  9 15:45:22 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/server_config.h server/*.c: force compilation with
