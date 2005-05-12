@@ -100,10 +100,23 @@ class WatchMonitor:
 	    self.__req_no = ret
 
 	def _internal_callback(self, path, event):
-	    if self.data != None:
-		self.callback (path, event, self.data)
-	    else:
-		self.callback (path, event)
+	    # it is very important here to catch all exception which may
+	    # arise in the client callback code.
+	    try:
+		if self.data != None:
+		    self.callback (path, event, self.data)
+		else:
+		    self.callback (path, event)
+	    except:
+		import traceback 
+		traceback.print_exc()
+
+	    if event == GAMAcknowledge:
+	        try:
+		    self.monitor.cancelled.remove(self)
+		except:
+		    print "gamin failed to remove from cancelled"
+		    pass
 
 	def cancel(self):
 	    ret = _gamin.MonitorCancel(self.__mon_no, self.__req_no);
@@ -111,9 +124,9 @@ class WatchMonitor:
 		raise(GaminException("Failed to stop monitor on %s" %
 				     (self.path)))
 	    try:
-	        self.monitor.objects[self.path].remove(self)
+		self.monitor.cancelled.append(self)
 	    except:
-	        pass
+	        print "gamin cancel() failed to add to cancelled"
 
     def __init__ (self):
         self.__no = _gamin.MonitorConnect()
@@ -124,6 +137,7 @@ class WatchMonitor:
 	if self.__fd < 0:
 	    _gamin.MonitorClose(self.__no)
 	    raise(GaminException("Failed to get file descriptor"))
+	self.cancelled = []
 
     def __del__ (self):
         self.disconnect()
@@ -185,9 +199,9 @@ class WatchMonitor:
 	    list = self.objects[path]
 	except:
 	    raise(GaminException("Resource %s is not monitored" % (path)))
-	del self.objects[path]
 	for obj in list:
 	    obj.cancel()
+	self.objects[path] = []
 	
     def get_fd(self):
         if (self.__no < 0):

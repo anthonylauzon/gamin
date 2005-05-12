@@ -1363,8 +1363,8 @@ FAMPending(FAMConnection * fc)
 int
 FAMCancelMonitor(FAMConnection * fc, const FAMRequest * fr)
 {
-    GAMDataPtr conn;
     int ret;
+    GAMDataPtr conn;
 
     if ((fc == NULL) || (fr == NULL)) {
 	GAM_DEBUG(DEBUG_INFO, "FAMCancelMonitor() arg error\n");
@@ -1380,13 +1380,14 @@ FAMCancelMonitor(FAMConnection * fc, const FAMRequest * fr)
     GAM_DEBUG(DEBUG_INFO, "FAMCancelMonitor(%d)\n", fr->reqnum);
 
     /*
-     * destroy the request internally
+     * Verify the request
      */
     conn = fc->client;
     gamin_data_lock(conn);
-    ret = gamin_data_del_req(conn, fr->reqnum);
+    ret = gamin_data_cancel(conn, fr->reqnum);
     if (ret < 0) {
         FAMErrno = FAM_ARG;
+	gamin_data_unlock(conn);
         return (-1);
     }
 

@@ -18,13 +18,15 @@ expect = [gamin.GAMExists, gamin.GAMEndExist, gamin.GAMCreated]
 def debug(path, type, data):
     global dbg, ok
 
-    print "Got debug %s, %s, %s" % (path, type, data)
+#    print "Got debug %s, %s, %s" % (path, type, data)
     dbg = dbg + 1
     ok = 0
 
 def callback(path, event, which):
     global top, expect, ok
 #    print "Got callback: %s, %s" % (path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if expect[top] != event:
         print "Error got event %d expected %d" % (expect[top], event)
 	ok = 0

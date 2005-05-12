@@ -46,6 +46,8 @@ def debug(path, type, data):
 def callback_file(path, event):
     global top_f, expect_f, ok
 #    print "Got callback: %s, %s" % (path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if expect_f[top_f] != event:
         print "Error got file event %d expected %d" % (expect_f[top_f], event)
 	ok = 0
@@ -54,6 +56,8 @@ def callback_file(path, event):
 def callback_dir(path, event):
     global top_d, expect_d, ok
 #    print "Got callback: %s, %s" % (path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if expect_d[top_d] != event:
         print "Error got dir event %d expected %d" % (expect_d[top_d], event)
 	ok = 0

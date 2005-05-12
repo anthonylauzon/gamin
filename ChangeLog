@@ -1,3 +1,16 @@
+Thu May 12 13:33:52 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c libgamin/gam_data.[ch] server/gam_connection.[ch]:
+	  applied patch from #300028 FAMCancelMonitor should get back a
+	  FAMAcknowledge event, plus some fixups. The real question was
+	  should the full round-trip to the server be needed or not,
+	  expectation are that it should be done, though it's heavier,
+	  kept as is so far but this might be changed in the future.
+	* tests/result/10 tests/scenario/10.tst: this impacts one of the
+	  simpler tests
+	* python/gamin.py python/tests/*.py: this severely impacted the
+	  Python bindings, and most tests had to be fixed, working now.
+
 Tue May 10 11:29:40 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_inotify.c server/local_inotify.h: applied patch

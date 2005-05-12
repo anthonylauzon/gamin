@@ -30,6 +30,8 @@ def debug(path, type, data):
 def callback(path, event, which):
     global top, expect, ok
 #    print "Got callback: %s, %s" % (path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if expect[top] != event:
         print "Error got event %d expected %d" % (expect[top], event)
 	ok = 0

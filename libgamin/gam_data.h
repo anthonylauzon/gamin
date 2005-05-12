@@ -74,6 +74,8 @@ int		gamin_data_get_request	(GAMDataPtr conn,
 					 int reqno);
 int		gamin_data_del_req	(GAMDataPtr conn,
 					 int reqno);
+int		gamin_data_cancel	(GAMDataPtr conn,
+					 int reqno);
 int		gamin_data_conn_data	(GAMDataPtr conn,
 					 int len);
 int		gamin_data_need_auth	(GAMDataPtr conn);

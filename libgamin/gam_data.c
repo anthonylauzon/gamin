@@ -380,6 +380,30 @@ gamin_data_del_req(GAMDataPtr conn, int reqno)
 }
 
 /**
+ * gamin_data_cancel:
+ * @conn:  a connection data structure
+ *
+ * Cancel a connection
+ *
+ * Returns 0 or 1 in case or -1 in case of error.
+ */
+int
+gamin_data_cancel(GAMDataPtr conn, int reqno)
+{
+    int idx;
+    GAMReqDataPtr data;
+
+    idx = gamin_data_get_req_idx(conn, reqno);
+    if (idx < 0)
+        return (-1);
+    data = conn->req_tab[idx];
+    if (data->state == REQ_CANCELLED)
+        return(0);
+    data->state = REQ_CANCELLED;
+    return(1);
+}
+
+/**
  * gamin_data_get_req:
  * @conn:  a connection data structure
  * @reqno:  the request number
@@ -549,6 +573,12 @@ gamin_data_read_event(GAMDataPtr conn, FAMEvent * event)
     event->code = evn->type;
     conn->evn_ready = 0;
     conn->evn_read -= evn->len;
+    if (event->code == FAMAcknowledge) {
+        /*
+         * destroy the request internally
+         */
+        gamin_data_del_req(conn, evn->seq);
+    }
     if (conn->evn_read > 0) {
         /*
          * there was other events piggy-backed on the same read,
@@ -623,7 +653,13 @@ gamin_data_conn_event(GAMDataPtr conn, GAMPacketPtr evn)
     switch (req->type) {
         case REQ_NONE:
         case REQ_SUSPENDED:
+            GAM_DEBUG(DEBUG_INFO,
+                      "Event: seq %d dropped, request type %d\n", evn->seq,
+                      req->type);
+            return (0);
         case REQ_CANCELLED:
+	    if (evn->type == FAMAcknowledge)
+	        break;
             GAM_DEBUG(DEBUG_INFO,
                       "Event: seq %d dropped, request type %d\n", evn->seq,
                       req->type);
@@ -902,3 +938,4 @@ gamin_data_get_exists(GAMDataPtr conn)
         return(0);
     return(1);
 }
+

@@ -22,6 +22,8 @@ def callback(path, event, which):
     global expect2, nb2
 
 #    print "Got callback on %d: %s, %s" % (which, path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if which == 0:
         if event != expect0[nb0]:
 	    print "Error: monitor %d got event %d expected %d" % (which, event,

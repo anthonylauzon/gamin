@@ -36,6 +36,8 @@ def debug(path, type, data):
 def callback(path, event, which):
     global top, expect, ok
 #    print "Got callback: %s, %s" % (path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if expect[top] != event:
         print "Error got event %d expected %d" % (expect[top], event)
 	ok = 0
@@ -44,6 +46,8 @@ def callback(path, event, which):
 def callback2(path, event, which):
     global top2, expect2, ok
 #    print "Got callback2: %s, %s" % (path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if expect2[top2] != event:
         print "Error got event %d expected %d" % (expect2[top2], event)
 	ok = 0
@@ -52,6 +56,8 @@ def callback2(path, event, which):
 def callback3(path, event, which):
     global top3, expect3, ok
 #    print "Got callback3: %s, %s" % (path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if expect3[top3] != event:
         print "Error got event %d expected %d" % (expect3[top3], event)
 	ok = 0
@@ -67,15 +73,15 @@ mon.watch_directory("temp_dir", callback2, 0)
 time.sleep(1)
 mon.handle_events()
 f = open("temp_dir/a", "w")
-time.sleep(0.1)
+time.sleep(0.3)
 mon.watch_file("temp_dir/a", callback3, 0)
-time.sleep(0.1)
+time.sleep(0.3)
 f.write("Hallo")
 f.close()
 time.sleep(1)
 mon.handle_events()
 os.unlink("temp_dir/a");
-time.sleep(0.1)
+time.sleep(0.3)
 mon.handle_events()
 mon.stop_watch("temp_dir/a")
 time.sleep(1)

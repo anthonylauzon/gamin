@@ -19,7 +19,7 @@ expect = [gamin.GAMExists, gamin.GAMEndExist, gamin.GAMDeleted,
 def debug(path, type, data):
     global dbg, db_expect, ok
 
-    print "Got debug %s, %s, %s" % (path, type, data)
+#    print "Got debug %s, %s, %s" % (path, type, data)
     if dbg < 2 and path[-8:] != "temp_dir":
         print "Error got debug path unexpected %s" % (path)
 	ok = 0
@@ -33,7 +33,9 @@ def debug(path, type, data):
 
 def callback(path, event, which):
     global top, expect, ok
-    print "Got callback: %s, %s" % (path, event)
+#    print "Got callback: %s, %s" % (path, event)
+    if event == gamin.GAMAcknowledge:
+        return
     if expect[top] != event:
         print "Error got event %d expected %d" % (expect[top], event)
 	ok = 0

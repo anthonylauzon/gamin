@@ -328,7 +328,10 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
             gam_subscription_set_listener(sub, conn->listener);
             gam_add_subscription(sub);
             break;
-        case GAM_REQ_CANCEL:
+        case GAM_REQ_CANCEL: {
+            char *path;
+            int pathlen;
+
             sub =
                 gam_listener_get_subscription_by_reqno(conn->listener,
                                             	       req->seq);
@@ -340,9 +343,17 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
             }
             GAM_DEBUG(DEBUG_INFO, "Cancelling subscription for (%d)\n",
                       req->seq);
+            path = g_strdup(gam_subscription_get_path(sub));
+            pathlen = gam_subscription_pathlen(sub);
             gam_remove_subscription(sub);
             gam_listener_remove_subscription(conn->listener, sub);
-            break;
+
+            if (gam_send_ack(conn, req->seq, path, pathlen) < 0) {
+                GAM_DEBUG(DEBUG_INFO, "Failed to send ack to PID %d\n",
+                          gam_connection_get_pid(conn));
+            }
+            g_free(path);
+        }   break;
         case GAM_REQ_DEBUG:
 #ifdef GAMIN_DEBUG_API
 	    gam_debug_add(conn, &req->path[0], options);
@@ -544,7 +555,59 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
         return (-1);
     }
     return (0);
+}
 
+/**
+ * gam_send_ack:
+ * @conn: the connection data
+ * @path: the file/directory path
+ *
+ * Emit an acknowledge event to the connection
+ *
+ * Returns 0 in case of success and -1 in case of failure
+ */
+int
+gam_send_ack(GamConnDataPtr conn, int reqno,
+             const char *path, int len)
+{
+    GAMPacket req;
+    size_t tlen;
+    int ret;
+
+    if ((conn == NULL) || (conn->fd < 0) || (path == NULL))
+        return (-1);
+
+    if (len <= 0) {
+        GAM_DEBUG(DEBUG_INFO, "Empty file path\n");
+        return (-1);
+    }
+
+    if (len >= MAXPATHLEN) {
+        GAM_DEBUG(DEBUG_INFO, "File path too long %s\n", path);
+        return (-1);
+    }
+
+    GAM_DEBUG(DEBUG_INFO, "Event to %d : %d, %d, %s\n", conn->pid,
+              reqno, FAMAcknowledge, path);
+    /*
+     * prepare the packet
+     */
+    tlen = GAM_PACKET_HEADER_LEN + len;
+    /* We use only local socket so no need for network byte order conversion */
+    req.len = (unsigned short) tlen;
+    req.version = GAM_PROTO_VERSION;
+    req.seq = reqno;
+    req.type = FAMAcknowledge;
+    req.pathlen = len;
+    memcpy(&req.path[0], path, len);
+    ret =
+        gam_client_conn_write(conn->source, conn->fd, (gpointer) & req,
+                              tlen);
+    if (!ret) {
+        GAM_DEBUG(DEBUG_INFO, "Failed to send event to %d\n", conn->pid);
+        return (-1);
+    }
+    return (0);
 }
 
 /************************************************************************

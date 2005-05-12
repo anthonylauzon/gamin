@@ -10,6 +10,7 @@ monfile /tmp/test_gamin/subdir/foo 1
 2: /tmp/test_gamin/subdir/foo Exists: NULL
 2: /tmp/test_gamin/subdir/foo EndExist: NULL
 cancel 0 2
+1: /tmp/test_gamin Acknowledge: NULL
 append /tmp/test_gamin/subdir/foo
 2: /tmp/test_gamin/subdir/foo Changed: NULL
 disconnected

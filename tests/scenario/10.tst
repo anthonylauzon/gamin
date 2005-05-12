@@ -9,6 +9,7 @@ monfile /tmp/test_gamin/subdir/foo
 wait
 expect 1
 cancel 0
+expect 1
 wait
 append /tmp/test_gamin/subdir/foo
 expect 1
