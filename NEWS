@@ -5,6 +5,22 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.1.0: May 12 2005:
+   - Close inherited file descriptors on exec of gam_server
+   - Cancelling a monitor send back a FAMAcknowledge based on patch by
+      Christophe Saout
+   - Fixed for big files > 2GB
+   - Bug when monitoring a non existing directory
+   - Make client side thread safe (Nicholas Miell base patch)
+   - Unreadable directory fixes (Nickolay Shmyrev)
+   - A lot more regression tests, more debugging support and code
+      cleanups.
+   - Better flow control handling
+   - Updated to latest inotify version: 0.23-6 (John McCutchan, Todor Penev,
+      Andrei Lahun, Daniel Drake)
+   - MacOSX/BSDs portability using kqueue (Joe Marcus Clarke, Fred Leason)
+
+
 0.0.26: Mar 15 2005:
    - Fixed an include problem showing up with gcc4
    - A couple of documentation typo fixes

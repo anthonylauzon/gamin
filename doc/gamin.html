@@ -89,6 +89,22 @@ tabs.</em></p>
 
 <h2><a name="News">News</a></h2>
 
+<h3>0.1.0: May 12 2005</h3>
+<ul>
+  <li>Close inherited file descriptors on exec of gam_server</li>
+  <li>Cancelling a monitor send back a FAMAcknowledge based on patch by
+      Christophe Saout</li>
+  <li>Fixed for big files &gt; 2GB</li>
+  <li>Bug when monitoring a non existing directory</li>
+  <li>Make client side thread safe (Nicholas Miell base patch)</li>
+  <li>Unreadable directory fixes (Nickolay Shmyrev)</li>
+  <li>A lot more regression tests, more debugging support and code
+      cleanups.</li>
+  <li>Better flow control handling</li>
+  <li>Updated to latest inotify version: 0.23-6 (John McCutchan, Todor Penev,
+      Andrei Lahun, Daniel Drake)</li>
+  <li>MacOSX/BSDs portability using kqueue (Joe Marcus Clarke, Fred Leason)</li>
+</ul>
 <h3>0.0.26: Mar 15 2005</h3>
 <ul>
   <li>Fixed an include problem showing up with gcc4</li>

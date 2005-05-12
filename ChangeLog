@@ -1,3 +1,7 @@
+Thu May 12 15:55:07 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS doc/gamin.html doc/news.html: preparing release 0.1.0
+
 Thu May 12 14:51:21 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in: preparing for 0.1.0
