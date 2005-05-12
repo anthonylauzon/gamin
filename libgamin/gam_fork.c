@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
@@ -66,6 +67,14 @@ gamin_fork_server(const char *fam_client_id)
     /* Become a daemon */
     pid = fork();
     if (pid == 0) {
+        long open_max;
+	long i;
+
+        /* don't hold open fd opened from the client of the library */
+	open_max = sysconf (_SC_OPEN_MAX);
+	for (i = 0; i < open_max; i++)
+	    fcntl (i, F_SETFD, FD_CLOEXEC);
+
         setsid();
         if (fork() == 0) {
             setenv("GAM_CLIENT_ID", fam_client_id, 0);

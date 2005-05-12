@@ -50,6 +50,7 @@ make
 rm -fr %{buildroot}
 
 %makeinstall
+rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
 
 %clean
 rm -fr %{buildroot}

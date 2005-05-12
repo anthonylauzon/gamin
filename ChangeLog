@@ -1,3 +1,9 @@
+Thu May 12 14:51:21 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: preparing for 0.1.0
+	* gamin.spec.in: don't ship the .la
+	* libgamin/gam_fork.c: tried to fix #300088, I hope it's okay.
+
 Thu May 12 13:33:52 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c libgamin/gam_data.[ch] server/gam_connection.[ch]:
