@@ -1,3 +1,8 @@
+2005-05-18  Mark McLoughlin  <mark@skynet.ie>
+
+	* libgamin/gam_data.c: (gamin_data_conn_event): Fix
+	req->state vs req->type thinko.
+
 Thu May 12 15:55:07 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS doc/gamin.html doc/news.html: preparing release 0.1.0

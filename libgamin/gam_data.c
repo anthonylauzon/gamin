@@ -650,7 +650,7 @@ gamin_data_conn_event(GAMDataPtr conn, GAMPacketPtr evn)
         return (0);
     }
 
-    switch (req->type) {
+    switch (req->state) {
         case REQ_NONE:
         case REQ_SUSPENDED:
             GAM_DEBUG(DEBUG_INFO,
@@ -665,7 +665,7 @@ gamin_data_conn_event(GAMDataPtr conn, GAMPacketPtr evn)
                       req->type);
             return (0);
         case REQ_INIT:
-            req->type = REQ_CONFIRMED;
+            req->state = REQ_CONFIRMED;
         case REQ_CONFIRMED:
             break;
     }
