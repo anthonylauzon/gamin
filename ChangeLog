@@ -1,3 +1,9 @@
+Thu May 19 22:57:25 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.spec.in: updated changelog section
+	* server/gam_kqueue.c server/gam_kqueue.h: applied patch for BSD
+	  kqueue code from Jean-Yves Lefort
+
 2005-05-18  Mark McLoughlin  <mark@skynet.ie>
 
 	* libgamin/gam_data.c: (gamin_data_conn_event): Fix

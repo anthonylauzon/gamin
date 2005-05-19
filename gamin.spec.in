@@ -88,6 +88,15 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
+* Thu May 12 2005 Daniel Veillard <veillard@redhat.com> 0.1.0-1
+- Close inherited file descriptors on exec of gam_server
+- Cancelling a monitor send back a FAMAcknowledge
+- Fixed for big files > 2GB
+- Bug when monitoring a non existing directory
+- Make client side thread safe
+- Unreadable directory fixes
+- Better flow control handling
+- Updated to latest inotify version: 0.23-6
 * Tue Mar 15 2005 Daniel Veillard <veillard@redhat.com> 0.0.26-1
 - Fix an include problem showing up with gcc4</li>
 - Fix the crash on failed tree assert bug #150471 based on patch from Dean Brettle
