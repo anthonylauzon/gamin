@@ -631,6 +631,21 @@ gam_poll_scan_directory_internal(GamNode * dir_node)
     g_list_free(children);
 }
 
+static void
+unregister_node (GamNode * node)
+{
+    if (missing_resources != NULL) {
+       	gam_poll_remove_missing(node);
+    }
+    if (busy_resources != NULL) {
+        gam_poll_remove_busy(node);
+    }
+    if (all_resources != NULL) {
+        all_resources = g_list_remove(all_resources, node);
+    }
+}
+
+
 static gboolean
 remove_directory_subscription(GamNode * node, GamSubscription * sub)
 {
@@ -650,12 +665,8 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 
         if ((!gam_node_get_subscriptions(child)) && (remove_dir) &&
             (!gam_tree_has_children(tree, child))) {
-            if (missing_resources != NULL) {
-                gam_poll_remove_missing(child);
-            }
-            if (busy_resources != NULL) {
-                gam_poll_remove_busy(child);
-            }
+            unregister_node (child);
+
             gam_tree_remove(tree, child);
         } else {
             remove_dir = FALSE;
@@ -790,15 +801,7 @@ prune_tree(GamNode * node)
                   "prune_tree: node %s\n", gam_node_get_path(node));
 
         parent = gam_node_parent(node);
-        if (missing_resources != NULL) {
-            gam_poll_remove_missing(node);
-        }
-        if (busy_resources != NULL) {
-            gam_poll_remove_busy(node);
-        }
-        if (all_resources != NULL) {
-            all_resources = g_list_remove(all_resources, node);
-        }
+        unregister_node(node);
         gam_tree_remove(tree, node);
         prune_tree(parent);
     }
@@ -975,15 +978,7 @@ gam_poll_remove_subscription_real(GamSubscription * sub)
             if (!gam_node_get_subscriptions(node)) {
                 GamNode *parent;
 
-                if (missing_resources != NULL) {
-                    gam_poll_remove_missing(node);
-                }
-                if (busy_resources != NULL) {
-                    gam_poll_remove_busy(node);
-                }
-                if (all_resources != NULL) {
-                    all_resources = g_list_remove(all_resources, node);
-                }
+                unregister_node (node);
                 if (gam_tree_has_children(tree, node)) {
                     fprintf(stderr,
                             "node %s is not dir but has children\n",
@@ -1004,15 +999,7 @@ gam_poll_remove_subscription_real(GamSubscription * sub)
             if (remove_directory_subscription(node, sub)) {
                 GamNode *parent;
 
-                if (missing_resources != NULL) {
-                    gam_poll_remove_missing(node);
-                }
-                if (busy_resources != NULL) {
-                    gam_poll_remove_busy(node);
-                }
-                if (all_resources != NULL) {
-                    all_resources = g_list_remove(all_resources, node);
-                }
+                unregister_node (node);
                 parent = gam_node_parent(node);
                 if (!gam_tree_has_children(tree, node)) {
                     gam_tree_remove(tree, node);
