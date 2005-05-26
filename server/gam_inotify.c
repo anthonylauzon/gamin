@@ -168,10 +168,10 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 	    GAM_DEBUG(DEBUG_INFO, "Removing %s from inotify\n", path);
 	    break;
 	case GAMIN_FLOWCONTROLSTART:
-	    GAM_DEBUG(DEBUG_INFO, "Start flow control for %s\n", path);
+	    GAM_DEBUG(DEBUG_INFO, "inotify: Start flow control for %s\n", path);
 	    break;
 	case GAMIN_FLOWCONTROLSTOP:
-	    GAM_DEBUG(DEBUG_INFO, "Stop flow control for %s\n", path);
+	    GAM_DEBUG(DEBUG_INFO, "inotify: Stop flow control for %s\n", path);
 	    break;
 	default:
 	    gam_error(DEBUG_INFO, "Unknown inotify operation %d for %s\n",
@@ -283,6 +283,7 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
         }
         if (data != NULL) {
 	    if (mode == GAMIN_FLOWCONTROLSTART) {
+		GAM_DEBUG(DEBUG_INFO, "inotify: GAMIN_FLOWCONTROLSTART for %s\n", data->path);
 		if (data->wd >= 0) {
 		    if (ioctl (inotify_device_fd, INOTIFY_IGNORE, &data->wd) < 0) {
 			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
@@ -296,14 +297,17 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 		}
 		data->busy++;
 	    } else {
+		GAM_DEBUG(DEBUG_INFO, "inotify: GAMIN_FLOWCONTROLSTOP for %s\n", data->path);
 	        if (data->busy > 0) {
+		    GAM_DEBUG(DEBUG_INFO, "inotify: data->busy > 0 for %s\n", data->path);
 		    data->busy--;
 		    if (data->busy == 0) {
+			GAM_DEBUG(DEBUG_INFO, "inotify: data->busy == 0 for %s\n", data->path);
 			path_fd = open(data->path, O_RDONLY);
 			if (path_fd < 0) {
 			    G_UNLOCK(inotify);
 			    GAM_DEBUG(DEBUG_INFO,
-			              "Failed to reactivate inotify for %s\n",
+			              "failed to reactivate inotify for %s\n",
 				      data->path);
 
                             if ((dir != path) && (dir != NULL))
@@ -317,7 +321,7 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 			close (path_fd);
 
 			/* Remove the old wd from the hash table */
-		    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
+			g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
 
 			data->wd = path_wd;
 			data->deactivated = FALSE;
@@ -325,7 +329,7 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 			/* Insert the new wd into the hash table */
 			g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd),
 			                    data);
-			GAM_DEBUG(DEBUG_INFO, "Reactivated inotify for %s\n",
+			GAM_DEBUG(DEBUG_INFO, "reactivated inotify for %s\n",
 			          data->path);
 #ifdef GAMIN_DEBUG_API
 			gam_debug_report(GAMinotifyFlowOff, path, 0);
@@ -420,12 +424,15 @@ gam_inotify_read_handler(gpointer user_data)
 
 	data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
 	if (!data) {
-	    GAM_DEBUG(DEBUG_INFO, "inotify can't find wd %d\n", event->wd);
+	    GAM_DEBUG(DEBUG_INFO, "processing event: inotify can't find wd %d\n", event->wd);
+	} else if (data->deactivated) {
+	    GAM_DEBUG(DEBUG_INFO, "inotify: ignoring event on temporarily deactivated watch %s\n", data->path);
 	} else {
 	    if (event->mask == IN_IGNORED) {
 		GList *l;
 
-		GAM_DEBUG(DEBUG_INFO, "inotify ignoring wd %d\n", event->wd);
+		GAM_DEBUG(DEBUG_INFO, "inotify: IN_IGNORE on wd=%d\n", event->wd);
+		GAM_DEBUG(DEBUG_INFO, "inotify: removing all subscriptions for %s\n", data->path);
 
 		l = data->subs;
 		data->subs = NULL;
@@ -441,7 +448,8 @@ gam_inotify_read_handler(gpointer user_data)
 		    gam_poll_scan_directory (data->path);
 		}
 	    } else if (event->mask == IN_Q_OVERFLOW) {
-		GAM_DEBUG(DEBUG_INFO, "inotify queue over flowed\n");
+		    GAM_DEBUG(DEBUG_INFO, "inotify queue over flowed\n");
+		    GAM_DEBUG(DEBUG_INFO, "FIXME, should request poll for all paths here\n");
 	    }
 	}
 

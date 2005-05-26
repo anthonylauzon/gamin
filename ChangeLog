@@ -1,3 +1,8 @@
+Thu May 26 15:53:19 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c: applied patch from John McCutchan fixing
+	  bug #171201 of inotify and mounted media.
+
 2005-05-20  Frederic Crozat  <fcrozat@mandriva.com>
 
 	* server/gam_poll.c: (unregister_node),
