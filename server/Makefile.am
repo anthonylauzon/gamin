@@ -4,6 +4,7 @@ INCLUDES =						\
 	-I$(top_builddir)/libgamin			\
 	-I$(top_builddir)/protocol			\
 	-I$(top_srcdir)/lib				\
+	-I$(top_srcdir)/libgamin			\
 	$(LIBGAMIN_CFLAGS)				\
 	-DBINDIR=\""$(libexecdir)"\"			\
 	-DG_DISABLE_DEPRECATED				
