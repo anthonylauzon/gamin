@@ -42,6 +42,9 @@
 #ifdef ENABLE_KQUEUE
 #include "gam_kqueue.h"
 #endif
+#ifdef ENABLE_HURD_MACH_NOTIFY
+#include "gam_hurd_mach_notify.h"
+#endif
 #include "gam_excludes.h"
 
 static int poll_only = 0;
@@ -113,6 +116,12 @@ gam_init_subscriptions(void)
 	    return(TRUE);
 	}
 #endif
+#ifdef ENABLE_HURD_MACH_NOTIFY
+	if (gam_hurd_notify_init()) {
+	    GAM_DEBUG(DEBUG_INFO, "Using Hurd Notify as backend\n");
+	    return(TRUE);
+	}
+#endif	
     }
     if (gam_poll_init()) {
 	GAM_DEBUG(DEBUG_INFO, "Using Poll as backend\n");

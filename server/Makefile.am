@@ -53,6 +53,21 @@ if ENABLE_KQUEUE
 gam_server_SOURCES += gam_kqueue.c gam_kqueue.h
 endif
 
+if ENABLE_HURD_MACH_NOTIFY
+gam_server_SOURCES += gam_hurd_mach_notify.c gam_hurd_mach_notify.h \
+	fs_notify.c fs_notify.h
+
+BUILT_SOURCES = fs_notify.c fs_notify.h
+CLEANFILES = fs_notify.c fs_notify.h
+
+fs_notify.c fs_notify.h: $(includedir)/hurd/fs_notify.defs
+	@MIG@ -s -server $(top_builddir)/server/fs_notify.c $(includedir)/hurd/fs_notify.defs
+endif
+
 gam_server_LDFLAGS =
 gam_server_DEPENDENCIES = $(DEPS)
 gam_server_LDADD= $(top_builddir)/lib/libgamin_shared.a $(LDADDS) $(LIBGAMIN_LIBS)
+
+if ENABLE_HURD_MACH_NOTIFY
+gam_server_LDADD += -lports -lthreads
+endif
