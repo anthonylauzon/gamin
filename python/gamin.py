@@ -150,7 +150,7 @@ class WatchMonitor:
 	    return;
 
         if (self.__no < 0):
-	    __raise_disconnected();
+	    self.__raise_disconnected();
         obj = self.WatchObject(self, self.__no, value, -1, callback, data)
 	# persistency need to be insured
 	self.objects["debug"] = obj
@@ -163,7 +163,7 @@ class WatchMonitor:
 
     def watch_directory(self, directory, callback, data = None):
         if (self.__no < 0):
-	    __raise_disconnected();
+	    self.__raise_disconnected();
         directory = os.path.abspath(directory)
 
         obj = self.WatchObject(self, self.__no, directory, 1, callback, data)
@@ -175,7 +175,7 @@ class WatchMonitor:
 
     def watch_file(self, file, callback, data = None):
         if (self.__no < 0):
-	    __raise_disconnected();
+	    self.__raise_disconnected();
         file = os.path.abspath(file)
 
         obj = self.WatchObject(self, self.__no, file, 0, callback, data)
@@ -205,12 +205,12 @@ class WatchMonitor:
 	
     def get_fd(self):
         if (self.__no < 0):
-	    __raise_disconnected();
+	    self.__raise_disconnected();
         return self.__fd
 
     def event_pending(self):
         if (self.__no < 0):
-	    __raise_disconnected();
+	    self.__raise_disconnected();
         ret = _gamin.EventPending(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to check pending events"))
@@ -218,7 +218,7 @@ class WatchMonitor:
 
     def handle_one_event(self):
         if (self.__no < 0):
-	    __raise_disconnected();
+	    self.__raise_disconnected();
         ret = _gamin.ProcessOneEvent(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to process one event"))
@@ -226,7 +226,7 @@ class WatchMonitor:
 
     def handle_events(self):
         if (self.__no < 0):
-	    __raise_disconnected();
+	    self.__raise_disconnected();
         ret = _gamin.ProcessEvents(self.__no);
 	if ret < 0:
 	    raise(GaminException("Failed to process events"))

@@ -1,3 +1,12 @@
+Wed Jun  8 15:55:20 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_poll.c server/gam_tree.c: moving
+	  the dnotify file <-> directory mapping outside of the dnotify
+	  module which doesn't have enough context.
+	* python/gamin.py: fixed a bug on error cases
+	* python/tests/Makefile.am python/tests/dnotify15.py: added a specific
+	  test case for monitoring multiple files in busy directories
+
 Wed Jun  8 11:34:13 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c server/gam_hurd_mach_notify.c

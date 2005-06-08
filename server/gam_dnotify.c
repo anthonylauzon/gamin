@@ -139,24 +139,13 @@ gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
         gam_debug_report(GAMDnotifyCreate, path, 0);
 #endif
     } else if (mode == GAMIN_DESACTIVATE) {
-	char *dir = (char *) path;
-
         data = g_hash_table_lookup(path_hash, path);
 
         if (!data) {
+	    GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
 
-	    dir = g_path_get_dirname(path);
-	    data = g_hash_table_lookup(path_hash, dir);
-
-            if (!data) {
-		GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
-
-		if (dir != NULL)
-		    g_free(dir);
-		G_UNLOCK(dnotify);
-		return;
-	    }
-	    GAM_DEBUG(DEBUG_INFO, "  not found using parent\n");
+	    G_UNLOCK(dnotify);
+	    return;
         }
 
         data->refcount--;
@@ -169,35 +158,23 @@ gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
             g_hash_table_remove(fd_hash, GINT_TO_POINTER(data->fd));
             gam_dnotify_data_free(data);
 #ifdef GAMIN_DEBUG_API
-	    gam_debug_report(GAMDnotifyDelete, dir, 0);
+	    gam_debug_report(GAMDnotifyDelete, path, 0);
 #endif
         } else {
 	    GAM_DEBUG(DEBUG_INFO, "  found decremented refcount: %d\n",
 	              data->refcount);
 #ifdef GAMIN_DEBUG_API
-            gam_debug_report(GAMDnotifyChange, dir, data->refcount);
+            gam_debug_report(GAMDnotifyChange, data->path, data->refcount);
 #endif
 	}
-	if ((dir != path) && (dir != NULL))
-	    g_free(dir);
     } else if ((mode == GAMIN_FLOWCONTROLSTART) ||
                (mode == GAMIN_FLOWCONTROLSTOP)) {
-	char *dir = (char *) path;
-
 	data = g_hash_table_lookup(path_hash, path);
 	if (!data) {
-	    dir = g_path_get_dirname(path);
-	    data = g_hash_table_lookup(path_hash, dir);
+	    GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
 
-            if (!data) {
-		GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
-
-		if (dir != NULL)
-		    g_free(dir);
-		G_UNLOCK(dnotify);
-		return;
-	    }
-	    GAM_DEBUG(DEBUG_INFO, "  not found using parent\n");
+	    G_UNLOCK(dnotify);
+	    return;
         }
         if (data != NULL) {
 	    if (mode == GAMIN_FLOWCONTROLSTART) {
@@ -208,7 +185,7 @@ gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 		    GAM_DEBUG(DEBUG_INFO, "deactivated DNotify for %s\n",
 			      data->path);
 #ifdef GAMIN_DEBUG_API
-		    gam_debug_report(GAMDnotifyFlowOn, dir, 0);
+		    gam_debug_report(GAMDnotifyFlowOn, data->path, 0);
 #endif
 		}
 		data->busy++;
@@ -222,8 +199,6 @@ gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 			    GAM_DEBUG(DEBUG_INFO,
 			              "Failed to reactivate DNotify for %s\n",
 				      data->path);
-			    if ((dir != path) && (dir != NULL))
-				g_free(dir);
 			    return;
 			}
 			data->fd = fd;
@@ -242,8 +217,6 @@ gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 		}
 	    }
 	}
-	if ((dir != path) && (dir != NULL))
-	    g_free(dir);
     } else {
 	GAM_DEBUG(DEBUG_INFO, "Unimplemented operation\n");
     }
@@ -257,17 +230,7 @@ gam_dnotify_directory_handler(const char *path, pollHandlerMode mode)
     GAM_DEBUG(DEBUG_INFO, "gam_dnotify_directory_handler %s : %d\n",
               path, mode);
 
-    if ((mode == GAMIN_DESACTIVATE) ||
-        (g_file_test(path, G_FILE_TEST_IS_DIR))) {
-	gam_dnotify_directory_handler_internal(path, mode);
-    } else {
-	char *dir;
-
-	dir = g_path_get_dirname(path);
-	GAM_DEBUG(DEBUG_INFO, " not a dir using parent %s\n", dir);
-	gam_dnotify_directory_handler_internal(dir, mode);
-	g_free(dir);
-    }
+    gam_dnotify_directory_handler_internal(path, mode);
 }
 
 static void
@@ -278,12 +241,7 @@ gam_dnotify_file_handler(const char *path, pollHandlerMode mode)
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
 	gam_dnotify_directory_handler_internal(path, mode);
     } else {
-	char *dir;
-
-	dir = g_path_get_dirname(path);
-	GAM_DEBUG(DEBUG_INFO, " not a dir using parent %s\n", dir);
-	gam_dnotify_directory_handler_internal(dir, mode);
-	g_free(dir);
+	GAM_DEBUG(DEBUG_INFO, " not a dir %s, failed !!!\n", path);
     }
 }
 

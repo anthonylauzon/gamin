@@ -77,7 +77,7 @@ shutil.rmtree ("temp_dir", True)
 if top != 4:
     print "Error: monitor got %d events insteads of 4" % (top)
 elif top2 != 5:
-    print "Error: monitor got %d events insteads of 5" % (top2)
+    print "Error: monitor2 got %d events insteads of 5" % (top2)
 elif dbg != 4 and gamin.has_debug_api == 1:
     print "Error: debug got %d events insteads of 4" % (dbg)
 elif ok == 1:

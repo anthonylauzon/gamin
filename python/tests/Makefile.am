@@ -20,6 +20,7 @@ PYTESTS=        		\
 		dnotify11.py	\
 		dnotify12.py	\
 		dnotify13.py	\
+		dnotify15.py	\
 		flood.py	\
 		flood2.py	\
 		flood3.py	\
