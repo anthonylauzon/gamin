@@ -1,3 +1,9 @@
+Wed Jun  8 19:20:08 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c server/gam_channel.c: Applied patch from
+	  Neal H. Walfield about non atomicity of write(), this should close
+	  bug #306912
+
 Wed Jun  8 18:30:03 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/Makefile.am: Hurd/Mach patch broke make dist

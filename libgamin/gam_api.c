@@ -520,20 +520,25 @@ static int
 gamin_write_byte(int fd, const char *data, size_t len)
 {
     int written;
+    int remaining;
 
-  retry:
-    written = write(fd, &data[0], len);
-    if (written < 0) {
-        if (errno == EINTR)
-            goto retry;
-        gam_error(DEBUG_INFO, "Failed to write bytes to socket %d\n", fd);
-        return (-1);
-    }
-    if (written != (int) len) {
-        gam_error(DEBUG_INFO, "Wrote only %d bytes to socket %d\n",
-                  written, fd);
-        return (-1);
-    }
+    remaining = len;
+    do {
+	written = write(fd, data, remaining);
+	if (written < 0) {
+	    if (errno == EINTR)
+		continue;
+
+	    GAM_DEBUG(DEBUG_INFO,
+		      "%s: Failed to write bytes to socket %d: %s\n",
+		      __FUNCTION__, fd, strerror (errno));
+	    return -1;
+	}
+
+	data += written;
+	remaining -= written;
+    } while (remaining > 0);
+
     GAM_DEBUG(DEBUG_INFO, "Wrote %d bytes to socket %d\n", written, fd);
     return (0);
 }

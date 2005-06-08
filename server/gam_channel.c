@@ -801,6 +801,7 @@ gam_client_conn_write(GIOChannel * source, int fd, gpointer data,
                       size_t len)
 {
     int written;
+    int remaining;
 
     /**
      * Todo: check if write will block, or use non-blocking options
@@ -811,19 +812,23 @@ gam_client_conn_write(GIOChannel * source, int fd, gpointer data,
     if (fd < 0)
         return (FALSE);
 
-retry:
-    written = write(fd, data, len);
-    if (written < 0) {
-        if (errno == EINTR)
-            goto retry;
-        GAM_DEBUG(DEBUG_INFO, "Failed to write bytes to socket %d\n", fd);
-        return (FALSE);
-    }
-    if (written != (int) len) {
-        GAM_DEBUG(DEBUG_INFO, "Wrote only %d bytes to socket %d\n",
-                  written, fd);
-        return (FALSE);
-    }
-    GAM_DEBUG(DEBUG_INFO, "Wrote %d bytes to socket %d\n", written, fd);
+    remaining = len;
+    do {
+	written = write(fd, data, remaining);
+	if (written < 0) {
+	    if (errno == EINTR)
+		continue;
+
+	    GAM_DEBUG(DEBUG_INFO,
+		      "%s: Failed to write bytes to socket %d: %s\n",
+		      __FUNCTION__, fd, strerror (errno));
+	    return (FALSE);
+	}
+
+	data += written;
+	remaining -= written;
+    } while (remaining > 0);
+
+    GAM_DEBUG(DEBUG_INFO, "Wrote %d bytes to socket %d\n", len, fd);
     return (TRUE);
 }
