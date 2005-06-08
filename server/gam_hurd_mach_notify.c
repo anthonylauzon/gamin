@@ -98,7 +98,7 @@ monitor_watch (struct monitor *m)
     error_t err;
 
     assert (m->fd == -1);
-    m->fd = concat(m->path, O_RDONLY);
+    m->fd = open (m->path, O_RDONLY);
     if (m->fd < 0) {
 	GAM_DEBUG (DEBUG_INFO, "%s: failed to open `%s': %s\n",
 		   __FUNCTION__, m->path, strerror (errno));
@@ -134,14 +134,14 @@ monitor_watch (struct monitor *m)
 static void
 monitor_unwatch (struct monitor *m)
 {
-    assert (m->fd != -1);
+    if (m->fd != -1) {
+	/* Destroy (and create anew) the receive right.  */
+	ports_reallocate_port (m);
 
-    /* Destroy the receive right.  */
-    ports_reallocate_port (m);
-
-    /* And close the file descriptor.  */
-    close (m->fd);
-    m->fd = -1;
+	/* And close the file descriptor.  */
+	close (m->fd);
+	m->fd = -1;
+    }
 }
 
 /* Start monitoring PATH.  Returns NULL on failure.  LOCK should
@@ -201,7 +201,7 @@ monitor_create (const char *path)
     m->children = g_hash_table_new (g_str_hash, g_str_equal);
 
     err = monitor_watch (m);
-    if (err && err != ENOENT)
+    if (err && err != ENOENT && err != EPERM && errno != EACCES)
 	goto die;
 
     /* Monitor the containing directory for creation and deletetion events.  */
@@ -254,6 +254,9 @@ monitor_create (const char *path)
     if (m->fd != -1)
 	close (m->fd);
     g_hash_table_destroy (m->children);
+#ifndef NDEBUG
+    m->children = 0;
+#endif
     g_free (m->path);
     /* We didn't manage to make a send right so we'll never get a dead
        name notification.  Force the descruction of the receive
@@ -502,7 +505,8 @@ gam_hurd_notify_add_rm_handler(const char *path,
 			  __FUNCTION__, path);
 	    } else {
 		/* What was the problem?  */
-		if (errno != ENOTDIR && errno != ENOENT) {
+		if (errno != ENOTDIR && errno != ENOENT && errno != EPERM
+		    && errno != EACCES) {
 		    /* Fatal error.  */
 		    GAM_DEBUG(DEBUG_INFO, "%s: opening `%s': %s\n",
 			      __FUNCTION__, path, strerror (errno));
@@ -772,8 +776,11 @@ gam_hurd_notify_remove_all_for(GamListener * listener)
 	gam_hurd_notify_remove_subscription (sub);
     }
 
-    g_list_free (subs);
-    return TRUE;
+    if (subs) {
+	g_list_free (subs);
+	return TRUE;
+    } else
+	return FALSE;
 }
 
 /** @} */

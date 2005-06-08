@@ -267,40 +267,7 @@ gam_server_emit_event(const char *path, int is_dir_node, GaminEventType event,
 
     for (l = subs; l; l = l->next) {
         GamSubscription *sub = l->data;
-        GamListener *listener;
-        GamConnDataPtr conn;
-        int reqno;
-
-        if (!gam_subscription_wants_event(sub, path, is_dir_node, event, force))
-            continue;
-        listener = gam_subscription_get_listener(sub);
-        if (listener == NULL)
-            continue;
-        conn = (GamConnDataPtr) gam_listener_get_service(listener);
-        if (conn == NULL)
-            continue;
-
-        /*
-         * When sending directory related entries, for items in the
-         * directory the FAM protocol removes the common direcory part.
-         */
-        subpath = path;
-        len = pathlen;
-        if (gam_subscription_is_dir(sub)) {
-            int dlen = gam_subscription_pathlen(sub);
-
-            if ((pathlen > dlen + 1) && (path[dlen] == '/')) {
-                subpath += dlen + 1;
-                len -= dlen + 1;
-            }
-        }
-
-        reqno = gam_subscription_get_reqno(sub);
-
-        if (gam_send_event(conn, reqno, event, subpath, len) < 0) {
-            GAM_DEBUG(DEBUG_INFO, "Failed to send event to PID %d\n",
-                      gam_connection_get_pid(conn));
-        }
+	gam_server_emit_one_event (path, is_dir_node, event, sub, force);
     }
 }
 

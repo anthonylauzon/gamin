@@ -1,3 +1,12 @@
+Thu Jun  9 00:01:26 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_hurd_mach_notify.c: fixed an open() turned in concat()
+	  due to privoxy filtering closes #306915.
+	* server/gam_server.c: applied cleanup from Neal H. Walfield removing
+	  duplicate code #306913
+	* server/gam_hurd_mach_notify.c: bugfix for the Hurd backend from
+	  Neal H. Walfield #306916
+
 Wed Jun  8 23:45:28 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c server/gam_channel.c: patch from
