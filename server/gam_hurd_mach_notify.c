@@ -42,6 +42,7 @@
 #include "gam_hurd_mach_notify.h"
 #include "gam_server.h"
 #include "gam_event.h"
+#include "gam_poll.h"
 
 /* Hash from paths to monitor structures.  */
 static GHashTable *path_hash;
@@ -685,6 +686,7 @@ gam_hurd_notify_init(void)
 
     GAM_DEBUG (DEBUG_INFO, "hurd notify initialized\n");
 
+    gam_poll_set_kernel_handler(NULL, NULL, GAMIN_K_MACH);
     gam_backend_add_subscription = gam_hurd_notify_add_subscription;
     gam_backend_remove_subscription = gam_hurd_notify_remove_subscription;
     gam_backend_remove_all_for = gam_hurd_notify_remove_all_for;

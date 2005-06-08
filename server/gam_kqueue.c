@@ -62,6 +62,7 @@
 #include "gam_kqueue.h"
 #include "gam_event.h"
 #include "gam_server.h"
+#include "gam_poll.h"
 
 /*** tunable constants, modify to tweak the backend aggressivity *************/
 
@@ -1165,6 +1166,8 @@ gam_kqueue_init (void)
   channel = g_io_channel_unix_new(kq);
   g_io_add_watch(channel, G_IO_IN, gam_kqueue_kevent_cb, NULL);
 
+  
+  gam_poll_set_kernel_handler(NULL, NULL, GAMIN_K_KQUEUE);
   gam_backend_add_subscription = gam_kqueue_add_subscription;
   gam_backend_remove_subscription = gam_kqueue_remove_subscription;
   gam_backend_remove_all_for = gam_kqueue_remove_all_for;

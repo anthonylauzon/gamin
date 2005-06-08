@@ -1,3 +1,11 @@
+Wed Jun  8 11:34:13 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_hurd_mach_notify.c
+	 server/gam_inotify.c server/gam_kqueue.c server/gam_poll.c
+	 server/gam_poll.h: changed the way the kernel monitoring registration
+	 is done to try to cope later with troubles with dnotify directly from
+	 the gam_poll.c code.
+
 Tue Jun  7 10:17:17 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in server/Makefile.am server/gam_hurd_mach_notify.c

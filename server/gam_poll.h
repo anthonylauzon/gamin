@@ -8,6 +8,15 @@
 
 G_BEGIN_DECLS
 
+enum pollHandlerKernel {
+    GAMIN_K_NONE = 0,
+    GAMIN_K_DNOTIFY = 1,
+    GAMIN_K_INOTIFY = 2,
+    GAMIN_K_KQUEUE = 3,
+    GAMIN_K_MACH = 4
+};
+typedef enum pollHandlerKernel pollHandlerKernel;
+
 enum pollHandlerMode {
     GAMIN_ACTIVATE = 1,		/* Activate kernel monitoring */
     GAMIN_DESACTIVATE = 2,	/* Desactivate kernel monitoring */
@@ -29,8 +38,9 @@ gboolean   gam_poll_remove_subscription   (GamSubscription *sub);
 
 gboolean   gam_poll_remove_all_for        (GamListener *listener);
 
-void       gam_poll_set_directory_handler (GamPollHandler handler);
-void       gam_poll_set_file_handler      (GamPollHandler handler);
+void       gam_poll_set_kernel_handler    (GamPollHandler dir_handler,
+                                           GamPollHandler file_handler,
+					   pollHandlerKernel type);
 
 void       gam_poll_scan_directory        (const char *path);
 

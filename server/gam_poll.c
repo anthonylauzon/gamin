@@ -59,6 +59,7 @@ static GList *busy_resources = NULL;
 static GList *all_resources = NULL;
 static GamPollHandler dir_handler = NULL;
 static GamPollHandler file_handler = NULL;
+static pollHandlerKernel type_khandler = GAMIN_K_NONE;
 
 static int poll_mode = 0;
 
@@ -1274,29 +1275,21 @@ gam_poll_consume_subscriptions(void)
 
 
 /**
- * Sets the function to be called when a directory node loses or gains
- * subscriptions.  This is useful for implementing other sorts of backends
- * that want to use portions of this backend.
+ * gam_poll_set_kernel_handler:
+ * @d_handler: function to be called to register directories kernel monitoring
+ * @f_handler: function to be called to register file kernel monitoring
+ * @type: the type of handler being used
  *
- * @param handler a #GamPollHandler
+ * Sets the function to be called when fiels and directories loses or gains
+ * subscriptions. It also allows to discriminate the polling code based on
+ * the kind of backend being used, unfortunately needed for dnotify.
  */
 void
-gam_poll_set_directory_handler(GamPollHandler handler)
-{
-    dir_handler = handler;
-}
-
-/**
- * Sets the function to be called when a file node loses or gains
- * subscriptions.  This is useful for implementing other sorts of backends
- * that want to use portions of this backend.
- *
- * @param handler a #GamPollHandler
- */
-void
-gam_poll_set_file_handler(GamPollHandler handler)
-{
-    file_handler = handler;
+gam_poll_set_kernel_handler(GamPollHandler d_handler,
+		GamPollHandler f_handler, pollHandlerKernel type) {
+    dir_handler = d_handler;
+    file_handler = f_handler;
+    type_khandler = type;
 }
 
 /** @} */

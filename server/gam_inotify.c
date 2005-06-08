@@ -540,8 +540,9 @@ gam_inotify_init(void)
 
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
     wd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
-    gam_poll_set_directory_handler(gam_inotify_directory_handler);
-    gam_poll_set_file_handler(gam_inotify_file_handler);
+    gam_poll_set_kernel_handler(gam_inotify_directory_handler,
+                                gam_inotify_file_handler,
+				GAMIN_K_INOTIFY);
 
     GAM_DEBUG(DEBUG_INFO, "inotify initialized\n");
 
