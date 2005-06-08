@@ -1,3 +1,7 @@
+Wed Jun  8 18:30:03 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/Makefile.am: Hurd/Mach patch broke make dist
+
 Wed Jun  8 15:55:20 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c server/gam_poll.c server/gam_tree.c: moving
