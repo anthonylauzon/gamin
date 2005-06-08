@@ -55,7 +55,6 @@ endif
 
 if ENABLE_HURD_MACH_NOTIFY
 gam_server_SOURCES += gam_hurd_mach_notify.c gam_hurd_mach_notify.h
-#	fs_notify.c fs_notify.h
 
 BUILT_SOURCES = fs_notify.c fs_notify.h
 CLEANFILES = fs_notify.c fs_notify.h

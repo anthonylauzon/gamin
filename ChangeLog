@@ -1,3 +1,11 @@
+Wed Jun  8 23:45:28 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c server/gam_channel.c: patch from
+	  Neal H. Walfield support for OSes that do not support LOCAL_CRED
+	  closes bug #306706
+	* server/Makefile.am: tidying
+	* libgamin/gam_api.c: fixed a missing const #306909 (Neal H. Walfield)
+
 Wed Jun  8 19:20:08 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_api.c server/gam_channel.c: Applied patch from

@@ -169,7 +169,7 @@ gamin_get_socket_path(void)
 static char *
 gamin_get_socket_dir(void)
 {
-    char *user;
+    const char *user;
     char *ret;
     char path[MAXPATHLEN + 1];
 
@@ -645,6 +645,7 @@ gamin_check_cred(GAMDataPtr conn, int fd)
     pid_t c_pid;
     uid_t c_uid, s_uid;
     gid_t c_gid;
+    int lack_creds = 0;
 
 #ifdef HAVE_CMSGCRED
     struct {
@@ -660,9 +661,9 @@ gamin_check_cred(GAMDataPtr conn, int fd)
     {
         int on = 1;
 
-        if (setsockopt(fd, 0, LOCAL_CREDS, &on, sizeof(on)) < 0) {
+        if ((lack_creds = (setsockopt(fd, 0, LOCAL_CREDS, &on, sizeof(on))
+			   < 0))) {
             gam_error(DEBUG_INFO, "Unable to set LOCAL_CREDS socket option\n");
-            return(-1);
         }
     }
 #endif
@@ -694,7 +695,8 @@ retry:
         goto failed;
     }
 #ifdef HAVE_CMSGCRED
-    if (cmsg.hdr.cmsg_len < sizeof(cmsg) || cmsg.hdr.cmsg_type != SCM_CREDS) {
+    if (lack_creds && (cmsg.hdr.cmsg_len < sizeof(cmsg)
+		       || cmsg.hdr.cmsg_type != SCM_CREDS)) {
         GAM_DEBUG(DEBUG_INFO,
                   "Message from recvmsg() was not SCM_CREDS\n");
         goto failed;
@@ -703,7 +705,7 @@ retry:
 
     GAM_DEBUG(DEBUG_INFO, "read credentials byte\n");
 
-    {
+    if (lack_creds) {
 #ifdef SO_PEERCRED
         struct ucred cr;
         int cr_len = sizeof(cr);
@@ -728,6 +730,11 @@ retry:
                   "Socket credentials not supported on this OS\n");
         goto failed;
 #endif
+    } else {
+        GAM_DEBUG(DEBUG_INFO,
+                  "Socket credentials not supported on this OS\n");
+	c_pid = getpid ();
+	goto out;
     }
 
     if (s_uid != c_uid) {
@@ -739,6 +746,7 @@ retry:
     GAM_DEBUG(DEBUG_INFO,
               "Credentials: s_uid %d, c_uid %d, c_gid %d, c_pid %d\n",
               (int) s_uid, (int) c_uid, (int) c_gid, (int) c_pid);
+out:
     gamin_data_done_auth(conn);
 
     return(0);
