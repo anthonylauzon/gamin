@@ -106,7 +106,7 @@ static void
 gam_exclude_read_config(void) {
     gchar *filename, *path;
     gchar *contents, **lines, *line, **words;
-    gsize len, plen;
+    gsize len;
     int x, y;
     int exclude = 1;
 

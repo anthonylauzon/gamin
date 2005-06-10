@@ -1309,8 +1309,14 @@ gam_poll_consume_subscriptions(void)
                 if ((event == 0) || (event == GAMIN_EVENT_EXISTS)
                     || (event == GAMIN_EVENT_CHANGED)
                     || (event == GAMIN_EVENT_CREATED)) {
-                    gam_server_emit_one_event(path, node_is_dir,
-                                              GAMIN_EVENT_EXISTS, sub, 0);
+		    if (gam_subscription_is_dir(sub)) {
+		        /* we are watching a file but requested a directory */
+			gam_server_emit_one_event(path, node_is_dir,
+						  GAMIN_EVENT_DELETED, sub, 0);
+		    } else {
+			gam_server_emit_one_event(path, node_is_dir,
+						  GAMIN_EVENT_EXISTS, sub, 0);
+		    }
                 } else if (event != 0) {
                     gam_server_emit_one_event(path, node_is_dir,
                                               GAMIN_EVENT_DELETED, sub, 0);

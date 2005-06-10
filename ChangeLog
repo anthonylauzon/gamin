@@ -1,3 +1,9 @@
+Fri Jun 10 16:30:04 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_excludes.c: removed an extra variable
+	* server/gam_poll.c: fixed problem raised by dnotify4.py, watching
+	  a directory and getting a file should send back Deleted.
+
 Fri Jun 10 11:44:27 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_excludes.c: allowed ~ at the beginning of a path to
