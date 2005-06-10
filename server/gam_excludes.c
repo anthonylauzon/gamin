@@ -5,6 +5,7 @@
 #include <string.h>
 #include <errno.h>
 #include <glib.h>
+#include "gam_error.h"
 #include "gam_excludes.h"
 
 typedef struct _gam_exclude gam_exclude;
@@ -54,9 +55,7 @@ gam_exclude_add(const char *pattern, int exclude) {
     ptr->comp = comp;
     ptr->exclude = exclude;
     excludes = g_list_append(excludes, ptr);
-#if 0
-    fprintf(stderr, "added %s,%d to excludes\n", pattern, exclude);
-#endif
+    GAM_DEBUG(DEBUG_INFO, "added %s,%d to excludes\n", pattern, exclude);
     return(0);
 }
 
@@ -105,9 +104,9 @@ gam_exclude_check_all(const char *filename) {
  */
 static void
 gam_exclude_read_config(void) {
-    gchar *filename;
+    gchar *filename, *path;
     gchar *contents, **lines, *line, **words;
-    gsize len;
+    gsize len, plen;
     int x, y;
     int exclude = 1;
 
@@ -141,6 +140,14 @@ gam_exclude_read_config(void) {
 		    continue;
 		if (words[y][0] == '#')
 		    break;
+		if (words[y][0] == '~') {
+		    path = g_strconcat(g_get_home_dir(), &(words[y][1]), NULL);
+                    if (path != NULL) {
+		        gam_exclude_add(path, exclude);
+                        g_free(path);
+		    }
+		    continue;
+		}
 		if (words[y][0] != '/')
 		    continue;
 		gam_exclude_add(words[y], exclude);

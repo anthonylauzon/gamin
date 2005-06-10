@@ -1,3 +1,8 @@
+Fri Jun 10 11:44:27 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_excludes.c: allowed ~ at the beginning of a path to
+	  indicate the user home directory
+
 Thu Jun  9 00:01:26 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_hurd_mach_notify.c: fixed an open() turned in concat()
