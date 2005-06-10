@@ -1,3 +1,8 @@
+Fri Jun 10 17:15:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS configure.in doc/gamin.html doc/news.html: prepared release
+	  0.1.1
+
 Fri Jun 10 16:30:04 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_excludes.c: removed an extra variable

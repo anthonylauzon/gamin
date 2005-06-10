@@ -5,6 +5,21 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.1.1: Jun 10 2005:
+   -  Bug fixes: gamin_data_conn_event (Mark McLoughlin),
+       crash from bug #303932 (Frederic Crozat),
+       Inotify and mounted media #171201 (John McCutchan),
+       monitoring multiple files in busy directories #159748
+       (mounted media did not show up on Desktop),
+       write may not be atomic (Neal H. Walfield),
+       Monitoring a directory when it is a file.
+  
+   -  Portability to Hurd/Mach and various code cleanups (Neal H. Walfield)
+  
+   -  Added support for ~ as user home alias in .gaminrc
+
+
+
 0.1.0: May 12 2005:
    - Close inherited file descriptors on exec of gam_server
    - Cancelling a monitor send back a FAMAcknowledge based on patch by
