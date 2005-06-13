@@ -58,13 +58,10 @@ gam_node_new(const char *path, GamSubscription * sub, gboolean is_dir)
 void
 gam_node_free(GamNode * node)
 {
-    g_return_if_fail(node != NULL);
-
+    g_assert(node != NULL);
     g_assert(node->subs == NULL);
 
     g_free(node->path);
-    g_list_free(node->subs);
-    node->subs = NULL;
     g_free(node);
 }
 
@@ -72,15 +69,15 @@ gam_node_free(GamNode * node)
  * Retrieves the parent of a given node
  *
  * @param node the node
- * @returns the parent, or NULL
+ * @returns the parent, or NULL if node has no parent
  */
 GamNode *
 gam_node_parent(GamNode * node)
 {
     GamNode *ret = NULL;
 
-    if (!node)
-        return(NULL);
+    g_assert(node);
+
     if (node->node && node->node->parent)
         ret = (GamNode *) node->node->parent->data;
 
@@ -88,7 +85,7 @@ gam_node_parent(GamNode * node)
 }
 
 /**
- * Checks whether a node is a directory or not
+ * Returns whether a node is a directory or not
  *
  * @param node the node
  * @returns TRUE if the node is a directory, FALSE otherwise
@@ -96,13 +93,12 @@ gam_node_parent(GamNode * node)
 gboolean
 gam_node_is_dir(GamNode * node)
 {
-    if (node == NULL)
-        return(FALSE);
+    g_assert(node);
     return(node->is_dir);
 }
 
 /**
- * Sets whether a node is a directory or not
+ * Sets whether a node is a directory
  *
  * @param node the node
  * @param is_dir whether the node is a directory
@@ -110,54 +106,50 @@ gam_node_is_dir(GamNode * node)
 void
 gam_node_set_is_dir(GamNode * node, gboolean is_dir)
 {
-    if (!node)
-        return;
+    g_assert(node);
     node->is_dir = is_dir;
 }
 
 /**
- * Gets the path a given node represents
+ * Returns the path associated with a node
  *
  * @param node the node
- * @returns The path.  It should not be freed.
+ * @returns the path.  The caller must keep a reference to node until
+ * it has finished with the string.  If it must keep it longer, it
+ * should makes its own copy.  The returned string must not be freed.
  */
 G_CONST_RETURN char *
 gam_node_get_path(GamNode * node)
 {
-    if (!node)
-        return(NULL);
+    g_assert(node);
     return node->path;
 }
 
 /**
- * Returns a list of subscriptions attached to the node
+ * Returns the list of subscriptions to a node
  *
  * @param node the node
- * @returns a list of #GamSubscription, or NULL
+ * @returns the list of #GamSubscription to the node
  */
 GList *
 gam_node_get_subscriptions(GamNode * node)
 {
-    if (!node)
-        return(NULL);
+    g_assert(node);
     return node->subs;
 }
 
 /**
- * gam_node_has_dir_subscriptions:
- * @node: the node
+ * Returns whether a node has any directory subscriptions
  *
- * Allow to find if a node has directory subscriptions
- *
- * Returns TRUE if yes and FALSE otherwise
+ * @param node the node
+ * @returns TRUE if the node has directory subscriptions, FALSE otherwise
  */
 gboolean
 gam_node_has_dir_subscriptions(GamNode * node)
 {
     GList *s;
 
-    if (!node)
-        return(FALSE);
+    g_assert (node);
     if (!(node->is_dir))
         return(FALSE);
     for (s = node->subs;s != NULL;s = s->next) {
@@ -172,15 +164,16 @@ gam_node_has_dir_subscriptions(GamNode * node)
  *
  * @param node the node
  * @param sub the subscription
+ * @returns TRUE on success, FALSE otherwise
  */
 gboolean
 gam_node_add_subscription(GamNode * node, GamSubscription * sub)
 {
+    g_assert(node);
+    g_assert(sub);
+    g_assert(!g_list_find(node->subs, sub));
 
-    if (!node)
-        return(FALSE);
-    if (!g_list_find(node->subs, sub))
-        node->subs = g_list_prepend(node->subs, sub);
+    node->subs = g_list_prepend(node->subs, sub);
 
     return TRUE;
 }
@@ -195,15 +188,16 @@ gam_node_add_subscription(GamNode * node, GamSubscription * sub)
 gboolean
 gam_node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
-    if (!node)
-        return(FALSE);
+    g_assert(node);
+    g_assert(g_list_find(node->subs, sub));
+
     node->subs = g_list_remove_all(node->subs, sub);
 
     return TRUE;
 }
 
 /**
- * Sets the GNode associated with this node.  Should only be used by MdTree
+ * Sets the GNode associated with a node.  Should only be used by MdTree
  *
  * @param node the node
  * @param gnode the GNode
@@ -211,13 +205,12 @@ gam_node_remove_subscription(GamNode * node, GamSubscription * sub)
 void
 gam_node_set_node(GamNode * node, GNode * gnode)
 {
-    if (node == NULL)
-        return;
+    g_assert(node);
     node->node = gnode;
 }
 
 /**
- * Gets the GNode associated with this node.  Should only be used by MdTree
+ * Gets the GNode associated with a node.  Should only be used by MdTree
  *
  * @param node the node
  * @returns the GNode
@@ -225,27 +218,27 @@ gam_node_set_node(GamNode * node, GNode * gnode)
 GNode *
 gam_node_get_node(GamNode * node)
 {
-    if (node == NULL)
-        return(NULL);
+    g_assert(node);
     return node->node;
 }
 
 /**
- * Sets a flag on the node
+ * Set a flag on a node
  *
  * @param node the node
- * @param flag the flag
+ * @param flag the flag to set
  */
 void
 gam_node_set_flag(GamNode * node, int flag)
 {
-    if (node == NULL)
-        return;
+    g_assert(node);
+    /* Make sure we set exactly one flag.  */
+    g_assert((flag & (flag - 1)) == 0);
     node->flags |= flag;
 }
 
 /**
- * Removes a flag on the node
+ * Clears a flag from a node
  *
  * @param node the node
  * @param flag the flag
@@ -253,23 +246,25 @@ gam_node_set_flag(GamNode * node, int flag)
 void
 gam_node_unset_flag(GamNode * node, int flag)
 {
-    if (node == NULL)
-        return;
+    g_assert(node);
+    /* Make sure we clear exactly one flag.  */
+    g_assert((flag & (flag - 1)) == 0);
     node->flags &= ~flag;
 }
 
 /**
- * Checks whether a node has a given flag
+ * Checks whether a flag is set on a node
  *
  * @param node the node
  * @param flag the flag
- * @returns TRUE if the node has the flag, FALSE otherwise
+ * @returns TRUE if the flag is set, FALSE otherwise
  */
 gboolean
 gam_node_has_flag(GamNode * node, int flag)
 {
-    if (node == NULL)
-        return(FALSE);
+    g_assert(node);
+    /* Check exactly one flag.  */
+    g_assert((flag & (flag - 1)) == 0);
     return node->flags & flag;
 }
 

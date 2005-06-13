@@ -1,3 +1,8 @@
+Mon Jun 13 16:57:35 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_node.c server/gam_poll.c: applied 2 cleanup patches
+	  from Neal H. Walfiel
+
 Mon Jun 13 11:11:43 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_dnotify.c server/gam_dnotify.h server/gam_inotify.c
