@@ -88,6 +88,15 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
+* Fri Jun 10 2005 Daniel Veillard <veillard@redhat.com> 0.1.1-1
+- gamin_data_conn_event fix
+- crash from bug gnome #303932
+- Inotify and mounted media #171201
+- mounted media did not show up on Desktop #159748
+- write may not be atomic
+- Monitoring a directory when it is a file
+- Portability to Hurd/Mach and various code cleanups
+- Added support for ~ as user home alias in .gaminrc
 * Thu May 12 2005 Daniel Veillard <veillard@redhat.com> 0.1.0-1
 - Close inherited file descriptors on exec of gam_server
 - Cancelling a monitor send back a FAMAcknowledge

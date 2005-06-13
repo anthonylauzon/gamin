@@ -1,3 +1,7 @@
+Mon Jun 13 10:40:13 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.spec.in: updated the Changelog
+
 Fri Jun 10 17:15:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS configure.in doc/gamin.html doc/news.html: prepared release
