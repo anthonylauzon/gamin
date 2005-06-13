@@ -44,15 +44,15 @@
 #include "gam_debugging.h"
 #endif
 
-#define MIN_POLL_TIME 1.0
-
 typedef struct {
     char *path;
     int wd;
     int refcount;
     GList *subs;
     int busy;
-	gboolean deactivated;
+    gboolean deactivated;
+    int events;
+    int deactivated_events;
 } inotify_data_t;
 
 static GHashTable *path_hash = NULL;
@@ -67,6 +67,36 @@ static gboolean have_consume_idler = FALSE;
 static int inotify_device_fd = -1;
 
 static guint should_poll_mask = IN_MODIFY|IN_ATTRIB|IN_CLOSE_WRITE|IN_MOVED_FROM|IN_MOVED_TO|IN_DELETE|IN_CREATE|IN_DELETE_SELF|IN_UNMOUNT;
+
+static void 
+gam_inotify_data_debug (gpointer key, gpointer value, gpointer user_data)
+{
+    inotify_data_t *data = (inotify_data_t *)value;
+
+    if (!data)
+        return;
+
+    int deactivated = data->deactivated;
+
+    GAM_DEBUG(DEBUG_INFO, "isub wd %d refs %d busy %d deactivated %d events (%d:%d): %s\n", data->wd, data->refcount, data->busy, deactivated, data->events, data->deactivated_events, data->path);
+}
+
+void
+gam_inotify_debug(void)
+{
+    if (inotify_device_fd == -1)
+    {
+        GAM_DEBUG(DEBUG_INFO, "Inotify device not opened\n");
+        return;
+    }
+
+    if (path_hash == NULL)
+        return;
+
+    GAM_DEBUG(DEBUG_INFO, "Inotify device fd = %d\n", inotify_device_fd);
+    GAM_DEBUG(DEBUG_INFO, "Dumping inotify subscriptions\n");
+    g_hash_table_foreach (path_hash, gam_inotify_data_debug, NULL);
+}
 
 static void print_mask(int mask)
 {
@@ -138,6 +168,8 @@ gam_inotify_data_new(const char *path, int wd)
     data->wd = wd;
     data->busy = 0;
     data->refcount = 1;
+    data->deactivated_events = 0;
+    data->events = 0;
 
     return data;
 }
@@ -145,7 +177,7 @@ gam_inotify_data_new(const char *path, int wd)
 static void
 gam_inotify_data_free(inotify_data_t * data)
 {
-    if (data->refcount != 0)
+    if (data->refcount != 0) 
 	GAM_DEBUG(DEBUG_INFO, "gam_inotify_data_free called with reffed data.\n");
     g_free(data->path);
     g_free(data);
@@ -155,11 +187,8 @@ static void
 gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 {
     inotify_data_t *data;
-    int path_fd;
-    int path_wd;
+    int path_fd, path_wd;
     struct inotify_watch_request iwr;
-
-
     switch (mode) {
         case GAMIN_ACTIVATE:
 	    GAM_DEBUG(DEBUG_INFO, "Adding %s to inotify\n", path);
@@ -178,9 +207,11 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 	              mode, path);
 	    return;
     }
+
     G_LOCK(inotify);
 
     if (mode == GAMIN_ACTIVATE) {
+
         if ((data = g_hash_table_lookup(path_hash, path)) != NULL) {
             data->refcount++;
 	    GAM_DEBUG(DEBUG_INFO, "  found incremented refcount: %d\n",
@@ -214,24 +245,13 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
         gam_debug_report(GAMinotifyCreate, path, 0);
 #endif
     } else if (mode == GAMIN_DESACTIVATE) {
-	char *dir = (char *) path;
-
 	data = g_hash_table_lookup(path_hash, path);
 
 	if (!data) {
-	    dir = g_path_get_dirname(path);
-	    data = g_hash_table_lookup(path_hash, dir);
+	    GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
 
-	    if (!data) {
-		GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
-
-		if (dir != NULL)
-		    g_free(dir);
-
-		G_UNLOCK(inotify);
-		return;
-	    }
-	    GAM_DEBUG(DEBUG_INFO, "  not found using parent\n");
+            G_UNLOCK(inotify);
+            return;
 	}
 
         data->refcount--;
@@ -240,46 +260,32 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 
         if (data->refcount == 0) {
 	    int wd = data->wd;
-
-	    GAM_DEBUG(DEBUG_INFO, "removed inotify watch for %s\n", data->path);
-
+	    GAM_DEBUG(DEBUG_INFO, "removed inotify watch for %s\n", 
+                    data->path);
 	    g_hash_table_remove(path_hash, data->path);
 	    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
 	    gam_inotify_data_free(data);
-
 	    if (ioctl (inotify_device_fd, INOTIFY_IGNORE, &wd) < 0) {
 		GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
 	    }
 #ifdef GAMIN_DEBUG_API
-	    gam_debug_report(GAMinotifyDelete, dir, 0);
+	    gam_debug_report(GAMinotifyDelete, data->path, 0);
 #endif
         } else {
 	    GAM_DEBUG(DEBUG_INFO, "  found decremented refcount: %d\n",
 	              data->refcount);
 #ifdef GAMIN_DEBUG_API
-            gam_debug_report(GAMinotifyChange, dir, data->refcount);
+            gam_debug_report(GAMinotifyChange, data->path, data->refcount);
 #endif
 	}
-	if ((dir != path) && (dir != NULL))
-	    g_free(dir);
     } else if ((mode == GAMIN_FLOWCONTROLSTART) ||
                (mode == GAMIN_FLOWCONTROLSTOP)) {
-        char *dir = (char *) path;
-
         data = g_hash_table_lookup(path_hash, path);
         if (!data) {
-            dir = g_path_get_dirname(path);
-            data = g_hash_table_lookup(path_hash, dir);
+            GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
 
-            if (!data) {
-                GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
-
-                if (dir != NULL)
-                    g_free(dir);
-                G_UNLOCK(inotify);
-                return;
-            }
-            GAM_DEBUG(DEBUG_INFO, "  not found using parent\n");
+            G_UNLOCK(inotify);
+            return;
         }
         if (data != NULL) {
 	    if (mode == GAMIN_FLOWCONTROLSTART) {
@@ -292,7 +298,7 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 		    GAM_DEBUG(DEBUG_INFO, "deactivated inotify for %s\n",
 			      data->path);
 #ifdef GAMIN_DEBUG_API
-		    gam_debug_report(GAMinotifyFlowOn, dir, 0);
+		    gam_debug_report(GAMinotifyFlowOn, data->path, 0);
 #endif
 		}
 		data->busy++;
@@ -310,13 +316,11 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 			              "failed to reactivate inotify for %s\n",
 				      data->path);
 
-                            if ((dir != path) && (dir != NULL))
-                                g_free(dir);
                             return;
 			}
 
 			iwr.fd = path_fd;
-			iwr.mask = 0xffffffff;
+			iwr.mask = should_poll_mask;
 			path_wd = ioctl (inotify_device_fd, INOTIFY_WATCH, &iwr);
 			close (path_fd);
 
@@ -338,8 +342,6 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 		}
 	    }
 	}
-        if ((dir != path) && (dir != NULL))
-            g_free(dir);
     } else {
 	GAM_DEBUG(DEBUG_INFO, "Unimplemented operation\n");
     }
@@ -353,17 +355,7 @@ gam_inotify_directory_handler(const char *path, pollHandlerMode mode)
     GAM_DEBUG(DEBUG_INFO, "gam_inotify_directory_handler %s : %d\n",
               path, mode);
 
-    if ((mode == GAMIN_DESACTIVATE) ||
-        (g_file_test(path, G_FILE_TEST_IS_DIR))) {
-	gam_inotify_directory_handler_internal(path, mode);
-    } else {
-	char *dir;
-
-	dir = g_path_get_dirname(path);
-	GAM_DEBUG(DEBUG_INFO, " not a dir using parent %s\n", dir);
-	gam_inotify_directory_handler_internal(dir, mode);
-	g_free(dir);
-    }
+    gam_inotify_directory_handler_internal(path, mode);
 }
 
 static void
@@ -374,13 +366,16 @@ gam_inotify_file_handler(const char *path, pollHandlerMode mode)
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
 	gam_inotify_directory_handler_internal(path, mode);
     } else {
-	char *dir;
-
-	dir = g_path_get_dirname(path);
-	GAM_DEBUG(DEBUG_INFO, " not a dir using parent %s\n", dir);
-	gam_inotify_directory_handler_internal(dir, mode);
-	g_free(dir);
+	GAM_DEBUG(DEBUG_INFO, " not a dir %s, FAILED!!!\n", path);
     }
+}
+
+static void 
+gam_inotify_q_overflow (gpointer key, gpointer value, gpointer user_data)
+{
+    inotify_data_t *data = (inotify_data_t *)value;
+
+    gam_poll_scan_directory (data->path);
 }
 
 static gboolean
@@ -392,10 +387,6 @@ gam_inotify_read_handler(gpointer user_data)
     gsize buffer_i, read_size;
 
     G_LOCK(inotify);
-
-#if 0
-    gam_inotify_dirty_list_cleaner ();
-#endif
 
     if (ioctl(inotify_device_fd, FIONREAD, &buffer_size) < 0) {
 	G_UNLOCK(inotify);
@@ -427,12 +418,15 @@ gam_inotify_read_handler(gpointer user_data)
 	    GAM_DEBUG(DEBUG_INFO, "processing event: inotify can't find wd %d\n", event->wd);
 	} else if (data->deactivated) {
 	    GAM_DEBUG(DEBUG_INFO, "inotify: ignoring event on temporarily deactivated watch %s\n", data->path);
+            data->deactivated_events++;
 	} else {
 	    if (event->mask == IN_IGNORED) {
 		GList *l;
 
 		GAM_DEBUG(DEBUG_INFO, "inotify: IN_IGNORE on wd=%d\n", event->wd);
 		GAM_DEBUG(DEBUG_INFO, "inotify: removing all subscriptions for %s\n", data->path);
+
+                data->events++;
 
 		l = data->subs;
 		data->subs = NULL;
@@ -445,11 +439,12 @@ gam_inotify_read_handler(gpointer user_data)
 		    GAM_DEBUG(DEBUG_INFO, "inotify requesting poll for %s\n", data->path);
 		    GAM_DEBUG(DEBUG_INFO, "poll was requested for event = ");
 		    print_mask (event->mask);
+                    data->events++;
 		    gam_poll_scan_directory (data->path);
 		}
 	    } else if (event->mask == IN_Q_OVERFLOW) {
-		    GAM_DEBUG(DEBUG_INFO, "inotify queue over flowed\n");
-		    GAM_DEBUG(DEBUG_INFO, "FIXME, should request poll for all paths here\n");
+		    GAM_DEBUG(DEBUG_INFO, "inotify queue over flowed, requesting poll on all watched paths\n");
+                    g_hash_table_foreach (path_hash, gam_inotify_q_overflow, NULL);
 	    }
 	}
 
@@ -516,16 +511,16 @@ gam_inotify_init(void)
 {
     GSource *source;
 
+    g_return_val_if_fail(gam_poll_init_full(FALSE), FALSE);
+
     inotify_device_fd = open("/dev/inotify", O_RDONLY);
 
     if (inotify_device_fd < 0) {
-		GAM_DEBUG(DEBUG_INFO, "Could not open /dev/inotify\n");
-		return FALSE;
+        GAM_DEBUG(DEBUG_INFO, "Could not open /dev/inotify\n");
+        return FALSE;
     }
 
-    g_return_val_if_fail(gam_poll_init_full(FALSE), FALSE);
-
-	inotify_read_ioc = g_io_channel_unix_new(inotify_device_fd);
+    inotify_read_ioc = g_io_channel_unix_new(inotify_device_fd);
 
     /* For binary data */
     g_io_channel_set_encoding(inotify_read_ioc, NULL, NULL);
@@ -563,6 +558,7 @@ gboolean
 gam_inotify_add_subscription(GamSubscription * sub)
 {
     GAM_DEBUG(DEBUG_INFO, "gam_inotify_add_subscription\n");
+
     if (!gam_poll_add_subscription(sub)) {
         return FALSE;
     }

@@ -149,7 +149,7 @@ gam_poll_remove_busy(GamNode * node)
 static void
 trigger_dir_handler(const char *path, pollHandlerMode mode, GamNode * node)
 {
-    if (type_khandler == GAMIN_K_DNOTIFY) {
+    if (type_khandler == GAMIN_K_DNOTIFY || type_khandler == GAMIN_K_INOTIFY) {
         if (gam_node_is_dir(node)) {
 	    if (dir_handler != NULL)
 		(*dir_handler) (path, mode);
@@ -172,7 +172,7 @@ trigger_dir_handler(const char *path, pollHandlerMode mode, GamNode * node)
 static void
 trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node)
 {
-    if (type_khandler == GAMIN_K_DNOTIFY) {
+    if (type_khandler == GAMIN_K_DNOTIFY || type_khandler == GAMIN_K_INOTIFY) {
         if (gam_node_is_dir(node)) {
 	    (*file_handler) (path, mode);
 	} else {
@@ -947,8 +947,14 @@ gam_poll_scan_all_callback(gpointer data)
 gboolean
 gam_poll_init_full(gboolean start_scan_thread)
 {
+    /* already started */
+    if ((poll_mode == 2) && (start_scan_thread))
+        return (TRUE);
+    if ((poll_mode == 1) && (!start_scan_thread))
+        return (TRUE);
+    /* not started as expected */
     if (poll_mode != 0)
-        return (FALSE);
+        return(FALSE);
 
     if (!start_scan_thread) {
         g_timeout_add(1000, gam_poll_scan_callback, NULL);

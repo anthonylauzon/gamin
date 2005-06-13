@@ -313,7 +313,7 @@ processCommand(char *line, int no)
         testState.nb_requests++;
     } else if (!strcmp(command, "monfile")) {
         if (args != 2) {
-            fprintf(stderr, "mkdir line %d: lacks name\n", no);
+            fprintf(stderr, "monfile line %d: lacks name\n", no);
             return (-1);
         }
         if (arg[0] != '/')

@@ -12,6 +12,7 @@ gboolean   gam_dnotify_init                  (void);
 gboolean   gam_dnotify_add_subscription      (GamSubscription *sub);
 gboolean   gam_dnotify_remove_subscription   (GamSubscription *sub);
 gboolean   gam_dnotify_remove_all_for        (GamListener *listener);
+void       gam_dnotify_debug                 (void);
 
 G_END_DECLS
 

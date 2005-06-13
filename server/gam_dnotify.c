@@ -58,6 +58,29 @@ static GIOChannel *pipe_write_ioc = NULL;
 
 static gboolean have_consume_idler = FALSE;
 
+void 
+gam_dnotify_data_debug (gpointer key, gpointer value, gpointer user_data)
+{
+    DNotifyData *data = (DNotifyData *)value;
+
+    if (!data)
+        return;
+
+    int deactivated = data->fd == -1 ? 1 : 0;
+
+    GAM_DEBUG(DEBUG_INFO, "dsub fd %d refs %d busy %d deactivated %d: %s\n", data->fd, data->refcount, data->busy, deactivated, data->path);
+}
+
+void
+gam_dnotify_debug (void)
+{
+    if (path_hash == NULL)
+        return;
+
+    GAM_DEBUG(DEBUG_INFO, "Dumping dnotify subscriptions\n");
+    g_hash_table_foreach (path_hash, gam_dnotify_data_debug, NULL);
+}
+
 static DNotifyData *
 gam_dnotify_data_new(const char *path, int fd)
 {

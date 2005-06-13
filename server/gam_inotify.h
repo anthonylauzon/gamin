@@ -11,6 +11,7 @@ gboolean   gam_inotify_init                  (void);
 gboolean   gam_inotify_add_subscription      (GamSubscription *sub);
 gboolean   gam_inotify_remove_subscription   (GamSubscription *sub);
 gboolean   gam_inotify_remove_all_for        (GamListener *listener);
+void       gam_inotify_debug                 (void); 
 
 G_END_DECLS
 

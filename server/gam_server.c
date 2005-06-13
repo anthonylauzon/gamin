@@ -82,6 +82,12 @@ gam_shutdown(void) {
 void
 gam_show_debug(void) {
     gam_connections_debug();
+#ifdef ENABLE_INOTIFY
+    gam_inotify_debug ();
+#endif
+#ifdef ENABLE_DNOTIFY
+    gam_dnotify_debug ();
+#endif
 }
 
 /**

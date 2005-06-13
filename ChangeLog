@@ -1,3 +1,10 @@
+Mon Jun 13 11:11:43 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_dnotify.c server/gam_dnotify.h server/gam_inotify.c
+	  server/gam_inotify.h server/gam_poll.c server/gam_server.c: applied
+	  patch from  John McCutchan for the inotify back-end #171201 and more
+	  debugging informations. Had to fix gam_poll_init_full() too.
+
 Mon Jun 13 10:40:13 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in: updated the Changelog
