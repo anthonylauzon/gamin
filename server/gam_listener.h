@@ -22,7 +22,7 @@ int           gam_listener_get_pid               (GamListener *listener);
 void          gam_listener_add_subscription     (GamListener     *listener,
 						  GamSubscription *sub);
 
-gboolean      gam_listener_remove_subscription  (GamListener     *listener,
+void          gam_listener_remove_subscription  (GamListener     *listener,
 						  GamSubscription *sub);
 
 GamSubscription *gam_listener_get_subscription  (GamListener *listener,

@@ -41,19 +41,22 @@ struct _GamListener {
  */
 
 /**
- * Create a new #GamListener.
+ * gam_listener_new:
  *
- * @param service structure used to communicate with the listener
- * @param pid the unique ID for this listener
- * @returns the new #GamListener
+ * @service: service structure used to communicate with #GamListener
+ * @pid: the unique ID for this listener
+ *
+ * Creates a #GamListener
+ *
+ * Returns a new #GamListener on success, NULL otherwise
  */
 GamListener *
 gam_listener_new(void *service, int pid)
 {
     GamListener *listener;
 
-    g_return_val_if_fail(service != NULL, NULL);
-    g_return_val_if_fail(pid != 0, NULL);
+    g_assert(service);
+    g_assert(pid != 0);
 
     listener = g_new0(GamListener, 1);
     listener->service = service;
@@ -66,73 +69,90 @@ gam_listener_new(void *service, int pid)
 }
 
 /**
- * Free a subscription pertaining to a listener.
+ * gam_listener_free_subscription:
  *
- * @param subscription the subscription
- * @param listener the listener
+ * @listener: the #GamListener
+ * @sub: the subscription to remove
+ *
+ * Frees a listener's subscription
  */
 static void
-gam_listener_free_subscription(GamSubscription * sub,
-                               GamListener * listener)
+gam_listener_free_subscription(GamListener *listener,
+			       GamSubscription *sub)
 {
-    g_return_if_fail(listener != NULL);
-    g_return_if_fail(sub != NULL);
+    g_assert(listener);
+    g_assert(sub);
+    g_assert(g_list_find(listener->subs, sub));
     gam_remove_subscription(sub);
 }
 
 /**
- * Frees a previously created #GamListener
+ * gam_listener_free:
  *
- * @param listener the #GamListener to free
+ * @listener: the #GamListener to free
+ *
+ * Frees a #GamListener returned by #gam_listener_new
  */
 void
-gam_listener_free(GamListener * listener)
+gam_listener_free(GamListener *listener)
 {
     GList *cur;
 
-    g_return_if_fail(listener != NULL);
+    g_assert(listener);
+
     GAM_DEBUG(DEBUG_INFO, "Freeing listener for %d\n", listener->pid);
+
     while ((cur = g_list_first(listener->subs)) != NULL) {
         GamSubscription * sub = cur->data;
-	listener->subs = g_list_remove_all(listener->subs, sub);
-	gam_listener_free_subscription(sub, listener);
+	gam_listener_free_subscription(listener, sub);
+	listener->subs = g_list_delete_link(listener->subs, cur);
     }
     g_free(listener);
 }
 
 /**
+ * gam_listener_get_service:
+ *
+ * @listener: the #GamListener
+ *
  * Gets the service associated with a #GamListener
  *
- * The result is owned by the #GamListener and should not be freed.
- *
- * @param listener the listener
+ * Returns the service associated with the #GamListener.  The result
+ * is owned by the #GamListener and must not be freed by the caller.
  */
 void *
-gam_listener_get_service(GamListener * listener)
+gam_listener_get_service(GamListener *listener)
 {
     return listener->service;
 }
 
 /**
+ * gam_listener_get_pid:
+ *
+ * @listener: the #GamListener
+ *
  * Gets the unique process ID associated with a #GamListener
  *
- * @param listener the listener
+ * Returns the pid associated with the #GamListener.
  */
 int
-gam_listener_get_pid(GamListener * listener)
+gam_listener_get_pid(GamListener *listener)
 {
     return listener->pid;
 }
 
 /**
- * Gets the subscription represented by the given path
+ * gam_listener_get_subscription:
  *
- * @param listener the listener
- * @param path a path to a file or directory
- * @returns a #GamSubscription, or NULL if it wasn't found
+ * @listener: the #GamListener
+ * @path: a path to a file or directory
+ *
+ * Gets the subscription to a path
+ *
+ * Returns the #GamSubscription to path, or NULL if there is none
  */
 GamSubscription *
-gam_listener_get_subscription(GamListener * listener, const char *path)
+gam_listener_get_subscription(GamListener *listener, const char *path)
 {
     GList *l;
 
@@ -147,11 +167,14 @@ gam_listener_get_subscription(GamListener * listener, const char *path)
 }
 
 /**
+ * gam_listener_get_subscription_by_reqno:
+ *
+ * @listener: the #GamListener
+ * @reqno: a subscription request number
+ *
  * Gets the subscription represented by the given reqno
  *
- * @param listener the listener
- * @param reqno a subscription request number
- * @returns a #GamSubscription, or NULL if it wasn't found
+ * Returns a #GamSubscription, or NULL if it wasn't found
  */
 GamSubscription *
 gam_listener_get_subscription_by_reqno(GamListener * listener, int reqno)
@@ -169,88 +192,102 @@ gam_listener_get_subscription_by_reqno(GamListener * listener, int reqno)
 }
 
 /**
- * Tells if a given #GamListener is subscribed to a file/directory
+ * gam_listener_is_subscribed:
  *
- * @param listener the listener
- * @param path the path to check for
+ * @listener: the #GamListener
+ * @path: the path to the file or directory
+ *
+ * Returns whether a #GamListener is subscribed to a file or directory
+ *
+ * Returns TRUE if listener has a subscription to the path, FALSE
+ * otherwise.
  */
 gboolean
-gam_listener_is_subscribed(GamListener * listener, const char *path)
+gam_listener_is_subscribed(GamListener *listener, const char *path)
 {
     return gam_listener_get_subscription(listener, path) != NULL;
 }
 
 /**
- * Adds a subscription to the listener.
+ * gam_listener_add_subscription:
  *
- * @param listener the listener
- * @param sub the #GamSubscription to add
+ * @listener: the #GamListener
+ * @sub: the #GamSubscription to add
+ *
+ * Adds a subscription to the #GamListener
  */
 void
-gam_listener_add_subscription(GamListener * listener,
-                              GamSubscription * sub)
+gam_listener_add_subscription(GamListener *listener,
+                              GamSubscription *sub)
 {
-    g_assert(sub != NULL);
-
-    if (g_list_find(listener->subs, sub) != NULL)
-        return;
+    g_assert(listener);
+    g_assert(sub);
+    g_assert(!g_list_find(listener->subs, sub));
 
     listener->subs = g_list_prepend(listener->subs, sub);
 }
 
 /**
- * Removes a subscription from the listener.
+ * gam_listener_remove_subscription:
  *
- * @param listener the listener
- * @param sub the #GamSubscription to remove
- * @returns TRUE if the removal was successful, otherwise FALSE
+ * @listener: the #GamListener
+ * @sub: the #GamSubscription to remove
+ *
+ * Removes a subscription from the #GamListener.
  */
-gboolean
-gam_listener_remove_subscription(GamListener * listener,
-                                 GamSubscription * sub)
+void
+gam_listener_remove_subscription(GamListener *listener,
+                                 GamSubscription *sub)
 {
-    listener->subs = g_list_remove_all(listener->subs, sub);
+    g_assert(listener);
+    g_assert(sub);
+    g_assert(g_list_find(listener->subs, sub));
 
-    return TRUE;
+    listener->subs = g_list_remove(listener->subs, sub);
+
+    /* There should only be one.  */
+    g_assert(!g_list_find(listener->subs, sub));
 }
 
 /**
- * Get all subscriptions a given listener holds
+ * gam_listener_get_subscriptions:
  *
- * @param listener the listener
- * @returns a list of #MdSuscription, or NULL if the listener has no
- * subscriptions
+ * @listener: the #GamListener
+ *
+ * Gets all the subscriptions a given listener has
+ *
+ * Returns a new list containing all of listener's subscriptions.  It
+ * is the responsibility of the caller to free the list.
  */
 GList *
-gam_listener_get_subscriptions(GamListener * listener)
+gam_listener_get_subscriptions(GamListener *listener)
 {
+    g_assert(listener);
     return g_list_copy(listener->subs);
 }
 
 /**
  * gam_listener_debug:
- * @listener: the listener
  *
- * Show debug informations about the listener data
+ * @listener: the #GamListener
+ *
+ * Print debugging information about a listener
  */
 void
-gam_listener_debug(GamListener * listener) {
+gam_listener_debug(GamListener *listener)
+{
 #ifdef GAM_DEBUG_ENABLED
     GList *cur;
-    GamSubscription *sub;
 
     if (listener == NULL) {
 	GAM_DEBUG(DEBUG_INFO, "  Listener is NULL\n");
         return;
     }
+
     GAM_DEBUG(DEBUG_INFO, "  Listener has %d subscriptions registered\n",
               g_list_length(listener->subs));
-    cur = listener->subs;
-    while (cur != NULL) {
-        sub = (GamSubscription *) cur->data;
-	gam_subscription_debug(sub);
-        
-	cur = g_list_next(cur);
+    for (cur = listener->subs; cur; cur = g_list_next(cur)) {
+	gam_subscription_debug((GamSubscription *) cur->data);
     }
 #endif
 }

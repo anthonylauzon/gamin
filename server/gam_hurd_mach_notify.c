@@ -745,7 +745,6 @@ gam_hurd_notify_remove_subscription(GamSubscription * sub)
 	      __FUNCTION__, gam_subscription_get_path (sub));
 
     gam_subscription_cancel (sub);
-    gam_listener_remove_subscription(gam_subscription_get_listener(sub), sub);
 
     mutex_lock (&lock);
     removed_subs = g_list_prepend (removed_subs, sub);

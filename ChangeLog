@@ -1,7 +1,13 @@
+Mon Jun 13 18:35:29 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_hurd_mach_notify.c server/gam_kqueue.c
+	  server/gam_listener.c server/gam_listener.h server/gam_poll.c: 
+	  another cleanup patch from Neal H. Walfield
+
 Mon Jun 13 16:57:35 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_node.c server/gam_poll.c: applied 2 cleanup patches
-	  from Neal H. Walfiel
+	  from Neal H. Walfield
 
 Mon Jun 13 11:11:43 CEST 2005 Daniel Veillard <veillard@redhat.com>
 

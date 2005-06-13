@@ -1235,7 +1235,6 @@ gam_kqueue_remove_subscription (GamSubscription *sub)
     }
 
   gam_subscription_cancel(sub);
-  gam_listener_remove_subscription(gam_subscription_get_listener(sub), sub);
 
   return TRUE;
 }

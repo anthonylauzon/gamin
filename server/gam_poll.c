@@ -1098,8 +1098,6 @@ gam_poll_remove_subscription(GamSubscription * sub)
     }
 
     gam_subscription_cancel(sub);
-    gam_listener_remove_subscription(gam_subscription_get_listener(sub),
-                                     sub);
 
     GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n", gam_tree_get_size(tree));
     gam_poll_remove_subscription_real(sub);
