@@ -1,3 +1,7 @@
+Tue Jun 14 14:30:54 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_connection.c: another cleanup patch from Neal H. Walfield
+
 Mon Jun 13 18:35:29 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_hurd_mach_notify.c server/gam_kqueue.c
