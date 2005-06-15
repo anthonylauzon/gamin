@@ -874,48 +874,8 @@ gam_poll_scan_all_callback(gpointer data)
 
     in_poll_callback++;
 
-    if (new_subs != NULL) {
-        /* we don't want to block the main loop */
-        subs = new_subs;
-        new_subs = NULL;
-
-        GAM_DEBUG(DEBUG_INFO,
-                  "%d new subscriptions.\n", g_list_length(subs));
-
-        for (l = subs; l; l = l->next) {
-            GamSubscription *sub = l->data;
-
-            const char *path = gam_subscription_get_path(sub);
-
-            node = gam_tree_get_at_path(tree, path);
-            if (!node) {
-                node = gam_tree_add_at_path(tree, path,
-                                            gam_subscription_is_dir(sub));
-            }
-
-            if (node_add_subscription(node, sub) < 0) {
-                gam_error(DEBUG_INFO,
-                          "Failed to add subscription for: %s\n", path);
-            }
-            if (!gam_node_is_dir(node)) {
-                char *parent;
-
-                parent = g_path_get_dirname(path);
-                node = gam_tree_get_at_path(tree, parent);
-                if (!node) {
-                    node = gam_tree_add_at_path(tree, parent,
-                                                gam_subscription_is_dir
-                                                (sub));
-                }
-                g_free(parent);
-            }
-
-            if (g_list_find(all_resources, node) == NULL) {
-                all_resources = g_list_prepend(all_resources, node);
-            }
-        }
-        g_list_free(subs);
-    }
+    if (new_subs != NULL)
+	gam_poll_consume_subscriptions ();
 
     current_time = time(NULL);
     for (idx = 0;; idx++) {
@@ -1321,10 +1281,24 @@ gam_poll_consume_subscriptions(void)
                 gam_server_emit_one_event(path, node_is_dir,
                                           GAMIN_EVENT_ENDEXISTS, sub, 0);
             }
-            if ((node) && ((node->pflags & MON_MISSING) ||
-                           (node->pflags & MON_NOKERNEL))) {
+            if ((node->pflags & MON_MISSING) ||
+		(node->pflags & MON_NOKERNEL)) {
                 gam_poll_add_missing(node);
             }
+
+	    if (!node_is_dir) {
+                char *parent;
+                parent = g_path_get_dirname(path);
+                node = gam_tree_get_at_path(tree, parent);
+                if (!node) {
+                    node = gam_tree_add_at_path(tree, parent,
+                                                gam_subscription_is_dir
+                                                (sub));
+                }
+                g_free(parent);
+	    }
+            if (g_list_find(all_resources, node) == NULL)
+                all_resources = g_list_prepend(all_resources, node);
         }
 
         g_list_free(subs);
