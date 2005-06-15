@@ -1,3 +1,8 @@
+Wed Jun 15 19:04:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* python/tests/Makefile.am: add make tests to make check target
+	  fixes #307786 Neal H. Walfield
+
 Wed Jun 15 14:40:56 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_poll.c: another cleanup of poll only support from 

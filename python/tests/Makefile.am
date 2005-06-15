@@ -35,6 +35,7 @@ PYTESTS=        		\
 EXTRA_DIST = $(PYTESTS)
 
 if WITH_PYTHON
+check-local: tests
 tests: $(PYTESTS)
 	@(LD_LIBRARY_PATH="..:../.libs:../libgamin:../libgamin/.libs"; \
 	  export LD_LIBRARY_PATH; \
