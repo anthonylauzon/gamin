@@ -264,8 +264,7 @@ gam_server_emit_event(const char *path, int is_dir_node, GaminEventType event,
                       GList * subs, int force)
 {
     GList *l;
-    int pathlen, len;
-    const char *subpath;
+    int pathlen;
 
     if ((path == NULL) || (subs == NULL))
         return;

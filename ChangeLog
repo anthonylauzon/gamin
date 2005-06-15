@@ -1,3 +1,9 @@
+Wed Jun 15 13:01:11 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_api.c server/gam_channel.c: reverted patch from
+	  #306706 as this broke authentication and debugging.
+	* server/gam_server.c: removed warnings.
+
 Tue Jun 14 14:30:54 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_connection.c: another cleanup patch from Neal H. Walfield
