@@ -27,6 +27,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <stdio.h>
+#include <string.h>
 #include <glib.h>
 #include "gam_error.h"
 #include "gam_poll.h"
@@ -44,15 +45,22 @@
 #include "gam_debugging.h"
 #endif
 
+#include <errno.h>
+
+#define INOTIFY_INIT 291
+#define INOTIFY_ADD 292
+#define INOTIFY_RM 293
+
 typedef struct {
     char *path;
     int wd;
     int refcount;
-    GList *subs;
     int busy;
     gboolean deactivated;
+    gboolean ignored;
     int events;
     int deactivated_events;
+    int ignored_events;
 } inotify_data_t;
 
 static GHashTable *path_hash = NULL;
@@ -77,8 +85,9 @@ gam_inotify_data_debug (gpointer key, gpointer value, gpointer user_data)
         return;
 
     int deactivated = data->deactivated;
+    int ignored = data->ignored;
 
-    GAM_DEBUG(DEBUG_INFO, "isub wd %d refs %d busy %d deactivated %d events (%d:%d): %s\n", data->wd, data->refcount, data->busy, deactivated, data->events, data->deactivated_events, data->path);
+    GAM_DEBUG(DEBUG_INFO, "isub wd %d refs %d busy %d deactivated %d ignored %d events (%d:%d:%d): %s\n", data->wd, data->refcount, data->busy, deactivated, ignored, data->events, data->deactivated_events, data->ignored_events, data->path);
 }
 
 void
@@ -163,13 +172,18 @@ gam_inotify_data_new(const char *path, int wd)
 {
     inotify_data_t *data;
 
+    g_assert (wd >= 0);
+
     data = g_new0(inotify_data_t, 1);
     data->path = g_strdup(path);
     data->wd = wd;
-    data->busy = 0;
     data->refcount = 1;
-    data->deactivated_events = 0;
+    data->busy = 0;
+    data->deactivated = FALSE;
+    data->ignored = FALSE;
     data->events = 0;
+    data->deactivated_events = 0;
+    data->ignored_events = 0;
 
     return data;
 }
@@ -187,8 +201,7 @@ static void
 gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 {
     inotify_data_t *data;
-    int path_fd, path_wd;
-    struct inotify_watch_request iwr;
+    int path_wd = -1;
     switch (mode) {
         case GAMIN_ACTIVATE:
 	    GAM_DEBUG(DEBUG_INFO, "Adding %s to inotify\n", path);
@@ -211,7 +224,6 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
     G_LOCK(inotify);
 
     if (mode == GAMIN_ACTIVATE) {
-
         if ((data = g_hash_table_lookup(path_hash, path)) != NULL) {
             data->refcount++;
 	    GAM_DEBUG(DEBUG_INFO, "  found incremented refcount: %d\n",
@@ -224,17 +236,15 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
             return;
         }
 
-        path_fd = open(path, O_RDONLY);
+	path_wd = syscall (INOTIFY_ADD, inotify_device_fd, path, should_poll_mask);
 
-        if (path_fd < 0) {
-            G_UNLOCK(inotify);
-            return;
-        }
-
-	iwr.fd = path_fd;
-	iwr.mask = should_poll_mask;
-	path_wd = ioctl (inotify_device_fd, INOTIFY_WATCH, &iwr);
-	close (path_fd);
+	if (path_wd < 0) {
+		int e = errno;
+		GAM_DEBUG(DEBUG_INFO, "INOTIFY_ADD failed for %s\n", path);
+		GAM_DEBUG(DEBUG_INFO, "Error = %s\n", strerror(e));
+		G_UNLOCK(inotify);
+		return;
+	}
 
         data = gam_inotify_data_new(path, path_wd);
         g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
@@ -260,17 +270,31 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 
         if (data->refcount == 0) {
 	    int wd = data->wd;
+	    g_assert (data->wd >= 0);
 	    GAM_DEBUG(DEBUG_INFO, "removed inotify watch for %s\n", 
                     data->path);
 	    g_hash_table_remove(path_hash, data->path);
 	    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
-	    gam_inotify_data_free(data);
-	    if (ioctl (inotify_device_fd, INOTIFY_IGNORE, &wd) < 0) {
-		GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
+
+	    if (data->ignored) {
+		    GAM_DEBUG(DEBUG_INFO, "INOTIFY_IGNORE IGNORED for %s (wd = %d)\n", data->path, data->wd);
+	    }
+	    if (data->deactivated == FALSE) {
+		    if (syscall (INOTIFY_RM, inotify_device_fd, wd) < 0) {
+			int e = errno;
+			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
+
+			GAM_DEBUG(DEBUG_INFO, "reason = %s\n", strerror (e));
+		    } else {
+			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE success for %s (wd = %d)\n", data->path, data->wd);
+		    }
+	    } else {
+		    GAM_DEBUG (DEBUG_INFO, "removed deactivated inotify watch for %s\n", data->path);
 	    }
 #ifdef GAMIN_DEBUG_API
 	    gam_debug_report(GAMinotifyDelete, data->path, 0);
 #endif
+	    gam_inotify_data_free(data);
         } else {
 	    GAM_DEBUG(DEBUG_INFO, "  found decremented refcount: %d\n",
 	              data->refcount);
@@ -283,16 +307,19 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
         data = g_hash_table_lookup(path_hash, path);
         if (!data) {
             GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
-
             G_UNLOCK(inotify);
             return;
         }
         if (data != NULL) {
 	    if (mode == GAMIN_FLOWCONTROLSTART) {
 		GAM_DEBUG(DEBUG_INFO, "inotify: GAMIN_FLOWCONTROLSTART for %s\n", data->path);
-		if (data->wd >= 0) {
-		    if (ioctl (inotify_device_fd, INOTIFY_IGNORE, &data->wd) < 0) {
+		if (!data->deactivated) {
+		    if (syscall (INOTIFY_RM, inotify_device_fd, data->wd) < 0) {
+			int e = errno;
 			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
+			GAM_DEBUG(DEBUG_INFO, "reason = %s\n", strerror (e));
+		    } else {
+			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE success for %s (wd = %d)\n", data->path, data->wd);
 		    }
 		    data->deactivated = TRUE;
 		    GAM_DEBUG(DEBUG_INFO, "deactivated inotify for %s\n",
@@ -300,6 +327,8 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 #ifdef GAMIN_DEBUG_API
 		    gam_debug_report(GAMinotifyFlowOn, data->path, 0);
 #endif
+		} else {
+			GAM_DEBUG(DEBUG_INFO, "inotify: GAMIN_FLOWCONTROLSTART for %s -- AGAIN!!!!\n", data->path);
 		}
 		data->busy++;
 	    } else {
@@ -309,24 +338,24 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 		    data->busy--;
 		    if (data->busy == 0) {
 			GAM_DEBUG(DEBUG_INFO, "inotify: data->busy == 0 for %s\n", data->path);
-			path_fd = open(data->path, O_RDONLY);
-			if (path_fd < 0) {
+
+			path_wd = syscall (INOTIFY_ADD, inotify_device_fd, data->path, should_poll_mask);
+
+			if (path_wd < 0) {
+			    int e = errno;
 			    G_UNLOCK(inotify);
 			    GAM_DEBUG(DEBUG_INFO,
 			              "failed to reactivate inotify for %s\n",
 				      data->path);
+			    GAM_DEBUG(DEBUG_INFO, "reason = %s\n", strerror (e));
 
                             return;
 			}
-
-			iwr.fd = path_fd;
-			iwr.mask = should_poll_mask;
-			path_wd = ioctl (inotify_device_fd, INOTIFY_WATCH, &iwr);
-			close (path_fd);
+			g_assert (data->wd >= 0);
+			g_assert (path_wd >= 0);
 
 			/* Remove the old wd from the hash table */
 			g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
-
 			data->wd = path_wd;
 			data->deactivated = FALSE;
 
@@ -419,21 +448,13 @@ gam_inotify_read_handler(gpointer user_data)
 	} else if (data->deactivated) {
 	    GAM_DEBUG(DEBUG_INFO, "inotify: ignoring event on temporarily deactivated watch %s\n", data->path);
             data->deactivated_events++;
-	} else {
+	} else if (data->ignored) {
+            GAM_DEBUG(DEBUG_INFO, "inotify: got event on ignored watch %s\n", data->path);
+        } else {
 	    if (event->mask == IN_IGNORED) {
-		GList *l;
-
 		GAM_DEBUG(DEBUG_INFO, "inotify: IN_IGNORE on wd=%d\n", event->wd);
-		GAM_DEBUG(DEBUG_INFO, "inotify: removing all subscriptions for %s\n", data->path);
-
-                data->events++;
-
-		l = data->subs;
-		data->subs = NULL;
-		for (l = l; l; l = l->next) {
-		    GamSubscription *sub = l->data;
-		    gam_inotify_remove_subscription (sub);
-		}
+                data->ignored = TRUE;
+                data->ignored_events++;
 	    } else if (event->mask != IN_Q_OVERFLOW) {
 		if (event->mask & should_poll_mask) {
 		    GAM_DEBUG(DEBUG_INFO, "inotify requesting poll for %s\n", data->path);
@@ -513,10 +534,11 @@ gam_inotify_init(void)
 
     g_return_val_if_fail(gam_poll_init_full(FALSE), FALSE);
 
-    inotify_device_fd = open("/dev/inotify", O_RDONLY);
+    inotify_device_fd = syscall(INOTIFY_INIT);
 
     if (inotify_device_fd < 0) {
         GAM_DEBUG(DEBUG_INFO, "Could not open /dev/inotify\n");
+	GAM_DEBUG(DEBUG_INFO, "fd = %d\n", inotify_device_fd);
         return FALSE;
     }
 

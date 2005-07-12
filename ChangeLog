@@ -1,3 +1,11 @@
+Tue Jul 12 23:19:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_inotify.c server/local_inotify.h: the inotify API
+	  changed from file based to syscall, patch from John McCutchan
+	* server/gam_node.c: one of the assert from Neal seems to be 
+	  crashing gam_server when using the gtk+ file selector, fix
+	  from John McCutchan too to avoid the assert() but not the cause
+
 Wed Jun 15 19:04:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* python/tests/Makefile.am: add make tests to make check target

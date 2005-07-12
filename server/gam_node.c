@@ -189,7 +189,9 @@ gboolean
 gam_node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
     g_assert(node);
-    g_assert(g_list_find(node->subs, sub));
+
+    if (!g_list_find (node->subs, sub))
+	    return TRUE;
 
     node->subs = g_list_remove_all(node->subs, sub);
 
