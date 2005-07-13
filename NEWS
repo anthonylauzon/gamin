@@ -5,6 +5,15 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.1.2: Jul 13 2005:
+   -  More patches from John McCutchan for the inotify back-end, inotify
+       is now in Linus's kernel tree, a patch for the new kernel API was
+       needed.
+   -  Lot of cleanup patches from Neal H. Walfield affecting most of the
+       server code.
+   -  Fixed an authentication problem.
+
+
 0.1.1: Jun 10 2005:
    -  Bug fixes: gamin_data_conn_event (Mark McLoughlin),
        crash from bug #303932 (Frederic Crozat),
