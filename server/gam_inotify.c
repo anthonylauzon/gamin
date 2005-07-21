@@ -51,6 +51,7 @@
 
 int gam_inotify_add_watch (const char *path, __u32 mask);
 int gam_inotify_rm_watch (const char *path, __u32 wd);
+void gam_inotify_read_events (gsize *buffer_size_out, struct inotify_event **buffer_out);
 
 typedef struct {
     char *path;
@@ -385,76 +386,61 @@ gam_inotify_q_overflow (gpointer key, gpointer value, gpointer user_data)
 static gboolean
 gam_inotify_read_handler(gpointer user_data)
 {
-    char *buffer;
-    int buffer_size;
-    int events;
-    gsize buffer_i, read_size;
+	struct inotify_event *buffer;
+	gsize buffer_size, buffer_i, events;
 
-    G_LOCK(inotify);
+        G_LOCK(inotify);
 
-    if (ioctl(inotify_device_fd, FIONREAD, &buffer_size) < 0) {
-	GAM_DEBUG(DEBUG_INFO, "inotify FIONREAD < 0. kaboom!\n");
-	G_UNLOCK(inotify);
-	return FALSE;
-    }
+        gam_inotify_read_events (&buffer_size, &buffer);
 
-    buffer = g_malloc(buffer_size);
+        buffer_i = 0;
+        events = 0;
 
-    if (g_io_channel_read_chars(inotify_read_ioc, (char *)buffer, buffer_size, &read_size, NULL) != G_IO_STATUS_NORMAL) {
-	GAM_DEBUG(DEBUG_INFO, "inotify failed to read events from inotify fd.\n");
-	g_free (buffer);
-	G_UNLOCK(inotify);
-	return FALSE;
-    }
+        while (buffer_i < buffer_size) {
+                struct inotify_event *event;
+                gsize event_size;
+                inotify_data_t *data;
 
-    buffer_i = 0;
-    events = 0;
-    while (buffer_i < read_size) {
-	struct inotify_event *event;
-	gsize event_size;
-	inotify_data_t *data;
+                event = (struct inotify_event *)&buffer[buffer_i];
+                event_size = sizeof(struct inotify_event) + event->len;
 
-	event = (struct inotify_event *)&buffer[buffer_i];
-	event_size = sizeof(struct inotify_event) + event->len;
+                data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
 
-	data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
-	if (!data) {
-	    GAM_DEBUG(DEBUG_INFO, "inotify: processing event and I can't find wd %d\n", event->wd);
-	} else if (data->deactivated) {
-	    GAM_DEBUG(DEBUG_INFO, "inotify: ignoring event on temporarily deactivated watch %s\n", data->path);
-            data->deactivated_events++;
-	} else if (data->ignored) {
-            GAM_DEBUG(DEBUG_INFO, "inotify: got event on ignored watch %s\n", data->path);
-	    data->ignored_events++;
-        } else {
-	    if (event->mask == IN_IGNORED) {
-		GAM_DEBUG(DEBUG_INFO, "inotify: IN_IGNORE on wd=%d\n", event->wd);
-                data->ignored = TRUE;
-                data->ignored_events++;
-	    } else if (event->mask != IN_Q_OVERFLOW) {
-		if (event->mask & should_poll_mask) {
-		    GAM_DEBUG(DEBUG_INFO, "inotify: requesting poll for %s event = ", data->path);
-		    print_mask (event->mask);
-                    data->events++;
-		    if (event->mask & (IN_DELETE|IN_MOVED_FROM))
-			    g_usleep (200);
-		    gam_poll_scan_directory (data->path);
-		}
-	    } else if (event->mask == IN_Q_OVERFLOW) {
-		    GAM_DEBUG(DEBUG_INFO, "inotify: queue over flowed, requesting poll on all watched paths\n");
-                    g_hash_table_foreach (path_hash, gam_inotify_q_overflow, NULL);
-	    }
-	}
+                if (!data) {
+                        GAM_DEBUG (DEBUG_INFO, "inotify: got an event for unknown wd %d\n", event->wd);
+                } else if (data->deactivated) {
+                        GAM_DEBUG (DEBUG_INFO, "inotify: ignoring event on temporarily deactivated watch %s\n", data->path);
+                        data->deactivated_events++;
+                } else if (data->ignored) {
+                        GAM_DEBUG (DEBUG_INFO, "inotify: got event on ignored watch %s\n", data->path);
+                        data->ignored_events++;
+                } else {
+                        if (event->mask & IN_IGNORED) {
+                                GAM_DEBUG (DEBUG_INFO, "inotify: IN_IGNORE on wd=%d\n", event->wd);
+                                data->ignored = TRUE;
+                                data->ignored_events++;
+                        } else if (!(event->mask & IN_Q_OVERFLOW)) {
+                                if (event->mask & should_poll_mask) {
+                                        GAM_DEBUG (DEBUG_INFO, "inotify: requesting poll for %s event = ", data->path);
+                                        print_mask (event->mask);
+                                        data->events++;
+                                        gam_poll_scan_directory (data->path);
+                                }
+                        } else if (event->mask & IN_Q_OVERFLOW) {
+                                GAM_DEBUG (DEBUG_INFO, "inotify: queue over flowed, requesting poll on all watched paths\n");
+                                g_hash_table_foreach (path_hash, gam_inotify_q_overflow, NULL);
+                        }
+                }
 
-        buffer_i += event_size;
-	events++;
-    }
-    GAM_DEBUG(DEBUG_INFO, "inotify recieved %d events\n", events);
+                buffer_i += event_size;
+                events++;
+        }
 
-    g_free(buffer);
-    G_UNLOCK(inotify);
+	GAM_DEBUG(DEBUG_INFO, "inotify recieved %d events\n", events);
 
-    return TRUE;
+        G_UNLOCK(inotify);
+
+        return TRUE;
 }
 
 
@@ -651,6 +637,76 @@ int gam_inotify_rm_watch (const char *path, __u32 wd)
 	}
 
 	return 0;
+}
+
+/* Code below based on beagle inotify glue code. I assume it was written by Robert Love */
+#define MAX_PENDING_COUNT 5
+#define PENDING_THRESHOLD(qsize) ((qsize) >> 1)
+#define PENDING_MARGINAL_COST(p) ((unsigned int)(1 << (p)))
+#define MAX_QUEUED_EVENTS 8192
+#define AVERAGE_EVENT_SIZE sizeof (struct inotify_event) + 16
+#define PENDING_PAUSE_MICROSECONDS 2000
+
+void gam_inotify_read_events (gsize *buffer_size_out, struct inotify_event **buffer_out)
+{
+        static int prev_pending = 0, pending_count = 0;
+        static struct inotify_event *buffer = NULL;
+        static gsize buffer_size;
+
+
+        /* Initialize the buffer on our first read() */
+        if (buffer == NULL)
+        {
+                buffer_size = AVERAGE_EVENT_SIZE;
+                buffer_size *= MAX_QUEUED_EVENTS;
+                buffer = g_malloc (buffer_size);
+
+                if (!buffer) {
+                        *buffer_size_out = 0;
+                        *buffer_out = NULL;
+                        GAM_DEBUG (DEBUG_INFO, "inotify: could not allocate read buffer\n");
+                        return;
+                }
+        }
+
+        *buffer_size_out = 0;
+        *buffer_out = NULL;
+
+        while (pending_count < MAX_PENDING_COUNT) {
+                unsigned int pending;
+
+                if (ioctl (inotify_device_fd, FIONREAD, &pending) == -1)
+                        break;
+
+                pending /= AVERAGE_EVENT_SIZE;
+
+                /* Don't wait if the number of pending events is too close
+                 * to the maximum queue size.
+                 */
+
+                if (pending > PENDING_THRESHOLD (MAX_QUEUED_EVENTS))
+                        break;
+
+                /* With each successive iteration, the minimum rate for
+                 * further sleep doubles. */
+
+                if (pending-prev_pending < PENDING_MARGINAL_COST(pending_count))
+                        break;
+
+		prev_pending = pending;
+                pending_count++;
+
+                /* We sleep for a bit and try again */
+                g_usleep (PENDING_PAUSE_MICROSECONDS);
+        }
+
+        if (g_io_channel_read_chars (inotify_read_ioc, (char *)buffer, buffer_size, buffer_size_out, NULL) != G_IO_STATUS_NORMAL) {
+                GAM_DEBUG (DEBUG_INFO, "inotify: failed to read from buffer\n");
+        }
+        *buffer_out = buffer;
+
+        prev_pending = 0;
+        pending_count = 0;
 }
 
 /** @} */

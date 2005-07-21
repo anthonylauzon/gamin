@@ -1,3 +1,10 @@
+2005-07-21  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* server/gam_inotify.c: (gam_inotify_read_handler),
+	(gam_inotify_rm_watch), (gam_inotify_read_events): New function that
+	tries hard to read events from inotify in large chunks. Big
+	CPU usage decrease with dd if=/dev/zero of=test!
+
 2005-07-21  John McCutchan  <jmc@cvs.gnome.org>
 
 	* python/tests/basic4.py:
