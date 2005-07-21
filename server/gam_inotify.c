@@ -279,13 +279,13 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 		    gam_debug_report(GAMDnotifyDelete, data->path, 0);
 #endif
 		    gam_inotify_data_free(data);
-		    G_UNLOCK (inotify);
-		    return;
 		} else {
 #ifdef GAMIN_DEBUG_API
 		    gam_debug_report(GAMDnotifyChange, data->path, data->refcount);
 #endif
 		}
+		G_UNLOCK (inotify);
+		return;
 	} 
 	else if ((mode == GAMIN_FLOWCONTROLSTART) || (mode == GAMIN_FLOWCONTROLSTOP))
 	{
@@ -352,6 +352,9 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 			}
 		}
 	}
+
+	/* This should never be reached */
+	g_assert (NULL);
 }
 
 static void
