@@ -237,7 +237,7 @@ gam_connection_set_pid(GamConnDataPtr conn, int pid)
 	    name[127] = '\0';
 	    conn->pidname = g_strdup (name);
 	    g_free (name);
-	    f_close (fp);
+	    fclose (fp);
     }
 #else
     conn->pidname = g_strdup_printf ("%d", pid);
