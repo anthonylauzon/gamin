@@ -10,7 +10,7 @@ nb_callbacks=0
 
 def callback(path, event):
     global nb_callbacks
-    print "Got callback: %s, %s" % (path, event)
+#    print "Got callback: %s, %s" % (path, event)
     nb_callbacks = nb_callbacks + 1
 
 shutil.rmtree ("temp_dir", True)

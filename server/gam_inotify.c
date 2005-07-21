@@ -19,15 +19,16 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-
 #include "server_config.h"
 #define _GNU_SOURCE
-#include <fcntl.h>
-#include <signal.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <asm/unistd.h>
 #include <glib.h>
 #include "gam_error.h"
 #include "gam_poll.h"
@@ -36,6 +37,7 @@
 #else
 #include "local_inotify.h"
 #endif
+#include "local_inotify_syscalls.h"
 #include "gam_inotify.h"
 #include "gam_tree.h"
 #include "gam_event.h"
@@ -47,9 +49,8 @@
 
 #include <errno.h>
 
-#define INOTIFY_INIT 291
-#define INOTIFY_ADD 292
-#define INOTIFY_RM 293
+int gam_inotify_add_watch (const char *path, __u32 mask);
+int gam_inotify_rm_watch (const char *path, __u32 wd);
 
 typedef struct {
     char *path;
@@ -200,182 +201,156 @@ gam_inotify_data_free(inotify_data_t * data)
 static void
 gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 {
-    inotify_data_t *data;
-    int path_wd = -1;
-    switch (mode) {
-        case GAMIN_ACTIVATE:
-	    GAM_DEBUG(DEBUG_INFO, "Adding %s to inotify\n", path);
-	    break;
-        case GAMIN_DESACTIVATE:
-	    GAM_DEBUG(DEBUG_INFO, "Removing %s from inotify\n", path);
-	    break;
+	inotify_data_t *data;
+	int path_wd = -1;
+
+	switch (mode) {
+	case GAMIN_ACTIVATE:
+	case GAMIN_DESACTIVATE:
 	case GAMIN_FLOWCONTROLSTART:
-	    GAM_DEBUG(DEBUG_INFO, "inotify: Start flow control for %s\n", path);
-	    break;
 	case GAMIN_FLOWCONTROLSTOP:
-	    GAM_DEBUG(DEBUG_INFO, "inotify: Stop flow control for %s\n", path);
-	    break;
+		break;
 	default:
-	    gam_error(DEBUG_INFO, "Unknown inotify operation %d for %s\n",
-	              mode, path);
-	    return;
-    }
-
-    G_LOCK(inotify);
-
-    if (mode == GAMIN_ACTIVATE) {
-        if ((data = g_hash_table_lookup(path_hash, path)) != NULL) {
-            data->refcount++;
-	    GAM_DEBUG(DEBUG_INFO, "  found incremented refcount: %d\n",
-	              data->refcount);
-            G_UNLOCK(inotify);
-#ifdef GAMIN_DEBUG_API
-            gam_debug_report(GAMinotifyChange, path, data->refcount);
-#endif
-            GAM_DEBUG(DEBUG_INFO, "inotify updated refcount\n");
-            return;
-        }
-
-	path_wd = syscall (INOTIFY_ADD, inotify_device_fd, path, should_poll_mask);
-
-	if (path_wd < 0) {
-		int e = errno;
-		GAM_DEBUG(DEBUG_INFO, "INOTIFY_ADD failed for %s\n", path);
-		GAM_DEBUG(DEBUG_INFO, "Error = %s\n", strerror(e));
-		G_UNLOCK(inotify);
+		gam_error(DEBUG_INFO, "Unknown operation %d for %s\n", mode, path);
 		return;
 	}
 
-        data = gam_inotify_data_new(path, path_wd);
-        g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
-        g_hash_table_insert(path_hash, data->path, data);
+	G_LOCK(inotify);
 
-        GAM_DEBUG(DEBUG_INFO, "activated inotify for %s\n", path);
+	if (mode == GAMIN_ACTIVATE) {
+		data = g_hash_table_lookup (path_hash, path);
+
+		if (data != NULL) {
+			data->refcount++;
+			GAM_DEBUG (DEBUG_INFO, "inotify: incremented refcount for %s (ref = %d)\n", path, data->refcount);
 #ifdef GAMIN_DEBUG_API
-        gam_debug_report(GAMinotifyCreate, path, 0);
+			gam_debug_report(GAMDnotifyChange, path, data->refcount);
 #endif
-    } else if (mode == GAMIN_DESACTIVATE) {
-	data = g_hash_table_lookup(path_hash, path);
+			G_UNLOCK(inotify);
+			return;
+		}
 
-	if (!data) {
-	    GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
+		/* We aren't already watching this path */
+		path_wd = gam_inotify_add_watch (path, should_poll_mask);
+		if (path_wd < 0) {
+			G_UNLOCK(inotify);
+			return;
+		}
 
-            G_UNLOCK(inotify);
-            return;
-	}
+		data = gam_inotify_data_new (path, path_wd);
+		g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
+		g_hash_table_insert(path_hash, data->path, data);
+#ifdef GAMIN_DEBUG_API
+		gam_debug_report(GAMDnotifyCreate, path, 0);
+#endif
+		G_UNLOCK(inotify);
+		return;
+	} else if (mode == GAMIN_DESACTIVATE) {
+		data = g_hash_table_lookup(path_hash, path);
 
-        data->refcount--;
-        GAM_DEBUG(DEBUG_INFO, "inotify decremeneted refcount for %s\n",
-                  path);
+		if (!data) {
+			GAM_DEBUG (DEBUG_INFO, "inotify: requested DEACTIVATE on unknown path: %s\n", data->path);
+			G_UNLOCK (inotify);
+			return;
+		}
 
-        if (data->refcount == 0) {
-	    int wd = data->wd;
-	    g_assert (data->wd >= 0);
-	    GAM_DEBUG(DEBUG_INFO, "removed inotify watch for %s\n", 
-                    data->path);
-	    g_hash_table_remove(path_hash, data->path);
-	    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
+		data->refcount--;
+		GAM_DEBUG (DEBUG_INFO, "inotify: decremented refcount for %s (ref = %d)\n", path, data->refcount);
 
-	    if (data->ignored) {
-		    GAM_DEBUG(DEBUG_INFO, "INOTIFY_IGNORE IGNORED for %s (wd = %d)\n", data->path, data->wd);
-	    }
-	    if (data->deactivated == FALSE) {
-		    if (syscall (INOTIFY_RM, inotify_device_fd, wd) < 0) {
-			int e = errno;
-			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
+		if (data->refcount == 0) {
+		    int wd = data->wd;
+		    g_assert (wd >= 0);
 
-			GAM_DEBUG(DEBUG_INFO, "reason = %s\n", strerror (e));
-		    } else {
-			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE success for %s (wd = %d)\n", data->path, data->wd);
+		    GAM_DEBUG (DEBUG_INFO, "inotify: refcount == 0 for %s (wd = %d)\n", path, wd);
+		    g_hash_table_remove(path_hash, data->path);
+		    g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
+
+		    if (data->ignored) {
+			    GAM_DEBUG (DEBUG_INFO, "inotify: removing IGNORED watch for %s (wd = %d)\n", data->path, data->wd);
 		    }
-	    } else {
-		    GAM_DEBUG (DEBUG_INFO, "removed deactivated inotify watch for %s\n", data->path);
-	    }
-#ifdef GAMIN_DEBUG_API
-	    gam_debug_report(GAMinotifyDelete, data->path, 0);
-#endif
-	    gam_inotify_data_free(data);
-        } else {
-	    GAM_DEBUG(DEBUG_INFO, "  found decremented refcount: %d\n",
-	              data->refcount);
-#ifdef GAMIN_DEBUG_API
-            gam_debug_report(GAMinotifyChange, data->path, data->refcount);
-#endif
-	}
-    } else if ((mode == GAMIN_FLOWCONTROLSTART) ||
-               (mode == GAMIN_FLOWCONTROLSTOP)) {
-        data = g_hash_table_lookup(path_hash, path);
-        if (!data) {
-            GAM_DEBUG(DEBUG_INFO, "  not found !!!\n");
-            G_UNLOCK(inotify);
-            return;
-        }
-        if (data != NULL) {
-	    if (mode == GAMIN_FLOWCONTROLSTART) {
-		GAM_DEBUG(DEBUG_INFO, "inotify: GAMIN_FLOWCONTROLSTART for %s\n", data->path);
-		if (!data->deactivated) {
-		    if (syscall (INOTIFY_RM, inotify_device_fd, data->wd) < 0) {
-			int e = errno;
-			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE failed for %s (wd = %d)\n", data->path, data->wd);
-			GAM_DEBUG(DEBUG_INFO, "reason = %s\n", strerror (e));
+
+		    if (data->deactivated == FALSE) {
+			    gam_inotify_rm_watch (data->path, data->wd);
 		    } else {
-			GAM_DEBUG (DEBUG_INFO, "INOTIFY_IGNORE success for %s (wd = %d)\n", data->path, data->wd);
+			    GAM_DEBUG (DEBUG_INFO, "inotify: removing deactivated watch for %s\n", data->path);
 		    }
-		    data->deactivated = TRUE;
-		    GAM_DEBUG(DEBUG_INFO, "deactivated inotify for %s\n",
-			      data->path);
 #ifdef GAMIN_DEBUG_API
-		    gam_debug_report(GAMinotifyFlowOn, data->path, 0);
+		    gam_debug_report(GAMDnotifyDelete, data->path, 0);
 #endif
+		    gam_inotify_data_free(data);
+		    G_UNLOCK (inotify);
+		    return;
 		} else {
-			GAM_DEBUG(DEBUG_INFO, "inotify: GAMIN_FLOWCONTROLSTART for %s -- AGAIN!!!!\n", data->path);
-		}
-		data->busy++;
-	    } else {
-		GAM_DEBUG(DEBUG_INFO, "inotify: GAMIN_FLOWCONTROLSTOP for %s\n", data->path);
-	        if (data->busy > 0) {
-		    GAM_DEBUG(DEBUG_INFO, "inotify: data->busy > 0 for %s\n", data->path);
-		    data->busy--;
-		    if (data->busy == 0) {
-			GAM_DEBUG(DEBUG_INFO, "inotify: data->busy == 0 for %s\n", data->path);
-
-			path_wd = syscall (INOTIFY_ADD, inotify_device_fd, data->path, should_poll_mask);
-
-			if (path_wd < 0) {
-			    int e = errno;
-			    G_UNLOCK(inotify);
-			    GAM_DEBUG(DEBUG_INFO,
-			              "failed to reactivate inotify for %s\n",
-				      data->path);
-			    GAM_DEBUG(DEBUG_INFO, "reason = %s\n", strerror (e));
-
-                            return;
-			}
-			g_assert (data->wd >= 0);
-			g_assert (path_wd >= 0);
-
-			/* Remove the old wd from the hash table */
-			g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
-			data->wd = path_wd;
-			data->deactivated = FALSE;
-
-			/* Insert the new wd into the hash table */
-			g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd),
-			                    data);
-			GAM_DEBUG(DEBUG_INFO, "reactivated inotify for %s\n",
-			          data->path);
 #ifdef GAMIN_DEBUG_API
-			gam_debug_report(GAMinotifyFlowOff, path, 0);
+		    gam_debug_report(GAMDnotifyChange, data->path, data->refcount);
 #endif
-		    }
 		}
-	    }
-	}
-    } else {
-	GAM_DEBUG(DEBUG_INFO, "Unimplemented operation\n");
-    }
+	} 
+	else if ((mode == GAMIN_FLOWCONTROLSTART) || (mode == GAMIN_FLOWCONTROLSTOP))
+	{
+		data = g_hash_table_lookup(path_hash, path);
 
-    G_UNLOCK(inotify);
+		if (!data) {
+			GAM_DEBUG (DEBUG_INFO, "inotify: requested FLOWOP on unknown path: %s\n", data->path);
+			G_UNLOCK (inotify);
+			return;
+		}
+
+		if (mode == GAMIN_FLOWCONTROLSTART) {
+			if (!data->deactivated) {
+				GAM_DEBUG (DEBUG_INFO, "inotify: enabling flow control for %s\n", data->path);
+				if (gam_inotify_rm_watch (data->path, data->wd) < 0)
+				{
+					G_UNLOCK(inotify);
+					return;
+				}
+				data->deactivated = TRUE;
+#ifdef GAMIN_DEBUG_API
+				gam_debug_report(GAMDnotifyFlowOn, data->path, 0);
+#endif
+			}
+			data->busy++;
+			GAM_DEBUG (DEBUG_INFO, "inotify: incremented busy count for %s (busy = %d)\n", data->path, data->busy);
+			G_UNLOCK(inotify);
+			return;
+		} else {
+			if (data->busy > 0) {
+				data->busy--;
+				GAM_DEBUG (DEBUG_INFO, "inotify: incremented busy count for %s (busy = %d)\n", data->path, data->busy);
+				if (data->busy == 0) {
+					GAM_DEBUG(DEBUG_INFO, "inotify: disabling flow control for %s\n", data->path);
+
+					path_wd = gam_inotify_add_watch (data->path, should_poll_mask);
+
+					if (path_wd < 0) {
+						G_UNLOCK(inotify);
+						return;
+					}
+
+					g_assert (data->wd >= 0);
+					g_assert (path_wd >= 0);
+
+					/* Remove the old wd from the hash table */
+					g_hash_table_remove(wd_hash, GINT_TO_POINTER(data->wd));
+
+
+					/* Insert the new wd into the hash table */
+					data->wd = path_wd;
+					data->deactivated = FALSE;
+					g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
+#ifdef GAMIN_DEBUG_API
+					gam_debug_report(GAMDnotifyFlowOff, path, 0);
+#endif
+					G_UNLOCK(inotify);
+					return;
+				}
+			} else {
+				GAM_DEBUG (DEBUG_INFO, "inotify: requested FLOWSTOP for watch with busy count <= 0 for %s (busy = %d)\n", data->path, data->busy);
+				G_UNLOCK (inotify);
+				return;
+			}
+		}
+	}
 }
 
 static void
@@ -418,17 +393,17 @@ gam_inotify_read_handler(gpointer user_data)
     G_LOCK(inotify);
 
     if (ioctl(inotify_device_fd, FIONREAD, &buffer_size) < 0) {
-	G_UNLOCK(inotify);
 	GAM_DEBUG(DEBUG_INFO, "inotify FIONREAD < 0. kaboom!\n");
+	G_UNLOCK(inotify);
 	return FALSE;
     }
 
     buffer = g_malloc(buffer_size);
 
     if (g_io_channel_read_chars(inotify_read_ioc, (char *)buffer, buffer_size, &read_size, NULL) != G_IO_STATUS_NORMAL) {
-	G_UNLOCK(inotify);
 	GAM_DEBUG(DEBUG_INFO, "inotify failed to read events from inotify fd.\n");
 	g_free (buffer);
+	G_UNLOCK(inotify);
 	return FALSE;
     }
 
@@ -444,12 +419,13 @@ gam_inotify_read_handler(gpointer user_data)
 
 	data = g_hash_table_lookup (wd_hash, GINT_TO_POINTER(event->wd));
 	if (!data) {
-	    GAM_DEBUG(DEBUG_INFO, "processing event: inotify can't find wd %d\n", event->wd);
+	    GAM_DEBUG(DEBUG_INFO, "inotify: processing event and I can't find wd %d\n", event->wd);
 	} else if (data->deactivated) {
 	    GAM_DEBUG(DEBUG_INFO, "inotify: ignoring event on temporarily deactivated watch %s\n", data->path);
             data->deactivated_events++;
 	} else if (data->ignored) {
             GAM_DEBUG(DEBUG_INFO, "inotify: got event on ignored watch %s\n", data->path);
+	    data->ignored_events++;
         } else {
 	    if (event->mask == IN_IGNORED) {
 		GAM_DEBUG(DEBUG_INFO, "inotify: IN_IGNORE on wd=%d\n", event->wd);
@@ -457,14 +433,15 @@ gam_inotify_read_handler(gpointer user_data)
                 data->ignored_events++;
 	    } else if (event->mask != IN_Q_OVERFLOW) {
 		if (event->mask & should_poll_mask) {
-		    GAM_DEBUG(DEBUG_INFO, "inotify requesting poll for %s\n", data->path);
-		    GAM_DEBUG(DEBUG_INFO, "poll was requested for event = ");
+		    GAM_DEBUG(DEBUG_INFO, "inotify: requesting poll for %s event = ", data->path);
 		    print_mask (event->mask);
                     data->events++;
+		    if (event->mask & (IN_DELETE|IN_MOVED_FROM))
+			    g_usleep (200);
 		    gam_poll_scan_directory (data->path);
 		}
 	    } else if (event->mask == IN_Q_OVERFLOW) {
-		    GAM_DEBUG(DEBUG_INFO, "inotify queue over flowed, requesting poll on all watched paths\n");
+		    GAM_DEBUG(DEBUG_INFO, "inotify: queue over flowed, requesting poll on all watched paths\n");
                     g_hash_table_foreach (path_hash, gam_inotify_q_overflow, NULL);
 	    }
 	}
@@ -534,7 +511,7 @@ gam_inotify_init(void)
 
     g_return_val_if_fail(gam_poll_init_full(FALSE), FALSE);
 
-    inotify_device_fd = syscall(INOTIFY_INIT);
+    inotify_device_fd = inotify_init ();
 
     if (inotify_device_fd < 0) {
         GAM_DEBUG(DEBUG_INFO, "Could not open /dev/inotify\n");
@@ -628,6 +605,52 @@ gam_inotify_remove_all_for(GamListener * listener)
     gam_inotify_consume_subscriptions();
 
     return TRUE;
+}
+
+
+int gam_inotify_add_watch (const char *path, __u32 mask)
+{
+	int wd = -1;
+
+	g_assert (path&&*path);
+	g_assert (inotify_device_fd >= 0);
+
+	wd = inotify_add_watch (inotify_device_fd, path, mask);
+
+	if (wd < 0)
+	{
+		int e = errno;
+		GAM_DEBUG (DEBUG_INFO, "inotify: failed to add watch for %s\n", path);
+		GAM_DEBUG (DEBUG_INFO, "inotify: reason = %s\n", strerror (e));
+		return wd;
+	} 
+	else 
+	{
+		GAM_DEBUG (DEBUG_INFO, "inotify: success adding watch for %s (wd = %d)\n", path, wd);
+	}
+
+	g_assert (wd >= 0);
+
+	return wd;
+}
+
+int gam_inotify_rm_watch (const char *path, __u32 wd)
+{
+	g_assert (wd >= 0);
+
+	if (inotify_rm_watch (inotify_device_fd, wd) < 0) 
+	{
+		int e = errno;
+		GAM_DEBUG (DEBUG_INFO, "inotify: failed to rm watch for %s (wd = %d)\n", path, wd);
+		GAM_DEBUG (DEBUG_INFO, "inotify: reason = %s\n", strerror (e));
+		return -1;
+	}
+	else
+	{
+		GAM_DEBUG (DEBUG_INFO, "inotify: success removing watch for %s (wd = %d)\n", path, wd);
+	}
+
+	return 0;
 }
 
 /** @} */

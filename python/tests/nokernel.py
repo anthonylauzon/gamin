@@ -35,7 +35,7 @@ def callback(path, event, which):
 
 if not os.access('/media/test', os.R_OK | os.X_OK | os.W_OK):
     print "missing access to /media/test, test skipped"
-    print "Ok"
+    print "OK"
     sys.exit(0)
 
 shutil.rmtree ("/media/test/a", True)

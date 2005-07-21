@@ -1,3 +1,19 @@
+2005-07-21  John McCutchan  <jmc@cvs.gnome.org>
+
+	* python/tests/basic4.py:
+	* python/tests/basic6.py:
+	* python/tests/multiple2.py:
+	* python/tests/noexists.py:
+	* python/tests/nokernel.py:
+	* python/tests/readonly.py: Cleanup debug output
+	* server/gam_inotify.c: (gam_inotify_directory_handler_internal),
+	(gam_inotify_read_handler), (gam_inotify_init),
+	(gam_inotify_remove_all_for), (gam_inotify_add_watch),
+	(gam_inotify_rm_watch):  More inotify backend cleanups
+	* server/local_inotify_syscalls.h: Local header that defines the
+	inotify system calls for x86 and x86-64 architectures. Other
+	architectures get dummy functions.
+
 Wed Jul 13 18:51:44 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_connection.c: applied patch from Jean-Yves Lefort

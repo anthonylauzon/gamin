@@ -11,7 +11,7 @@ mons = []
 
 def callback(path, event, number):
     global nb_callbacks
-    print "Got callback: %d, %s, %s" % (number, path, event)
+#    print "Got callback: %d, %s, %s" % (number, path, event)
     if nb_callbacks.has_key(number):
         nb_callbacks[number] = nb_callbacks[number] + 1
     else:
