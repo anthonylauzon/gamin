@@ -36,6 +36,7 @@ int		gam_connection_close	(GamConnDataPtr conn);
 
 int		gam_connection_get_fd	(GamConnDataPtr conn);
 int		gam_connection_get_pid  (GamConnDataPtr conn);
+gchar *		gam_connection_get_pidname (GamConnDataPtr conn);
 GamConnState	gam_connection_get_state(GamConnDataPtr conn);
 int		gam_connection_get_data	(GamConnDataPtr conn,
 					 char **data,

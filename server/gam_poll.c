@@ -315,8 +315,10 @@ gam_poll_emit_event(GamNode * node, GaminEventType event)
     GList *subs;
     int is_dir_node = gam_node_is_dir(node);
 
+#ifdef VERBOSE_POLL
     GAM_DEBUG(DEBUG_INFO, "Poll: emit events %d for %s\n",
               event, gam_node_get_path(node));
+#endif
     subs = gam_node_get_subscriptions(node);
     if (subs)
         subs = g_list_copy(subs);
@@ -451,7 +453,9 @@ poll_file(GamNode * node)
     const char *path;
 
     path = gam_node_get_path(node);
+#ifdef VERBOSE_POLL
     GAM_DEBUG(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
+#endif
 
     if (node->lasttime == 0) {
         GAM_DEBUG(DEBUG_INFO, "Poll: file is new\n");
@@ -470,8 +474,10 @@ poll_file(GamNode * node)
         else
             return GAMIN_EVENT_DELETED;
     }
+#ifdef VERBOSE_POLL
     GAM_DEBUG(DEBUG_INFO, " at %d delta %d : %d\n", current_time,
               current_time - node->lasttime, node->checks);
+#endif
 
     event = 0;
 
@@ -500,17 +506,21 @@ poll_file(GamNode * node)
                (node->sbuf.st_ctim.tv_nsec != sbuf.st_ctim.tv_nsec)) {
         event = GAMIN_EVENT_CHANGED;
     } else {
+#ifdef VERBOSE_POLL
         GAM_DEBUG(DEBUG_INFO, "Poll: poll_file %s unchanged\n", path);
         GAM_DEBUG(DEBUG_INFO, "%d %d : %d %d\n", node->sbuf.st_mtim.tv_sec,
                   node->sbuf.st_mtim.tv_nsec, sbuf.st_mtim.tv_sec,
                   sbuf.st_mtim.tv_nsec);
+#endif
 #else
     } else if ((node->sbuf.st_mtime != sbuf.st_mtime) ||
                (node->sbuf.st_size != sbuf.st_size) ||
                (node->sbuf.st_ctime != sbuf.st_ctime)) {
         event = GAMIN_EVENT_CHANGED;
+#ifdef VERBOSE_POLL
         GAM_DEBUG(DEBUG_INFO, "%d : %d\n", node->sbuf.st_mtime,
                   sbuf.st_mtime);
+#endif
 #endif
     }
 
@@ -617,9 +627,11 @@ gam_poll_scan_directory_internal(GamNode * dir_node)
     dir = g_dir_open(dpath, 0, NULL);
 
     if (dir == NULL) {
+#ifdef VERBOSE_POLL
         GAM_DEBUG(DEBUG_INFO,
                   "Poll: directory %s is not readable or missing\n",
                   dpath);
+#endif
         return;
     }
 

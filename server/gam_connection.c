@@ -27,6 +27,7 @@ struct GamConnData {
     GamConnState state;         /* the state for the connection */
     int fd;                     /* the file descriptor */
     int pid;                    /* the PID of the remote process */
+    gchar *pidname;		/* The name of the process */
     GMainLoop *loop;            /* the Glib loop used */
     GIOChannel *source;         /* the Glib I/O Channel used */
     int request_len;            /* how many bytes of request are valid */
@@ -90,6 +91,7 @@ gam_connection_close(GamConnDataPtr conn)
     g_io_channel_unref(conn->source);
     gamConnList = g_list_remove(gamConnList, conn);
     g_assert (!g_list_find(gamConnList, conn));
+    g_free(conn->pidname);
     g_free(conn);
 
     return (0);
@@ -178,6 +180,13 @@ gam_connection_get_pid(GamConnDataPtr conn)
     return (conn->pid);
 }
 
+gchar *
+gam_connection_get_pidname(GamConnDataPtr conn)
+{
+	g_assert (conn);
+	return conn->pidname;
+}
+
 /**
  * gam_connection_set_pid:
  * @conn: a connection data structure.
@@ -191,6 +200,10 @@ int
 gam_connection_set_pid(GamConnDataPtr conn, int pid)
 {
     g_assert(conn);
+#ifdef HAVE_LINUX
+    gchar *procname;
+    FILE *fp;
+#endif
 
     if (conn->state != GAM_STATE_AUTH) {
         GAM_DEBUG(DEBUG_INFO, "Connection in unexpected state: "
@@ -201,6 +214,34 @@ gam_connection_set_pid(GamConnDataPtr conn, int pid)
 
     conn->state = GAM_STATE_OKAY;
     conn->pid = pid;
+#ifdef HAVE_LINUX
+    procname = g_strdup_printf ("/proc/%d/cmdline", pid);
+    fp = fopen(procname, "r");
+    g_free (procname);
+    if (!fp) {
+	    conn->pidname = g_strdup_printf ("%d", pid);
+    } else {
+	    gchar *name = g_malloc (128);
+	    int i = 0;
+	    while (i < 128) {
+		    int ch = fgetc (fp);
+
+		    if (ch == EOF)
+			    break;
+
+		    name[i++] = ch;
+
+		    if (ch == '\0')
+			    break;
+	    }
+	    name[127] = '\0';
+	    conn->pidname = g_strdup (name);
+	    g_free (name);
+	    f_close (fp);
+    }
+#else
+    conn->pidname = g_strdup_printf ("%d", pid);
+#endif
     conn->listener = gam_listener_new(conn, pid);
     if (conn->listener == NULL) {
         GAM_DEBUG(DEBUG_INFO, "Failed to create listener\n");
@@ -276,8 +317,8 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
 
     type = req->type & 0xF;
     options = req->type & 0xFFF0;
-    GAM_DEBUG(DEBUG_INFO, "Request: from %d, seq %d, type %x options %x\n",
-              conn->pid, req->seq, type, options);
+    GAM_DEBUG(DEBUG_INFO, "Request: from %s, seq %d, type %x options %x\n",
+              conn->pidname, req->seq, type, options);
 
     if (req->pathlen >= MAXPATHLEN)
         return (-1);
@@ -506,7 +547,7 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
             return (-1);
     }
 
-    GAM_DEBUG(DEBUG_INFO, "Event to %d : %d, %d, %s %s\n", conn->pid,
+    GAM_DEBUG(DEBUG_INFO, "Event to %s : %d, %d, %s %s\n", conn->pidname,
               reqno, type, path, gam_event_to_string(event));
     /*
      * prepare the packet
@@ -521,7 +562,7 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
     memcpy(req.path, path, len);
     ret = gam_client_conn_write(conn->source, conn->fd, (gpointer) &req, tlen);
     if (!ret) {
-        GAM_DEBUG(DEBUG_INFO, "Failed to send event to %d\n", conn->pid);
+        GAM_DEBUG(DEBUG_INFO, "Failed to send event to %s\n", conn->pidname);
         return (-1);
     }
     return (0);
@@ -557,7 +598,7 @@ gam_send_ack(GamConnDataPtr conn, int reqno,
         return (-1);
     }
 
-    GAM_DEBUG(DEBUG_INFO, "Event to %d: %d, %d, %s\n", conn->pid,
+    GAM_DEBUG(DEBUG_INFO, "Event to %s: %d, %d, %s\n", conn->pidname,
               reqno, FAMAcknowledge, path);
 
     /*
@@ -575,7 +616,7 @@ gam_send_ack(GamConnDataPtr conn, int reqno,
 
     ret = gam_client_conn_write(conn->source, conn->fd, (gpointer) &req, tlen);
     if (!ret) {
-        GAM_DEBUG(DEBUG_INFO, "Failed to send event to %d\n", conn->pid);
+        GAM_DEBUG(DEBUG_INFO, "Failed to send event to %s\n", conn->pidname);
         return (-1);
     }
     return (0);
@@ -661,8 +702,8 @@ gam_connections_debug(void)
 		    break;
 	    }
 	    GAM_DEBUG(DEBUG_INFO, 
-	              "Connection fd %d to pid %d: state %s, %d read\n",
-		      conn->fd, conn->pid, state, conn->request_len);
+	              "Connection fd %d to %s: state %s, %d read\n",
+		      conn->fd, conn->pidname, state, conn->request_len);
 	    gam_listener_debug(conn->listener);
 	}
     }
