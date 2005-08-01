@@ -323,6 +323,8 @@ gam_incoming_conn_read(GIOChannel * source, GIOCondition condition,
     return (FALSE);
 }
 
+// #define GAM_CHANNEL_VERBOSE
+
 /************************************************************************
  *									*
  *			Path for the socket connection			*
@@ -502,7 +504,9 @@ create:
 	    return(FALSE);
 	}
     }
+#ifdef GAM_CHANNEL_VERBOSE
     GAM_DEBUG(DEBUG_INFO, "Removed %s\n", dir);
+#endif
     tries++;
     if (tries < 5)
         goto create;

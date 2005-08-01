@@ -11,9 +11,7 @@ typedef struct _GamListener GamListener;
 typedef struct _GamSubscription GamSubscription;
 
 
-GamListener   *gam_listener_new                  (void *service,
-						  int   pid,
-						  const char *pidname);
+GamListener   *gam_listener_new                  (void *service, int pid);
 
 void          gam_listener_free                  (GamListener *listener);
 

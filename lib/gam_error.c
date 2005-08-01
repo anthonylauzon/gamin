@@ -36,6 +36,7 @@ gam_error_handle_signal(void) {
        do_debug = 0;
        gam_debug_active = 0;
        if (debug_out != NULL) {
+      fflush(debug_out);
            fclose(debug_out);
 	   debug_out = NULL;
        }

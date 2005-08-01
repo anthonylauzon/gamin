@@ -24,12 +24,14 @@
 #include "gam_subscription.h"
 #include "gam_server.h"
 #include "gam_error.h"
+#include "gam_pidname.h"
 
+// #define GAM_LISTENER_VERBOSE
 /* private struct representing a single listener */
 struct _GamListener {
     void *service;
     int pid;
-    const char *pidname;
+    char *pidname;
     GList *subs;
 };
 
@@ -52,7 +54,7 @@ struct _GamListener {
  * Returns a new #GamListener on success, NULL otherwise
  */
 GamListener *
-gam_listener_new(void *service, int pid, const char *pidname)
+gam_listener_new(void *service, int pid)
 {
     GamListener *listener;
 
@@ -62,10 +64,12 @@ gam_listener_new(void *service, int pid, const char *pidname)
     listener = g_new0(GamListener, 1);
     listener->service = service;
     listener->pid = pid;
-    listener->pidname = pidname;
+    listener->pidname = gam_get_pidname (pid);
     listener->subs = NULL;
 
+#ifdef GAM_LISTENER_VERBOSE
     GAM_DEBUG(DEBUG_INFO, "Created listener for %d\n", pid);
+#endif
 
     return listener;
 }
@@ -102,13 +106,12 @@ gam_listener_free(GamListener *listener)
 
     g_assert(listener);
 
-    GAM_DEBUG(DEBUG_INFO, "Freeing listener for %s\n", listener->pidname);
-
     while ((cur = g_list_first(listener->subs)) != NULL) {
         GamSubscription * sub = cur->data;
 	gam_listener_free_subscription(listener, sub);
 	listener->subs = g_list_delete_link(listener->subs, cur);
     }
+	g_free(listener->pidname);
     g_free(listener);
 }
 
@@ -148,7 +151,7 @@ gam_listener_get_pid(GamListener *listener)
  *
  * @listener: the #GamListener
  *
- * Gets the unique process name associated with a #GamListener
+ * Gets the process name associated with a #GamListener
  *
  * Returns the process name associated with the #GamListener.
  */
@@ -157,6 +160,7 @@ gam_listener_get_pidname(GamListener *listener)
 {
     return listener->pidname;
 }
+
 /**
  * gam_listener_get_subscription:
  *
@@ -241,6 +245,7 @@ gam_listener_add_subscription(GamListener *listener,
     g_assert(!g_list_find(listener->subs, sub));
 
     listener->subs = g_list_prepend(listener->subs, sub);
+    GAM_DEBUG(DEBUG_INFO, "Adding sub %s to listener %s\n", gam_subscription_get_path (sub), listener->pidname);
 }
 
 /**
@@ -260,7 +265,7 @@ gam_listener_remove_subscription(GamListener *listener,
     g_assert(g_list_find(listener->subs, sub));
 
     listener->subs = g_list_remove(listener->subs, sub);
-
+    GAM_DEBUG(DEBUG_INFO, "Removing sub %s from listener %s\n", gam_subscription_get_path (sub), listener->pidname);
     /* There should only be one.  */
     g_assert(!g_list_find(listener->subs, sub));
 }

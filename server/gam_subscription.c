@@ -28,6 +28,8 @@
 #include "gam_event.h"
 #include "gam_error.h"
 
+// #define GAM_SUB_VERBOSE
+
 struct _GamSubscription {
     char *path;
     int events;
@@ -81,7 +83,9 @@ gam_subscription_new(const char *path,
     sub->is_dir = is_dir;
     sub->options = options;
 
+#ifdef GAM_SUB_VERBOSE
     GAM_DEBUG(DEBUG_INFO, "Created subscription for %s\n", path);
+#endif
     return sub;
 }
 
@@ -95,7 +99,9 @@ gam_subscription_free(GamSubscription * sub)
 {
     if (sub == NULL)
         return;
+#ifdef GAM_SUB_VERBOSE
     GAM_DEBUG(DEBUG_INFO, "Freeing subscription for %s\n", sub->path);
+#endif
 
     g_free(sub->path);
     g_free(sub);
@@ -183,7 +189,8 @@ gam_subscription_set_listener(GamSubscription * sub,
 {
     if (sub == NULL)
         return;
-    GAM_DEBUG(DEBUG_INFO, "%s Setting subscription listener for %s\n", gam_listener_get_pidname (listener), sub->path);
+
+	GAM_DEBUG(DEBUG_INFO, "%s listening for %s\n", gam_listener_get_pidname (listener), sub->path);
     sub->listener = listener;
 }
 
@@ -253,7 +260,7 @@ gam_subscription_cancel(GamSubscription * sub)
 {
     if (sub == NULL)
         return;
-    GAM_DEBUG(DEBUG_INFO, "%s cancelling subscription for %s\n", gam_listener_get_pidname (sub->listener), sub->path);
+	GAM_DEBUG(DEBUG_INFO, "%s not listening for %s\n", gam_listener_get_pidname (sub->listener), sub->path);
     sub->cancelled = TRUE;
 }
 

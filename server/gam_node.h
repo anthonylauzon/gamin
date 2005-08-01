@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include "gam_event.h"
 #include "gam_subscription.h"
+#include "gam_fs.h"
 
 G_BEGIN_DECLS
 
@@ -21,11 +22,14 @@ struct _GamNode {
 	GNode *node;		/* pointer in the tree */
 	gboolean is_dir;	/* is that a directory or expected to be one */
 	int flags;		/* generic flags */
+	int poll_time;		/* How often this node should be polled */
+	gam_fs_mon_type mon_type; /* the type of notification that should be done */
 
         /* what used to be stored in a separate data structure */
+	int checks;
 	int pflags;		/* A combination of MON_xxx flags */
 	time_t lasttime;	/* Epoch of last time checking was done */
-	int checks;		/* the number of checks in that Epoch */
+	int flow_on_ticks;	/* Number of ticks while flow control is on */
 	struct stat sbuf;	/* The stat() informations in last check */
 };
 

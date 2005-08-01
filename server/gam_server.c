@@ -46,6 +46,7 @@
 #include "gam_hurd_mach_notify.h"
 #endif
 #include "gam_excludes.h"
+#include "gam_fs.h"
 
 static int poll_only = 0;
 static const char *session;
@@ -81,6 +82,7 @@ gam_shutdown(void) {
  */
 void
 gam_show_debug(void) {
+    gam_fs_debug ();
     gam_connections_debug();
 #ifdef ENABLE_INOTIFY
     gam_inotify_debug ();
@@ -150,11 +152,13 @@ gam_init_subscriptions(void)
 gboolean
 gam_add_subscription(GamSubscription * sub)
 {
-    
     if (sub == NULL)
         return(FALSE);
 
-    return (gam_backend_add_subscription(sub));
+    if (gam_fs_get_mon_type (gam_subscription_get_path (sub)) == GFS_MT_KERNEL) 
+	    return (gam_backend_add_subscription(sub));
+    else
+	    return gam_poll_add_subscription (sub);
 }
 
 /**
@@ -167,7 +171,10 @@ gam_add_subscription(GamSubscription * sub)
 gboolean
 gam_remove_subscription(GamSubscription * sub)
 {
-    return (gam_backend_remove_subscription(sub));
+    if (gam_fs_get_mon_type (gam_subscription_get_path (sub)) == GFS_MT_KERNEL) 
+	    return (gam_backend_remove_subscription(sub));
+    else
+	    return gam_poll_remove_subscription (sub);
 }
 
 /**

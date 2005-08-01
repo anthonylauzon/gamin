@@ -39,7 +39,7 @@
 
 /* #define VERBOSE_POLL */
 
-#define DEFAULT_POLL_TIMEOUT 3
+#define DEFAULT_POLL_TIMEOUT 1
 
 #define FLAG_NEW_NODE 1 << 5
 
@@ -149,6 +149,9 @@ gam_poll_remove_busy(GamNode * node)
 static void
 trigger_dir_handler(const char *path, pollHandlerMode mode, GamNode * node)
 {
+    if (node->mon_type != GFS_MT_KERNEL)
+	    return;
+
     if (type_khandler == GAMIN_K_DNOTIFY || type_khandler == GAMIN_K_INOTIFY) {
         if (gam_node_is_dir(node)) {
 	    if (dir_handler != NULL)
@@ -172,6 +175,9 @@ trigger_dir_handler(const char *path, pollHandlerMode mode, GamNode * node)
 static void
 trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node)
 {
+    if (node->mon_type != GFS_MT_KERNEL)
+	    return;
+
     if (type_khandler == GAMIN_K_DNOTIFY || type_khandler == GAMIN_K_INOTIFY) {
         if (gam_node_is_dir(node)) {
 	    (*file_handler) (path, mode);
@@ -186,12 +192,12 @@ trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node)
 	    dir = parent->path;
 	    switch (mode) {
 	        case GAMIN_ACTIVATE:
-		    GAM_DEBUG(DEBUG_INFO, "File activating dnotify on %s\n",
+		    GAM_DEBUG(DEBUG_INFO, "File activating kernel monitoring on %s\n",
 			      dir);
 		    (*dir_handler) (dir, mode);
 		    break;
 	        case GAMIN_DESACTIVATE:
-		    GAM_DEBUG(DEBUG_INFO, "File deactivating dnotify on %s\n",
+		    GAM_DEBUG(DEBUG_INFO, "File deactivating kernel monitoring on %s\n",
 			      dir);
 		    (*dir_handler) (dir, mode);
 		    break;
@@ -206,7 +212,7 @@ trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node)
 		    break;
 		case GAMIN_FLOWCONTROLSTOP:
 		    if (parent->pflags & MON_BUSY) {
-			GAM_DEBUG(DEBUG_INFO, "File dir no more busy %s\n",
+			GAM_DEBUG(DEBUG_INFO, "File dir no longer busy %s\n",
 				  dir);
 			(*dir_handler) (dir, mode);
 			gam_poll_remove_busy(parent);
@@ -452,11 +458,16 @@ poll_file(GamNode * node)
     int stat_ret;
     const char *path;
 
+    /* If not enough time has passed since the last time we polled this node, stop here */
+    if (current_time - node->lasttime < node->poll_time) 
+	    return 0;
+
     path = gam_node_get_path(node);
 #ifdef VERBOSE_POLL
     GAM_DEBUG(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
 #endif
 
+    memset(&sbuf, 0, sizeof(struct stat));
     if (node->lasttime == 0) {
         GAM_DEBUG(DEBUG_INFO, "Poll: file is new\n");
         stat_ret = stat(node->path, &sbuf);
@@ -466,7 +477,7 @@ poll_file(GamNode * node)
             gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
         if (gam_exclude_check(path))
             node->pflags |= MON_NOKERNEL;
-        memcpy(&(node->sbuf), &(sbuf), sizeof(sbuf));
+        memcpy(&(node->sbuf), &(sbuf), sizeof(struct stat));
         node->lasttime = current_time;
 
         if (stat_ret == 0)
@@ -530,7 +541,9 @@ poll_file(GamNode * node)
      */
     if (stat_ret == 0)
         gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
-    node->sbuf = sbuf;
+
+    memcpy(&(node->sbuf), &(sbuf), sizeof(struct stat));
+    node->sbuf.st_mtime = sbuf.st_mtime; // VALGRIND!
 
     /*
      * if kernel monitoring prohibited, stop here
@@ -665,6 +678,8 @@ gam_poll_scan_directory_internal(GamNode * dir_node)
   scan_files:
 
 
+    /* FIXME: 
+     * Shouldn't is_dir_node be assigned inside the loop? */
     is_dir_node = gam_node_is_dir(dir_node);
     children = gam_tree_get_children(tree, dir_node);
     for (l = children; l; l = l->next) {
@@ -878,7 +893,6 @@ static gboolean
 gam_poll_scan_all_callback(gpointer data)
 {
     int idx;
-    GList *subs, *l;
     GamNode *node;
 
     static int in_poll_callback = 0;
@@ -931,10 +945,10 @@ gam_poll_init_full(gboolean start_scan_thread)
         return(FALSE);
 
     if (!start_scan_thread) {
-        g_timeout_add(1000, gam_poll_scan_callback, NULL);
+        g_timeout_add(DEFAULT_POLL_TIMEOUT * 1000, gam_poll_scan_callback, NULL);
         poll_mode = 1;
     } else {
-        g_timeout_add(1000, gam_poll_scan_all_callback, NULL);
+        g_timeout_add(DEFAULT_POLL_TIMEOUT * 1000, gam_poll_scan_all_callback, NULL);
         poll_mode = 2;
     }
     tree = gam_tree_new();
@@ -1060,8 +1074,9 @@ gam_poll_remove_subscription(GamSubscription * sub)
      * make sure the subscription still isn't in the new subscription queue
      */
     if (g_list_find(new_subs, sub)) {
-        GAM_DEBUG(DEBUG_INFO, "new subscriptions is removed\n");
+        GAM_DEBUG(DEBUG_INFO, "new subscription is removed\n");
         new_subs = g_list_remove_all(new_subs, sub);
+	return TRUE;
     }
 
     node = gam_tree_get_at_path(tree, gam_subscription_get_path(sub));

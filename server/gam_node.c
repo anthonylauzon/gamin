@@ -35,7 +35,6 @@ GamNode *
 gam_node_new(const char *path, GamSubscription * sub, gboolean is_dir)
 {
     GamNode *node;
-
     node = g_new0(GamNode, 1);
 
     node->path = g_strdup(path);
@@ -46,6 +45,9 @@ gam_node_new(const char *path, GamSubscription * sub, gboolean is_dir)
 
     node->is_dir = is_dir;
     node->flags = 0;
+
+    node->poll_time = gam_fs_get_poll_timeout (path);
+    node->mon_type = gam_fs_get_mon_type (path);
 
     return node;
 }
@@ -189,9 +191,7 @@ gboolean
 gam_node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
     g_assert(node);
-
-    if (!g_list_find (node->subs, sub))
-	    return TRUE;
+    g_assert(g_list_find (node->subs, sub));
 
     node->subs = g_list_remove_all(node->subs, sub);
 

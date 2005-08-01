@@ -1,3 +1,39 @@
+2005-08-01  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* lib/gam_error.c: (gam_error_handle_signal): fflush the error stream
+	* server/Makefile.am: Add gam_fs and gam_pidname to build
+	* server/gam_channel.c: (gam_check_secure_dir):
+	* server/gam_connection.c: (gam_reqtype_to_string),
+	(gam_connection_set_pid), (gam_connection_request):
+	* server/gam_fs.c: (gam_fs_free_filesystems), (gam_fs_find_fs),
+	(gam_fs_find_fs_props), (gam_fs_filesystem_sort_cb),
+	(gam_fs_scan_mtab), (gam_fs_init), (gam_fs_get_mon_type),
+	(gam_fs_get_poll_timeout), (gam_fs_set), (gam_fs_unset),
+	(gam_fs_debug):
+	* server/gam_fs.h: Persistant storage of what filesystems are mounted and
+	where. Adds 2 preferences to each filesystem type, poll interval &
+	kernel/poll/none option.
+	* server/gam_listener.c: (gam_listener_new), (gam_listener_free),
+	(gam_listener_add_subscription),
+	(gam_listener_remove_subscription):
+	* server/gam_listener.h: Add pidname to debug output
+	* server/gam_node.c: (gam_node_new),
+	(gam_node_remove_subscription): Fix long standing bug of watches being
+	removed at the kernel level while the subscription level thinks they still
+	exist. 
+	* server/gam_node.h:
+	* server/gam_pidname.c: (gam_get_pidname):
+	* server/gam_pidname.h: Retrieves the process name for a given pid.
+	* server/gam_poll.c: (trigger_dir_handler), (trigger_file_handler),
+	(poll_file), (gam_poll_scan_directory_internal),
+	(gam_poll_scan_all_callback), (gam_poll_init_full),
+	(gam_poll_remove_subscription): Incorporate gam_fs options into logic.
+	* server/gam_server.c: (gam_show_debug), (gam_add_subscription),
+	(gam_remove_subscription):
+	* server/gam_subscription.c: (gam_subscription_new),
+	(gam_subscription_free), (gam_subscription_set_listener),
+	(gam_subscription_cancel): Debug output changes
+
 2005-08-01  John McCutchan  <jmc@cvs.gnome.org>
 
 	* server/gam_channel.c: (gam_client_conn_send_cred),

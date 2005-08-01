@@ -29,6 +29,8 @@ gam_server_SOURCES =					\
 	gam_tree.h					\
 	gam_poll.c					\
 	gam_poll.h					\
+	gam_pidname.c 					\
+	gam_pidname.h					\
 	gam_channel.c					\
 	gam_channel.h					\
 	gam_connection.c				\
@@ -38,6 +40,9 @@ gam_server_SOURCES =					\
 	gam_excludes.c					\
 	gam_excludes.h					\
 	local_inotify.h					\
+	local_inotify_syscalls.h		\
+	gam_fs.c						\
+	gam_fs.h						\
 	server_config.h
 
 if ENABLE_INOTIFY

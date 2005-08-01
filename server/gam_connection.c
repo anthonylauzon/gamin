@@ -10,6 +10,7 @@
 #include "gam_protocol.h"
 #include "gam_channel.h"
 #include "gam_error.h"
+#include "gam_pidname.h"
 #ifdef GAMIN_DEBUG_API
 #include "gam_debugging.h"
 #endif
@@ -34,6 +35,24 @@ struct GamConnData {
     GAMPacket request;          /* the next request being read */
     GamListener *listener;      /* the listener associated with the connection */
 };
+
+static const char *
+gam_reqtype_to_string (GAMReqType type)
+{
+	switch (type)
+	{
+	case GAM_REQ_FILE:
+		return "MONFILE";
+	case GAM_REQ_DIR:
+		return "MONDIR";
+	case GAM_REQ_CANCEL:
+		return "CANCEL";
+	case GAM_REQ_DEBUG:
+		return "4";
+	}
+
+	return "";
+}
 
 /**
  * gam_connections_init:
@@ -200,10 +219,6 @@ int
 gam_connection_set_pid(GamConnDataPtr conn, int pid)
 {
     g_assert(conn);
-#ifdef HAVE_LINUX
-    gchar *procname;
-    FILE *fp;
-#endif
 
     if (conn->state != GAM_STATE_AUTH) {
         GAM_DEBUG(DEBUG_INFO, "Connection in unexpected state: "
@@ -214,35 +229,8 @@ gam_connection_set_pid(GamConnDataPtr conn, int pid)
 
     conn->state = GAM_STATE_OKAY;
     conn->pid = pid;
-#ifdef HAVE_LINUX
-    procname = g_strdup_printf ("/proc/%d/cmdline", pid);
-    fp = fopen(procname, "r");
-    g_free (procname);
-    if (!fp) {
-	    conn->pidname = g_strdup_printf ("%d", pid);
-    } else {
-	    gchar *name = g_malloc (128);
-	    int i = 0;
-	    while (i < 128) {
-		    int ch = fgetc (fp);
-
-		    if (ch == EOF)
-			    break;
-
-		    name[i++] = ch;
-
-		    if (ch == '\0')
-			    break;
-	    }
-	    name[127] = '\0';
-	    conn->pidname = g_strdup (name);
-	    g_free (name);
-	    fclose (fp);
-    }
-#else
-    conn->pidname = g_strdup_printf ("%d", pid);
-#endif
-    conn->listener = gam_listener_new(conn, pid, conn->pidname);
+    conn->pidname = gam_get_pidname (pid);
+    conn->listener = gam_listener_new(conn, pid);
     if (conn->listener == NULL) {
         GAM_DEBUG(DEBUG_INFO, "Failed to create listener\n");
         conn->state = GAM_STATE_ERROR;
@@ -317,8 +305,8 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
 
     type = req->type & 0xF;
     options = req->type & 0xFFF0;
-    GAM_DEBUG(DEBUG_INFO, "Request: from %s, seq %d, type %x options %x\n",
-              conn->pidname, req->seq, type, options);
+    GAM_DEBUG(DEBUG_INFO, "%s request: from %s, seq %d, type %x options %x\n",
+              gam_reqtype_to_string (type), conn->pidname, req->seq, type, options);
 
     if (req->pathlen >= MAXPATHLEN)
         return (-1);
