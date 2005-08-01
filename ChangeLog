@@ -1,3 +1,8 @@
+Mon Aug  1 11:46:56 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/Makefile.am server/gam_debug_lists.c: keeping the debug
+	  copy around doesn not make sense anymore, removing, fixes #312113
+
 2005-07-21  John McCutchan  <jmc@cvs.gnome.org>
 
 	* server/gam_connection.c: (gam_connection_set_pid): It's fclose not
