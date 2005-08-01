@@ -12,12 +12,14 @@ typedef struct _GamSubscription GamSubscription;
 
 
 GamListener   *gam_listener_new                  (void *service,
-						  int   pid);
+						  int   pid,
+						  const char *pidname);
 
 void          gam_listener_free                  (GamListener *listener);
 
 void         *gam_listener_get_service           (GamListener *listener);
 int           gam_listener_get_pid               (GamListener *listener);
+const char *  gam_listener_get_pidname		 (GamListener *listener);
 
 void          gam_listener_add_subscription     (GamListener     *listener,
 						  GamSubscription *sub);

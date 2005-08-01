@@ -637,7 +637,9 @@ gam_poll_scan_directory_internal(GamNode * dir_node)
 
     exists = 1;
 
+#ifdef VERBOSE_POLL
     GAM_DEBUG(DEBUG_INFO, "Poll: scanning directory %s\n", dpath);
+#endif
     while ((name = g_dir_read_name(dir)) != NULL) {
         path = g_build_filename(gam_node_get_path(dir_node), name, NULL);
 

@@ -29,6 +29,7 @@
 struct _GamListener {
     void *service;
     int pid;
+    const char *pidname;
     GList *subs;
 };
 
@@ -51,7 +52,7 @@ struct _GamListener {
  * Returns a new #GamListener on success, NULL otherwise
  */
 GamListener *
-gam_listener_new(void *service, int pid)
+gam_listener_new(void *service, int pid, const char *pidname)
 {
     GamListener *listener;
 
@@ -61,6 +62,7 @@ gam_listener_new(void *service, int pid)
     listener = g_new0(GamListener, 1);
     listener->service = service;
     listener->pid = pid;
+    listener->pidname = pidname;
     listener->subs = NULL;
 
     GAM_DEBUG(DEBUG_INFO, "Created listener for %d\n", pid);
@@ -100,7 +102,7 @@ gam_listener_free(GamListener *listener)
 
     g_assert(listener);
 
-    GAM_DEBUG(DEBUG_INFO, "Freeing listener for %d\n", listener->pid);
+    GAM_DEBUG(DEBUG_INFO, "Freeing listener for %s\n", listener->pidname);
 
     while ((cur = g_list_first(listener->subs)) != NULL) {
         GamSubscription * sub = cur->data;
@@ -141,6 +143,20 @@ gam_listener_get_pid(GamListener *listener)
     return listener->pid;
 }
 
+/**
+ * gam_listener_get_pidname:
+ *
+ * @listener: the #GamListener
+ *
+ * Gets the unique process name associated with a #GamListener
+ *
+ * Returns the process name associated with the #GamListener.
+ */
+const char *
+gam_listener_get_pidname(GamListener *listener)
+{
+    return listener->pidname;
+}
 /**
  * gam_listener_get_subscription:
  *
@@ -284,7 +300,7 @@ gam_listener_debug(GamListener *listener)
         return;
     }
 
-    GAM_DEBUG(DEBUG_INFO, "  Listener has %d subscriptions registered\n",
+    GAM_DEBUG(DEBUG_INFO, "  Listener %s has %d subscriptions registered\n", listener->pidname, 
               g_list_length(listener->subs));
     for (cur = listener->subs; cur; cur = g_list_next(cur)) {
 	gam_subscription_debug((GamSubscription *) cur->data);

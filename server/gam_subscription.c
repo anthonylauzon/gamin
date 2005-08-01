@@ -183,7 +183,7 @@ gam_subscription_set_listener(GamSubscription * sub,
 {
     if (sub == NULL)
         return;
-    GAM_DEBUG(DEBUG_INFO, "Setting subscription listener for %s\n", sub->path);
+    GAM_DEBUG(DEBUG_INFO, "%s Setting subscription listener for %s\n", gam_listener_get_pidname (listener), sub->path);
     sub->listener = listener;
 }
 
@@ -253,7 +253,7 @@ gam_subscription_cancel(GamSubscription * sub)
 {
     if (sub == NULL)
         return;
-    GAM_DEBUG(DEBUG_INFO, "Cancelling subscription for %s\n", sub->path);
+    GAM_DEBUG(DEBUG_INFO, "%s cancelling subscription for %s\n", gam_listener_get_pidname (sub->listener), sub->path);
     sub->cancelled = TRUE;
 }
 

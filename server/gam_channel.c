@@ -12,6 +12,7 @@
 #include "gam_channel.h"
 #include "gam_protocol.h"
 
+/* #define CHANNEL_VERBOSE_DEBUGGING */
 /************************************************************************
  *									*
  *			Connection socket handling			*
@@ -70,7 +71,9 @@ retry:
 		  written, fd);
 	return (-1);
     }
+#if CHANNEL_VERBOSE_DEBUGGING
     GAM_DEBUG(DEBUG_INFO, "Wrote credential bytes to socket %d\n", fd);
+#endif
     return (written);
 }
 
@@ -267,7 +270,9 @@ retry:
         gam_client_conn_shutdown(source, conn);
         return (FALSE);
     }
+#if CHANNEL_VERBOSE_DEBUGGING
     GAM_DEBUG(DEBUG_INFO, "read %d bytes from client\n", ret);
+#endif
 
     /* 
      * there is no garantee of alignment, that the request is complete
@@ -829,6 +834,8 @@ gam_client_conn_write(GIOChannel * source, int fd, gpointer data,
 	remaining -= written;
     } while (remaining > 0);
 
+#if CHANNEL_VERBOSE_DEBUGGING
     GAM_DEBUG(DEBUG_INFO, "Wrote %d bytes to socket %d\n", len, fd);
+#endif
     return (TRUE);
 }

@@ -193,7 +193,7 @@ gam_inotify_data_new(const char *path, int wd)
 static void
 gam_inotify_data_free(inotify_data_t * data)
 {
-    if (data->refcount != 0) 
+    if (data->refcount != 0)
 	GAM_DEBUG(DEBUG_INFO, "gam_inotify_data_free called with reffed data.\n");
     g_free(data->path);
     g_free(data);
@@ -360,17 +360,12 @@ gam_inotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 static void
 gam_inotify_directory_handler(const char *path, pollHandlerMode mode)
 {
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_directory_handler %s : %d\n",
-              path, mode);
-
     gam_inotify_directory_handler_internal(path, mode);
 }
 
 static void
 gam_inotify_file_handler(const char *path, pollHandlerMode mode)
 {
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_file_handler %s : %d\n", path, mode);
-    
     if (g_file_test(path, G_FILE_TEST_IS_DIR)) {
 	gam_inotify_directory_handler_internal(path, mode);
     } else {
@@ -411,6 +406,12 @@ gam_inotify_read_handler(gpointer user_data)
 
                 if (!data) {
                         GAM_DEBUG (DEBUG_INFO, "inotify: got an event for unknown wd %d\n", event->wd);
+			GAM_DEBUG (DEBUG_INFO, "event->cookie = %d\n", event->cookie);
+			GAM_DEBUG (DEBUG_INFO, "event->mask = ");
+			print_mask (event->mask);
+			GAM_DEBUG (DEBUG_INFO, "event->len = %d\n", event->len);
+			if (event->len)
+				GAM_DEBUG (DEBUG_INFO, "event->name = %s\n", event->name);
                 } else if (data->deactivated) {
                         GAM_DEBUG (DEBUG_INFO, "inotify: ignoring event on temporarily deactivated watch %s\n", data->path);
                         data->deactivated_events++;
@@ -450,7 +451,6 @@ gam_inotify_read_handler(gpointer user_data)
 static gboolean
 gam_inotify_consume_subscriptions_real(gpointer data)
 {
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_consume_subscriptions_real()\n");
     gam_poll_consume_subscriptions();
     have_consume_idler = FALSE;
     return FALSE;
@@ -464,7 +464,6 @@ gam_inotify_consume_subscriptions(void)
     if (have_consume_idler)
         return;
 
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_consume_subscriptions()\n");
     have_consume_idler = TRUE;
     source = g_idle_source_new();
     g_source_set_callback(source, gam_inotify_consume_subscriptions_real,
@@ -545,15 +544,12 @@ gam_inotify_init(void)
 gboolean
 gam_inotify_add_subscription(GamSubscription * sub)
 {
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_add_subscription\n");
-
     if (!gam_poll_add_subscription(sub)) {
         return FALSE;
     }
 
     gam_inotify_consume_subscriptions();
 
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_add_subscription: done\n");
     return TRUE;
 }
 
@@ -566,7 +562,6 @@ gam_inotify_add_subscription(GamSubscription * sub)
 gboolean
 gam_inotify_remove_subscription(GamSubscription * sub)
 {
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_remove_subscription\n");
 
     if (!gam_poll_remove_subscription(sub)) {
         return FALSE;
@@ -574,7 +569,6 @@ gam_inotify_remove_subscription(GamSubscription * sub)
 
     gam_inotify_consume_subscriptions();
 
-    GAM_DEBUG(DEBUG_INFO, "gam_inotify_remove_subscription: done\n");
     return TRUE;
 }
 

@@ -242,7 +242,7 @@ gam_connection_set_pid(GamConnDataPtr conn, int pid)
 #else
     conn->pidname = g_strdup_printf ("%d", pid);
 #endif
-    conn->listener = gam_listener_new(conn, pid);
+    conn->listener = gam_listener_new(conn, pid, conn->pidname);
     if (conn->listener == NULL) {
         GAM_DEBUG(DEBUG_INFO, "Failed to create listener\n");
         conn->state = GAM_STATE_ERROR;

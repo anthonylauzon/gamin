@@ -1,3 +1,21 @@
+2005-08-01  John McCutchan  <jmc@cvs.gnome.org>
+
+	* server/gam_channel.c: (gam_client_conn_send_cred),
+	(gam_client_conn_read), (gam_client_conn_write):
+	* server/gam_connection.c: (gam_connection_set_pid):
+	* server/gam_inotify.c: (gam_inotify_data_free),
+	(gam_inotify_directory_handler), (gam_inotify_file_handler),
+	(gam_inotify_read_handler),
+	(gam_inotify_consume_subscriptions_real),
+	(gam_inotify_consume_subscriptions),
+	(gam_inotify_add_subscription), (gam_inotify_remove_subscription):
+	* server/gam_listener.c: (gam_listener_new), (gam_listener_free),
+	(gam_listener_get_pidname), (gam_listener_debug):
+	* server/gam_listener.h:
+	* server/gam_poll.c: (gam_poll_scan_directory_internal):
+	* server/gam_subscription.c: (gam_subscription_set_listener),
+	(gam_subscription_cancel): Debug output cleanups
+
 Mon Aug  1 11:46:56 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/Makefile.am server/gam_debug_lists.c: keeping the debug
