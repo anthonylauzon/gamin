@@ -459,8 +459,10 @@ poll_file(GamNode * node)
     const char *path;
 
     /* If not enough time has passed since the last time we polled this node, stop here */
+#if 0
     if (current_time - node->lasttime < node->poll_time) 
 	    return 0;
+#endif
 
     path = gam_node_get_path(node);
 #ifdef VERBOSE_POLL
