@@ -5,6 +5,15 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.1.3: Aug  2 2005:
+   -  Fix to compile on older gcc versions (Jean-Yves Lefort)
+   -  Inotify back-end changes and optimizations (John McCutchan)
+   -  Debug ouput cleanup, pid and process name reports (John McCutchan)
+   -  Dropped kernel monitor bugfix (John McCutchan)
+   -  Removed the old glist copy used for debugging
+   -  Maintain mounted filesystems knowledge, and per fstype preferences (John McCutchan)
+
+
 0.1.2: Jul 13 2005:
    -  More patches from John McCutchan for the inotify back-end, inotify
        is now in Linus's kernel tree, a patch for the new kernel API was

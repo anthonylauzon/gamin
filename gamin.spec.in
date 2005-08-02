@@ -88,6 +88,13 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
+* Tue Aug  2 2005 Daniel Veillard <veillard@redhat.com> 0.1.3-1
+- Fix to compile on older gcc versions
+- Inotify back-end changes and optimizations
+- Debug ouput cleanup, pid and process name reports
+- Dropped kernel monitor bugfix
+- Removed the old glist copy used for debugging
+- Maintain mounted filesystems knowledge, and per fstype preferences
 * Wed Jul 13 2005 Daniel Veillard <veillard@redhat.com> 0.1.2-1
 - inotify back end patches, ready for the new inotify support in kernel
 - lot of server code cleanup patches
