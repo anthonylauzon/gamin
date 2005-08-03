@@ -40,9 +40,11 @@ gam_server_SOURCES =					\
 	gam_excludes.c					\
 	gam_excludes.h					\
 	local_inotify.h					\
-	local_inotify_syscalls.h		\
-	gam_fs.c						\
-	gam_fs.h						\
+	local_inotify_syscalls.h			\
+	gam_fs.c					\
+	gam_fs.h					\
+	gam_conf.c					\
+	gam_conf.h					\
 	server_config.h
 
 if ENABLE_INOTIFY

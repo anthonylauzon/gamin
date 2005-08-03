@@ -9,6 +9,9 @@ extern "C" {
 
 int		gam_exclude_init	(void);
 gboolean	gam_exclude_check	(const char *filename);
+int		gam_exclude_add		(const char *pattern, int exclude);
+void		gam_exclude_debug	(void);
+
 #ifdef __cplusplus
 }
 #endif

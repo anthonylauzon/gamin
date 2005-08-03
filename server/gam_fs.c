@@ -10,7 +10,7 @@
 #include "gam_error.h"
 #include "gam_fs.h"
 
-#define DEFAULT_POLL_TIMEOUT 1
+#define DEFAULT_POLL_TIMEOUT 0
 
 typedef struct _gam_fs_properties {
 	char * 		fsname;

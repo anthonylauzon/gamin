@@ -1,3 +1,18 @@
+2005-08-03  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* server/Makefile.am:
+	* server/gam_conf.c: (gam_conf_string_to_mon_type),
+	(gam_conf_read_internal), (gam_conf_read): Move gaminrc parsing code here
+	* server/gam_conf.h: Move gaminrc parsing code here
+	* server/gam_excludes.c: (gam_exclude_init), (gam_exclude_check),
+	(gam_exclude_debug): Make gam_exclude_add public. Add gam_exclude_debug.
+	Removed config parsing code from here.
+	* server/gam_excludes.h: Make gam_exclude_add public.
+	* server/gam_fs.c: Adjust default poll timeout to be 0.
+	* server/gam_server.c: (gam_show_debug), (gam_init_subscriptions): call
+	gam_exclude_debug() in show_debug() and call gam_conf_read at beginning of
+	server initialization.
+
 2005-08-02  John McCutchan <jmc@cvs.gnome.org>
 
 	* server/gam_fs.c: (gam_fs_init): Change some defaults

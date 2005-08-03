@@ -47,6 +47,7 @@
 #endif
 #include "gam_excludes.h"
 #include "gam_fs.h"
+#include "gam_conf.h" 
 
 static int poll_only = 0;
 static const char *session;
@@ -82,6 +83,7 @@ gam_shutdown(void) {
  */
 void
 gam_show_debug(void) {
+	gam_exclude_debug ();
     gam_fs_debug ();
     gam_connections_debug();
 #ifdef ENABLE_INOTIFY
@@ -103,6 +105,7 @@ gam_show_debug(void) {
 gboolean
 gam_init_subscriptions(void)
 {
+	gam_conf_read ();
     gam_exclude_init();
 
     if (!poll_only) {
