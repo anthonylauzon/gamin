@@ -13,7 +13,8 @@ enum pollHandlerKernel {
     GAMIN_K_DNOTIFY = 1,
     GAMIN_K_INOTIFY = 2,
     GAMIN_K_KQUEUE = 3,
-    GAMIN_K_MACH = 4
+    GAMIN_K_MACH = 4,
+	GAMIN_K_INOTIFY2 = 5
 };
 typedef enum pollHandlerKernel pollHandlerKernel;
 

@@ -1,3 +1,38 @@
+2005-08-02  John McCutchan <jmc@cvs.gnome.org>
+
+	* server/gam_fs.c: (gam_fs_init): Change some defaults
+	* server/gam_inotify.c: (gam_inotify_data_debug),
+	(gam_inotify_debug), (mask_to_string), (mask_to_gam_event),
+	(gam_inotify_data_new), (gam_inotify_data_free),
+	(gam_inotify_event_new), (gam_inotify_event_free),
+	(gam_inotify_mask_to_gam_file_event),
+	(gam_inotify_mask_to_gam_dir_event), (gam_inotify_emit_one_event),
+	(gam_inotify_emit_events), (gam_inotify_process_event),
+	(gam_inotify_process_event_queue), (gam_inotify_read_handler),
+	(gam_inotify_send_initial_events),
+	(gam_inotify_send_initial_events_all),
+	(gam_inotify_add_subscription), (gam_inotify_remove_subscription),
+	(gam_inotify_remove_all_for), (gam_inotify_init),
+	(gam_inotify_add_watch), (gam_inotify_read_events),
+	(gam_inotify_is_missing), (missing_list_compare),
+	(gam_inotify_add_missing), (gam_inotify_rm_missing),
+	(gam_inotify_nolonger_missing), (gam_inotify_scan_missing),
+	(gam_inotify_wd_check), (gam_inotify_wd_hash_sanity_check),
+	(gam_inotify_missing_check),
+	(gam_inotify_missing_list_sanity_check),
+	(gam_inotify_sanity_check): Complete re-write of inotify backend. This
+	new backend does not use the poll backend at all. It passes all the
+	test suite tests except for dnotify15, and flood* because they make
+	use of falling back to the poll backend. Because it doesn't use the
+	poll backend anymore, memory & CPU usage has been greatly reduced.
+	* server/gam_node.c: (gam_node_new): Zero the checks field
+	* server/gam_poll.c: (poll_file): Change to poll limiter -- still
+	disabled.
+	* server/gam_poll.h: Add GAMIN_K_INOTIFY2 backend definition
+	* server/gam_server.c: (gam_add_subscription),
+	(gam_remove_subscription), (gam_server_emit_one_event): Fix backend
+	selection logic.
+
 Tue Aug  2 17:44:53 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS configure.in gamin.spec.in doc/gamin.html doc/news.html: 

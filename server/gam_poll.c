@@ -460,7 +460,7 @@ poll_file(GamNode * node)
 
     /* If not enough time has passed since the last time we polled this node, stop here */
 #if 0
-    if (current_time - node->lasttime < node->poll_time) 
+    if (node->lasttime && (current_time - node->lasttime) < node->poll_time) 
 	    return 0;
 #endif
 

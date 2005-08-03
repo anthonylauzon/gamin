@@ -152,13 +152,17 @@ gam_init_subscriptions(void)
 gboolean
 gam_add_subscription(GamSubscription * sub)
 {
-    if (sub == NULL)
-        return(FALSE);
+	gam_fs_mon_type type;
+	if (sub == NULL)
+		return(FALSE);
 
-    if (gam_fs_get_mon_type (gam_subscription_get_path (sub)) == GFS_MT_KERNEL) 
-	    return (gam_backend_add_subscription(sub));
-    else
-	    return gam_poll_add_subscription (sub);
+	type = gam_fs_get_mon_type (gam_subscription_get_path (sub));
+	if (type == GFS_MT_KERNEL)
+		return (gam_backend_add_subscription(sub));
+	else if (type == GFS_MT_POLL)
+		return gam_poll_add_subscription (sub);
+	else
+		return FALSE;
 }
 
 /**
@@ -171,10 +175,19 @@ gam_add_subscription(GamSubscription * sub)
 gboolean
 gam_remove_subscription(GamSubscription * sub)
 {
-    if (gam_fs_get_mon_type (gam_subscription_get_path (sub)) == GFS_MT_KERNEL) 
-	    return (gam_backend_remove_subscription(sub));
-    else
-	    return gam_poll_remove_subscription (sub);
+	gam_fs_mon_type type;
+
+	if (sub == NULL)
+		return(FALSE);
+
+	type = gam_fs_get_mon_type (gam_subscription_get_path (sub));
+
+	if (type == GFS_MT_KERNEL) 
+		return (gam_backend_remove_subscription(sub));
+	else if (type == GFS_MT_POLL)
+		return gam_poll_remove_subscription (sub);
+	else 
+		return FALSE;
 }
 
 /**
@@ -225,6 +238,7 @@ gam_server_emit_one_event(const char *path, int node_is_dir,
 
     if (!gam_subscription_wants_event(sub, path, node_is_dir, event, force))
 	return;
+
     listener = gam_subscription_get_listener(sub);
     if (listener == NULL)
 	return;
