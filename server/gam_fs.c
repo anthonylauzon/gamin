@@ -174,6 +174,8 @@ gam_fs_init ()
 		initialized = TRUE;
 		gam_fs_set ("ext3", GFS_MT_KERNEL, 0);
 		gam_fs_set ("ext2", GFS_MT_KERNEL, 0);
+		gam_fs_set ("reiser4", GFS_MT_KERNEL, 0);
+		gam_fs_set ("reiserfs", GFS_MT_KERNEL, 0);
 		gam_fs_set ("novfs", GFS_MT_POLL, 30);
 		gam_fs_set ("nfs", GFS_MT_POLL, 5);
 		if (stat("/etc/mtab", &mtab_sbuf) != 0)

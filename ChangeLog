@@ -1,5 +1,9 @@
 2005-08-03  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_fs.c: (gam_fs_init): Tweak defaults yet again.
+
+2005-08-03  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/Makefile.am:
 	* server/gam_conf.c: (gam_conf_string_to_mon_type),
 	(gam_conf_read_internal), (gam_conf_read): Move gaminrc parsing code here
