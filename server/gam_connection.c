@@ -11,6 +11,7 @@
 #include "gam_channel.h"
 #include "gam_error.h"
 #include "gam_pidname.h"
+#include "gam_eq.h"
 #ifdef GAMIN_DEBUG_API
 #include "gam_debugging.h"
 #endif
@@ -34,6 +35,8 @@ struct GamConnData {
     int request_len;            /* how many bytes of request are valid */
     GAMPacket request;          /* the next request being read */
     GamListener *listener;      /* the listener associated with the connection */
+    gam_eq_t *eq;               /* the event queue */
+    guint eq_source;            /* the event queue GSource id */
 };
 
 static const char *
@@ -98,6 +101,13 @@ gam_connection_close(GamConnDataPtr conn)
     g_assert(g_list_find(gamConnList, (gconstpointer) conn));
     g_assert(conn->source);
 
+    /* Kill the queue event source */
+    g_source_remove (conn->eq_source);
+    /* Flush the event queue */
+    gam_eq_flush (conn->eq, conn);
+    /* Kill the event queue */
+    gam_eq_free (conn->eq);
+
     if (conn->listener != NULL) {
         gam_listener_free(conn->listener);
     }
@@ -137,6 +147,24 @@ gam_connections_close(void)
 }
 
 /**
+ * gam_connection_eq_flush:
+ *
+ * Flushes the connections event queue
+ *
+ * returns TRUE
+ */
+static gboolean
+gam_connection_eq_flush (gpointer data)
+{
+	GamConnDataPtr conn = (GamConnDataPtr)data;
+	if (!conn)
+		return FALSE;
+
+	gam_eq_flush (conn->eq, conn);
+	return TRUE;
+}
+
+/**
  * gam_connection_new:
  * @loop: the Glib loop
  * @source: the  Glib I/O Channel 
@@ -161,7 +189,8 @@ gam_connection_new(GMainLoop *loop, GIOChannel *source)
     ret->fd = g_io_channel_unix_get_fd(source);
     ret->loop = loop;
     ret->source = source;
-
+    ret->eq = gam_eq_new ();
+    ret->eq_source = g_timeout_add (500 /* ms */, gam_connection_eq_flush, ret);
     gamConnList = g_list_prepend(gamConnList, ret);
 
     GAM_DEBUG(DEBUG_INFO, "Created connection %d\n", ret->fd);
@@ -555,6 +584,27 @@ gam_send_event(GamConnDataPtr conn, int reqno, int event,
     }
     return (0);
 }
+
+/**
+ * gam_queue_event:
+ * @conn: the connection
+ * @event: the event type
+ * @path: the path
+ *
+ * Queue an event to be sent over a connection within the next second.
+ * If an identical event is found at the tail of the event queue 
+ * no event will be queued.
+ */
+void
+gam_queue_event(GamConnDataPtr conn, int reqno, int event,
+                const char *path, int len)
+{
+	g_assert (conn);
+	g_assert (conn->eq);
+
+	gam_eq_queue (conn->eq, reqno, event, path, len);
+}
+
 
 /**
  * gam_send_ack:

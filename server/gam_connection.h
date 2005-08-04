@@ -48,6 +48,11 @@ int		gam_send_event		(GamConnDataPtr conn,
 					 int event,
 					 const char *path,
 					 int len);
+void		gam_queue_event		(GamConnDataPtr conn,
+					 int reqno,
+					 int event,
+					 const char *path,
+					 int len);
 int		gam_send_ack		(GamConnDataPtr conn,
 					 int reqno,
 					 const char *path,

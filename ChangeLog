@@ -1,3 +1,18 @@
+2005-08-04  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* server/Makefile.am: Compile gam_eq.c
+	* server/gam_connection.c: (gam_connection_close),
+	(gam_connection_eq_flush), (gam_connection_new), (gam_queue_event):
+	* server/gam_connection.h: Hookup the event queue. BUT, It's not used yet.
+	* server/gam_eq.c: (gam_eq_event_new), (gam_eq_event_free),
+	(gam_eq_new), (gam_eq_free), (gam_eq_queue), (gam_eq_size),
+	(gam_eq_flush_callback), (gam_eq_flush):
+	* server/gam_eq.h:
+	An event queue that will be per-connection when finished. Provides limited
+	but effective flow control. 
+	* server/gam_poll.c: (poll_file): Enable poll limiter now that we have
+	proper defaults for local filesystems.
+
 2005-08-03  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* server/gam_fs.c: (gam_fs_init): Tweak defaults yet again.

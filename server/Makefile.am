@@ -45,6 +45,8 @@ gam_server_SOURCES =					\
 	gam_fs.h					\
 	gam_conf.c					\
 	gam_conf.h					\
+	gam_eq.c					\
+	gam_eq.h					\
 	server_config.h
 
 if ENABLE_INOTIFY
