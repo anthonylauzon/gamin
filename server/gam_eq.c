@@ -13,6 +13,7 @@
 #include "gam_error.h"
 #include "gam_eq.h"
 
+// #define GAM_EQ_VERBOSE
 typedef struct {
 	int reqno;
 	int event;
@@ -88,15 +89,16 @@ gam_eq_queue (gam_eq_t *eq, int reqno, int event, const char *path, int len)
 	/* Check if the last event in the event queue is the same as the one we are attempting to queue
 	 * if it is, we can throw this new event away
 	 */
-
-	if (eq_event->reqno == reqno &&
+	if (eq_event && eq_event->reqno == reqno &&
 		eq_event->len == len &&
 		eq_event->event == event &&
 		!strcmp(eq_event->path, path))
 	{
+#ifdef GAM_EQ_VERBOSE
+		GAM_DEBUG(DEBUG_INFO, "gam_eq: Didn't queue duplicate event\n");
+#endif
 		return;
 	}
-
 	eq_event = gam_eq_event_new (reqno, event, path, len);
 	g_queue_push_tail (eq->event_queue, eq_event);
 }
@@ -123,6 +125,9 @@ gam_eq_flush (gam_eq_t *eq, GamConnDataPtr conn)
 	if (!eq)
 		return;
 
+#ifdef GAM_EQ_VERBOSE
+	GAM_DEBUG(DEBUG_INFO, "gam_eq: Flushing event queue for %s\n", gam_connection_get_pidname (conn));
+#endif
 	while (!g_queue_is_empty (eq->event_queue))
 	{
 		gam_eq_event_t *event = g_queue_pop_head (eq->event_queue);
