@@ -266,10 +266,15 @@ gam_server_emit_one_event(const char *path, int node_is_dir,
 
     reqno = gam_subscription_get_reqno(sub);
 
-    if (gam_send_event(conn, reqno, event, subpath, len) < 0) {
-	GAM_DEBUG(DEBUG_INFO, "Failed to send event to PID %d\n",
-		  gam_connection_get_pid(conn));
-    }
+	if (gam_inotify_is_running())
+	{
+		gam_queue_event(conn, reqno, event, subpath, len);
+	} else {
+		if (gam_send_event(conn, reqno, event, subpath, len) < 0) {
+		GAM_DEBUG(DEBUG_INFO, "Failed to send event to PID %d\n",
+			  gam_connection_get_pid(conn));
+		}
+	}
 }
 
 /**

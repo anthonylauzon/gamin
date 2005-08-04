@@ -127,6 +127,12 @@ gam_inotify_data_debug (gpointer key, gpointer value, gpointer user_data)
 	GAM_DEBUG(DEBUG_INFO, "isub wd %d refs %d permission %d missing %d busy %d deactivated %d ignored %d events (%d:%d:%d): %s\n", data->wd, data->refcount, permission, missing, busy, deactivated, ignored, data->events, data->deactivated_events, data->ignored_events, data->path);
 }
 
+gboolean
+gam_inotify_is_running()
+{
+	return inotify_device_fd >= 0;
+}
+
 void
 gam_inotify_debug(void)
 {
