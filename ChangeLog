@@ -1,3 +1,7 @@
+Fri Aug  5 11:52:56 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* gamin.spec.in: tiny fix for the python package
+
 2005-08-04  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* server/gam_eq.c: (gam_eq_queue), (gam_eq_flush): Fix a segfault when the
