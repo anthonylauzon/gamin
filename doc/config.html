@@ -11,20 +11,34 @@ A:link, A:visited, A:active { text-decoration: underline }
 sometimes using the kernel notification APIs doesn't work or lead to troubles
 (for example when trying to unmount device). By default gamin revert to using
 polling for all paths matching <code>/mnt/*</code> or <code>/media/*</code>
-on Linux. This may be overriden or extended by the config file
-<code>$HOME/.gaminrc</code> . Here is an example of such a configuration
-file:</p><pre># configuration for gamin
+on Linux. This may be overriden or extended by the one of the three config files
+<code>/etc/gamin/gaminrc</code>, <code>$HOME/.gaminrc</code>, <code>/etc/gamin/mandatory_gaminrc</code>.
+Here is an example of such a configuration file:</p><pre># configuration for gamin
 # Can be used to override the default behaviour.
 # notify filepath(s) : indicate to use kernel notification
 # poll filepath(s)   : indicate to use polling instead
+# fsset fsname method poll_limit : indicate what method of notification for the filesystem
+#                                  kernel - use the kernel for notification
+#                                  poll - use polling for notification
+#                                  none - don't use any notification
+#                                  
+#                                  the poll_limit is the number of seconds
+#                                  that must pass before a resource is polled again.
+#                                  It is optional, and if it is not present the previous
+#                                  value will be used or the default.
  
-notify /mnt/local* /mnt/pictures*
-poll /temp/*</pre><p>The configuration file accepts only 2 types of command:</p><ul><li>notify : to express that kernel monitoring should be used for matching
+notify /mnt/local* /mnt/pictures* # use kernel notification on these paths
+poll /temp/*                      # use poll notification on these paths
+fsset nfs poll 10                 # use polling on nfs mounts and poll once every 10 seconds
+</pre><p>The configuration file accepts only 3 types of command:</p><ul><li>notify : to express that kernel monitoring should be used for matching
     paths</li>
   <li>poll: to express that polling should be used for matching paths</li>
-</ul><p>When checking a path to guess whether polling or kernel notification
+  <li>fsset: to control what notification method is used on a filesystem type</li>
+</ul><p>The three config files are loaded in this order:</p><ul><li><code>/etc/gamin/gaminrc</code></li>
+	<li><code>~/.gaminrc</code></li>
+	<li><code>/etc/gamin/mandatory_gaminrc</code></li>
+</ul><p>The mandatory config file allows the system administrator to override any potentially dangerous preferences set by the user.</p><p>When checking a path to guess whether polling or kernel notification
 should be used, gamin checks first the user provided rules in their
 declaration order within the configuration file and then check the predefined
 rules. This way the first declaration for <code>/mnt/local*</code> in the
-example override the default one for <code>/mnt/*</code> .</p><p><em>Caveat: separators in the config file should be spaces, not
-tabs.</em></p><p><a href="contacts.html">Daniel Veillard</a></p></td></tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></body></html>
+example override the default one for <code>/mnt/*</code> .</p><p>If gamin is not told to use poll on a particular path, it will then try and decide based on the filesystem the path is located on</p><p><em>Caveat: separators in the config file should be spaces, not tabs.</em></p><p><a href="contacts.html">Daniel Veillard</a></p></td></tr></table></td></tr></table></td></tr></table></td></tr></table></td></tr></table></body></html>

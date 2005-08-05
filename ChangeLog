@@ -1,5 +1,10 @@
 2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* doc/config.html:
+	* doc/gamin.html: Update documentation
+
+2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_poll.c: (node_add_subscription),
 	(node_remove_subscription), (gam_poll_delist_node),
 	(gam_poll_relist_node), (gam_poll_flowon_node),
