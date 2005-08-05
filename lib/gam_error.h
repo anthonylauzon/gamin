@@ -47,6 +47,11 @@ void	gam_error(const char *file, int line, const char* function,
 
 #ifdef GAM_DEBUG_ENABLED
 
+#ifdef GAMIN_DEBUG_API
+extern int debug_reqno;
+extern void *debug_userData;
+#endif
+
 /**
  * gam_debug_active:
  *

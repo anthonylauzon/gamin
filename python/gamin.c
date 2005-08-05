@@ -19,7 +19,7 @@ void init_gamin(void);
 
 static FAMConnection **connections = NULL;
 static int nb_connections = 0;
-int max_connections = 0;
+static int max_connections = 0;
 
 static FAMRequest **requests = NULL;
 static int nb_requests = 0;

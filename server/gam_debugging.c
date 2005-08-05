@@ -6,7 +6,7 @@
 #include "fam.h"
 
 #ifdef GAMIN_DEBUG_API
-GList *gamDebugNotify = NULL;
+static GList *gamDebugNotify = NULL;
 
 /**
  * gam_debug_release:
@@ -58,6 +58,8 @@ gam_debug_report(GAMDebugEvent event, const char *value, int extra) {
         case GAMDnotifyFlowOff:
 	    connlist = gamDebugNotify;
 	    break;
+	default:
+	    return;
     }
     for (l = connlist; l; l = l->next) {
         GamConnDataPtr conn = l->data;

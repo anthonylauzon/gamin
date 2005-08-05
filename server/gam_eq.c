@@ -50,7 +50,7 @@ struct _gam_eq {
 };
 
 gam_eq_t *
-gam_eq_new ()
+gam_eq_new (void)
 {
 	gam_eq_t *eq = NULL;
 

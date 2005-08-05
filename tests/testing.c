@@ -17,11 +17,11 @@
 
 #define MAX_REQUESTS 2048
 
-char pwd[250];
-char filename[MAXPATHLEN + 250];
-int interactive = 0;
+static char pwd[250];
+static char filename[MAXPATHLEN + 250];
+static int interactive = 0;
 
-struct testState {
+static struct testState {
     int connected;
     FAMConnection fc;
     int nb_requests;

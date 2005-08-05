@@ -21,7 +21,7 @@
  * Returns path on success or NULL in case of error.
  */
 static const char *
-gamin_find_server_path()
+gamin_find_server_path(void)
 {
     static const char *server_paths[] = {
         BINDIR "/gam_server",

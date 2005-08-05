@@ -9,9 +9,9 @@
 extern "C" {
 #endif
 
-gboolean        (*gam_backend_add_subscription) (GamSubscription *sub);
-gboolean        (*gam_backend_remove_subscription) (GamSubscription *sub);
-gboolean        (*gam_backend_remove_all_for)   (GamListener *listener);
+extern gboolean (*gam_backend_add_subscription) (GamSubscription *sub);
+extern gboolean (*gam_backend_remove_subscription) (GamSubscription *sub);
+extern gboolean (*gam_backend_remove_all_for)   (GamListener *listener);
 
 gboolean        gam_init_subscriptions          (void);
 gboolean        gam_add_subscription            (GamSubscription *sub);

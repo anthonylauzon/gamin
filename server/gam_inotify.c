@@ -113,22 +113,27 @@ static void 	gam_inotify_sanity_check	(void);
 static void 
 gam_inotify_data_debug (gpointer key, gpointer value, gpointer user_data)
 {
+	int busy;
+	int deactivated;
+	int ignored;
+	int missing;
+	int permission;
 	inotify_data_t *data = (inotify_data_t *)value;
 
 	if (!data)
 		return;
 
-	int busy = data->busy;
-	int deactivated = data->deactivated;
-	int ignored = data->ignored;
-	int missing = data->missing;
-	int permission = data->permission;
+	busy = data->busy;
+	deactivated = data->deactivated;
+	ignored = data->ignored;
+	missing = data->missing;
+	permission = data->permission;
 
 	GAM_DEBUG(DEBUG_INFO, "isub wd %d refs %d permission %d missing %d busy %d deactivated %d ignored %d events (%d:%d:%d): %s\n", data->wd, data->refcount, permission, missing, busy, deactivated, ignored, data->events, data->deactivated_events, data->ignored_events, data->path);
 }
 
 gboolean
-gam_inotify_is_running()
+gam_inotify_is_running(void)
 {
 	return inotify_device_fd >= 0;
 }
@@ -485,7 +490,7 @@ gam_inotify_process_event (inotify_event_t *event)
 }
 
 static void
-gam_inotify_process_event_queue ()
+gam_inotify_process_event_queue (void)
 {
 	/* TODO: Preprocess events */
 	while (!g_queue_is_empty (event_queue))
@@ -1060,7 +1065,7 @@ gam_inotify_wd_check (gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-gam_inotify_wd_hash_sanity_check ()
+gam_inotify_wd_hash_sanity_check (void)
 {
 	g_hash_table_foreach (wd_hash, gam_inotify_wd_check, NULL);
 }
@@ -1129,14 +1134,14 @@ gam_inotify_missing_check (gpointer data, gpointer user_data)
 }
 
 static void
-gam_inotify_missing_list_sanity_check ()
+gam_inotify_missing_list_sanity_check (void)
 {
 	g_list_foreach (missing_list, gam_inotify_missing_check, NULL);
 }
 
 
 static void
-gam_inotify_sanity_check ()
+gam_inotify_sanity_check (void)
 {
 #ifdef GAM_INOTIFY_SANITY
 	gam_inotify_wd_hash_sanity_check ();

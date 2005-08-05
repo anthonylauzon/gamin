@@ -192,7 +192,6 @@ gam_tree_add_at_path(GamTree * tree, const char *path, gboolean is_dir)
     GamNode *node;
     unsigned int i;
     char *path_cpy;
-    int is_real_dir;
 
     g_return_val_if_fail(strlen(path) > 0, NULL);
 

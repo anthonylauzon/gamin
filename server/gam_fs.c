@@ -29,7 +29,7 @@ static GList *fs_props = NULL;
 static struct stat mtab_sbuf;
 
 static void
-gam_fs_free_filesystems ()
+gam_fs_free_filesystems (void)
 {
 	GList *iterator = NULL;
 	gam_fs *fs = NULL;
@@ -111,7 +111,7 @@ gam_fs_filesystem_sort_cb (gconstpointer a, gconstpointer b)
 }
 
 static void
-gam_fs_scan_mtab ()
+gam_fs_scan_mtab (void)
 {
 	gchar *contents, **lines, *line, **words;
 	gsize len;
@@ -167,7 +167,7 @@ gam_fs_scan_mtab ()
 }
 
 void
-gam_fs_init ()
+gam_fs_init (void)
 {
 	if (initialized == FALSE)
 	{
@@ -285,7 +285,7 @@ gam_fs_unset (const char *fsname)
 }
 
 void
-gam_fs_debug ()
+gam_fs_debug (void)
 {
 	GList *iterator = NULL;
 	gam_fs_properties *prop = NULL;

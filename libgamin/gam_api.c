@@ -30,7 +30,7 @@ void *debug_userData = NULL;
 #endif
 int FAMErrno = 0;
 
-enum {
+static enum {
     FAM_OK = 0,
     FAM_ARG,	/* Bad arguments */
     FAM_FILE,	/* Bad filename */

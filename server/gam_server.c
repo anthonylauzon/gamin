@@ -52,6 +52,10 @@
 static int poll_only = 0;
 static const char *session;
 
+gboolean (*gam_backend_add_subscription) (GamSubscription *sub);
+gboolean (*gam_backend_remove_subscription) (GamSubscription *sub);
+gboolean (*gam_backend_remove_all_for)   (GamListener *listener);
+
 /**
  * gam_exit:
  *

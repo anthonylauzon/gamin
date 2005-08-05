@@ -1,3 +1,11 @@
+Fri Aug  5 14:07:24 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* lib/gam_error.h libgamin/gam_api.c libgamin/gam_fork.c python/gamin.c
+	  server/gam_debugging.c server/gam_dnotify.c server/gam_eq.c
+	  server/gam_fs.c server/gam_inotify.c server/gam_server.c
+	  server/gam_server.h server/gam_tree.c tests/testing.c: code cleanups
+	  for reports from gcc and sparse.
+
 Fri Aug  5 11:52:56 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.spec.in: tiny fix for the python package
