@@ -1,5 +1,10 @@
 2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_connection.c: (gam_connection_new): Change event queue flush
+	to 100 ms.
+
+2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* doc/config.html:
 	* doc/gamin.html: Update documentation
 

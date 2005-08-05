@@ -190,7 +190,7 @@ gam_connection_new(GMainLoop *loop, GIOChannel *source)
     ret->loop = loop;
     ret->source = source;
     ret->eq = gam_eq_new ();
-    ret->eq_source = g_timeout_add (500 /* ms */, gam_connection_eq_flush, ret);
+    ret->eq_source = g_timeout_add (100 /* ms */, gam_connection_eq_flush, ret);
     gamConnList = g_list_prepend(gamConnList, ret);
 
     GAM_DEBUG(DEBUG_INFO, "Created connection %d\n", ret->fd);
