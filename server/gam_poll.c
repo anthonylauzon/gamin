@@ -250,7 +250,7 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
     GAM_DEBUG(DEBUG_INFO, "node_add_subscription(%s)\n", node->path);
     gam_node_add_subscription(node, sub);
 
-    if (gam_exclude_check(node->path)) {
+    if (gam_exclude_check(node->path) || gam_fs_get_mon_type (node->path) == GFS_MT_POLL) {
         GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
         if (node->lasttime == 0)
             poll_file(node);
@@ -293,7 +293,7 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
     gam_node_remove_subscription(node, sub);
 
     path = node->path;
-    if (gam_exclude_check(path)) {
+    if (gam_exclude_check(path) || gam_fs_get_mon_type (path) == GFS_MT_POLL) {
         GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
         return (0);
     }
@@ -361,7 +361,7 @@ gam_poll_delist_node(GamNode * node)
     path = gam_node_get_path(node);
     GAM_DEBUG(DEBUG_INFO, "gam_poll_delist_node %s\n", path);
 
-    if (gam_exclude_check(path))
+    if (gam_exclude_check(path) || gam_fs_get_mon_type (path) != GFS_MT_KERNEL)
         return;
     subs = gam_node_get_subscriptions(node);
 
@@ -390,8 +390,9 @@ gam_poll_relist_node(GamNode * node)
     path = gam_node_get_path(node);
     GAM_DEBUG(DEBUG_INFO, "gam_poll_relist_node %s\n", path);
 
-    if (gam_exclude_check(path))
+    if (gam_exclude_check(path) || gam_fs_get_mon_type(path) != GFS_MT_KERNEL)
         return;
+
     subs = gam_node_get_subscriptions(node);
 
     while (subs != NULL) {
@@ -416,10 +417,11 @@ gam_poll_flowon_node(GamNode * node)
     const char *path;
 
     path = gam_node_get_path(node);
-    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowon_node %s\n", path);
 
-    if (gam_exclude_check(path))
+    if (gam_exclude_check(path) || gam_fs_get_mon_type(path) != GFS_MT_KERNEL)
         return;
+
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowon_node %s\n", path);
 
     if (gam_node_is_dir(node))
         trigger_dir_handler(path, GAMIN_FLOWCONTROLSTART, node);
@@ -440,9 +442,11 @@ gam_poll_flowoff_node(GamNode * node)
     const char *path;
 
     path = gam_node_get_path(node);
-    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowoff_node %s\n", path);
-    if (gam_exclude_check(path))
+
+    if (gam_exclude_check(path) || gam_fs_get_mon_type(path) != GFS_MT_KERNEL)
         return;
+
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_flowoff_node %s\n", path);
 
     if (gam_node_is_dir(node))
         trigger_dir_handler(path, GAMIN_FLOWCONTROLSTOP, node);
@@ -475,7 +479,7 @@ poll_file(GamNode * node)
             node->pflags |= MON_MISSING;
         else
             gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
-        if (gam_exclude_check(path))
+        if (gam_exclude_check(path) || gam_fs_get_mon_type (path) != GFS_MT_KERNEL)
             node->pflags |= MON_NOKERNEL;
         memcpy(&(node->sbuf), &(sbuf), sizeof(struct stat));
         node->lasttime = current_time;
@@ -572,7 +576,7 @@ poll_file(GamNode * node)
 
     if ((node->checks >= 4) && (!(node->pflags & MON_BUSY))) {
         if ((gam_node_get_subscriptions(node) != NULL) &&
-            (!gam_exclude_check(node->path))) {
+            (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) {
             GAM_DEBUG(DEBUG_INFO, "switching %s back to polling\n", path);
             node->pflags |= MON_BUSY;
             node->checks = 0;
@@ -596,7 +600,7 @@ poll_file(GamNode * node)
 
     if ((event == 0) && (node->pflags & MON_BUSY) && (node->checks > 5)) {
         if ((gam_node_get_subscriptions(node) != NULL) &&
-            (!gam_exclude_check(node->path))) {
+            (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) {
             GAM_DEBUG(DEBUG_INFO,
                       "switching %s back to kernel monitoring\n", path);
             node->pflags &= ~MON_BUSY;
@@ -818,7 +822,7 @@ gam_poll_scan_callback(gpointer data)
          * if the resource exists again and is not in a special monitoring
          * mode then switch back to dnotify for monitoring.
          */
-        if ((node->pflags == 0) && (!gam_exclude_check(node->path))) {
+        if ((node->pflags == 0) && (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) {
             gam_poll_remove_missing(node);
             if (gam_node_get_subscriptions(node) != NULL) {
                 gam_poll_relist_node(node);
@@ -856,7 +860,7 @@ gam_poll_scan_callback(gpointer data)
          * if the resource exists again and is not in a special monitoring
          * mode then switch back to dnotify for monitoring.
          */
-        if ((node->pflags == 0) && (!gam_exclude_check(node->path))) {
+        if ((node->pflags == 0) && (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) {
             gam_poll_remove_busy(node);
             if (gam_node_get_subscriptions(node) != NULL) {
                 gam_poll_flowoff_node(node);
@@ -1219,7 +1223,7 @@ gam_poll_first_scan_dir(GamSubscription * sub, GamNode * dir_node,
             }
             stat(node->path, &(node->sbuf));
             gam_node_set_is_dir(node, (S_ISDIR(node->sbuf.st_mode) != 0));
-            if (gam_exclude_check(path))
+            if (gam_exclude_check(path) || gam_fs_get_mon_type(path) != GFS_MT_KERNEL)
                 node->pflags |= MON_NOKERNEL;
             node->lasttime = current_time;
             gam_tree_add(tree, dir_node, node);

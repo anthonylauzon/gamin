@@ -159,17 +159,26 @@ gam_init_subscriptions(void)
 gboolean
 gam_add_subscription(GamSubscription * sub)
 {
-	gam_fs_mon_type type;
+	const char *path = NULL;
+
 	if (sub == NULL)
 		return(FALSE);
 
-	type = gam_fs_get_mon_type (gam_subscription_get_path (sub));
-	if (type == GFS_MT_KERNEL)
-		return (gam_backend_add_subscription(sub));
-	else if (type == GFS_MT_POLL)
+	path = gam_subscription_get_path (sub);
+
+	if (gam_exclude_check (path)) 
+	{
 		return gam_poll_add_subscription (sub);
-	else
-		return FALSE;
+	} else {
+		gam_fs_mon_type type;
+		type = gam_fs_get_mon_type (path);
+		if (type == GFS_MT_KERNEL)
+			return (gam_backend_add_subscription(sub));
+		else if (type == GFS_MT_POLL)
+			return gam_poll_add_subscription (sub);
+	}
+
+	return FALSE;
 }
 
 /**
@@ -182,19 +191,26 @@ gam_add_subscription(GamSubscription * sub)
 gboolean
 gam_remove_subscription(GamSubscription * sub)
 {
-	gam_fs_mon_type type;
+	const char *path = NULL;
 
 	if (sub == NULL)
 		return(FALSE);
 
-	type = gam_fs_get_mon_type (gam_subscription_get_path (sub));
+	path = gam_subscription_get_path (sub);
 
-	if (type == GFS_MT_KERNEL) 
-		return (gam_backend_remove_subscription(sub));
-	else if (type == GFS_MT_POLL)
+	if (gam_exclude_check (path)) 
+	{
 		return gam_poll_remove_subscription (sub);
-	else 
-		return FALSE;
+	} else {
+		gam_fs_mon_type type;
+		type = gam_fs_get_mon_type (path);
+		if (type == GFS_MT_KERNEL)
+			return (gam_backend_remove_subscription(sub));
+		else if (type == GFS_MT_POLL)
+			return gam_poll_remove_subscription (sub);
+	}
+
+	return FALSE;
 }
 
 /**

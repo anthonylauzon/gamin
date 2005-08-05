@@ -1,5 +1,27 @@
 2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_poll.c: (node_add_subscription),
+	(node_remove_subscription), (gam_poll_delist_node),
+	(gam_poll_relist_node), (gam_poll_flowon_node),
+	(gam_poll_flowoff_node), (poll_file), (gam_poll_scan_callback),
+	(gam_poll_first_scan_dir):
+	* server/gam_server.c: (gam_add_subscription),
+	(gam_remove_subscription):
+
+	Consider fsset options when deciding between kernel/poll/none
+	subscription options.
+
+2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* server/gam_conf.c: (gam_conf_string_to_mon_type),
+	(gam_conf_read_internal), (gam_conf_read):
+	Make poll timeout value optional, read in /etc/gamin/gaminrc, then
+	~/.gaminrc, finally /etc/gamin/mandatory_gaminrc.
+	* server/gam_fs.c: (gam_fs_set): Use GAMIN_POLL_DEFAULT when passed -1 for
+	poll_timeout.
+
+2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* libgamin/gam_api.c: (gamin_check_cred):
 	* server/gam_channel.c: (gam_client_conn_check_cred),
 	(gam_client_create):
