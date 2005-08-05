@@ -1,5 +1,14 @@
 2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_conf.c: (gam_conf_read): Fix build.
+	* server/gam_inotify.c: (gam_inotify_process_event_queue),
+	(gam_inotify_read_handler), (gam_inotify_init), (g_timeval_lt),
+	(t_timeval_eq): Process the inotify event queue in a timer. Add GTimeVal
+	comparision predicates. This is the beginning of pairing move events
+	together.
+
+2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_connection.c: (gam_connection_new): Change event queue flush
 	to 100 ms.
 

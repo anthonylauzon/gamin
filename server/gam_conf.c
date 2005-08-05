@@ -109,7 +109,7 @@ void
 gam_conf_read (void)
 {
 	const char *globalconf = "/etc/gamin/gaminrc";
-	const char *mandatory = "/etc/gamin/mandatory_gaminrc"
+	const char *mandatory = "/etc/gamin/mandatory_gaminrc";
 	gchar *userconf = NULL;
 	userconf = g_strconcat(g_get_home_dir(), "/.gaminrc", NULL);
 	if (userconf == NULL) {

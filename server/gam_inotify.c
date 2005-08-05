@@ -51,6 +51,7 @@
 #define GAM_INOTIFY_WD_MISSING -1
 #define GAM_INOTIFY_WD_PERM -2
 
+
 typedef struct {
 	/* The full pathname of this node */
 	char *path;
@@ -109,6 +110,9 @@ static void 	gam_inotify_rm_missing 		(const char *path);
 static gboolean gam_inotify_scan_missing 	(gpointer userdata);
 
 static void 	gam_inotify_sanity_check	(void);
+
+static gboolean	g_timeval_lt			(GTimeVal *val1, GTimeVal *val2);
+static gboolean	t_timeval_eq			(GTimeVal *val1, GTimeVal *val2);
 
 static void 
 gam_inotify_data_debug (gpointer key, gpointer value, gpointer user_data)
@@ -489,8 +493,8 @@ gam_inotify_process_event (inotify_event_t *event)
 	GAM_DEBUG(DEBUG_INFO, "inotify: error event->mask = %d\n", event->mask);
 }
 
-static void
-gam_inotify_process_event_queue (void)
+static gboolean
+gam_inotify_process_event_queue (gpointer data)
 {
 	/* TODO: Preprocess events */
 	while (!g_queue_is_empty (event_queue))
@@ -500,6 +504,8 @@ gam_inotify_process_event_queue (void)
 		gam_inotify_process_event (event);
 		gam_inotify_event_free (event);
 	}
+
+	return TRUE;
 }
 
 static gboolean
@@ -512,7 +518,8 @@ gam_inotify_read_handler(gpointer user_data)
 
         buffer_i = 0;
         events = 0;
-        while (buffer_i < buffer_size) {
+        while (buffer_i < buffer_size) 
+	{
                 struct inotify_event *event;
                 gsize event_size;
                 event = (struct inotify_event *)&buffer[buffer_i];
@@ -523,8 +530,6 @@ gam_inotify_read_handler(gpointer user_data)
         }
 
 	GAM_DEBUG(DEBUG_INFO, "inotify recieved %d events\n", events);
-
-	gam_inotify_process_event_queue ();
 
         return TRUE;
 }
@@ -770,6 +775,7 @@ gam_inotify_init(void)
     g_source_set_callback(source, gam_inotify_read_handler, NULL, NULL);
     g_source_attach(source, NULL);
     g_timeout_add (1000, gam_inotify_scan_missing, NULL);
+    g_timeout_add (50, gam_inotify_process_event_queue, NULL);
 
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
     wd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -1148,3 +1154,26 @@ gam_inotify_sanity_check (void)
 	gam_inotify_missing_list_sanity_check ();
 #endif
 }
+
+static gboolean
+g_timeval_lt(GTimeVal *val1, GTimeVal *val2)
+{
+	if (val1->tv_sec < val2->tv_sec)
+		return TRUE;
+
+	if (val1->tv_sec > val2->tv_sec)
+		return FALSE;
+
+	/* val1->tv_sec == val2->tv_sec */
+	if (val1->tv_usec < val2->tv_usec)
+		return TRUE;
+
+	return FALSE;
+}
+
+static gboolean
+t_timeval_eq(GTimeVal *val1, GTimeVal *val2)
+{
+	return (val1->tv_sec == val2->tv_sec) && (val1->tv_usec == val2->tv_usec);
+}
+
