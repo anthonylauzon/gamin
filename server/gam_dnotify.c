@@ -73,7 +73,7 @@ gam_dnotify_data_debug (gpointer key, gpointer value, gpointer user_data)
 }
 
 void
-gam_dnotify_debug (void)
+gam_dnotify_debug ()
 {
     if (path_hash == NULL)
         return;

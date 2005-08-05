@@ -1,3 +1,11 @@
+2005-08-05  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* libgamin/gam_api.c: (gamin_check_cred):
+	* server/gam_channel.c: (gam_client_conn_check_cred),
+	(gam_client_create):
+	* server/gam_dnotify.c: (gam_dnotify_debug):
+	* server/gam_tree.c: (gam_tree_add_at_path): Clean up gcc warnings
+
 Fri Aug  5 14:07:24 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* lib/gam_error.h libgamin/gam_api.c libgamin/gam_fork.c python/gamin.c

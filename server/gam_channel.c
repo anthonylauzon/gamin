@@ -154,7 +154,7 @@ gam_client_conn_check_cred(GIOChannel * source, int fd,
     {
 #ifdef SO_PEERCRED
         struct ucred cr;
-        int cr_len = sizeof(cr);
+        socklen_t cr_len = sizeof(cr);
 
         if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &cr, &cr_len) ==
             0 && cr_len == sizeof(cr)) {
@@ -772,7 +772,7 @@ gam_client_create(GIOChannel * server)
     GIOChannel *socket = NULL;
     int sock;
     int client = -1;
-    int client_addrlen;
+    socklen_t client_addrlen;
     struct sockaddr client_addr;
 
     sock = g_io_channel_unix_get_fd(server);
