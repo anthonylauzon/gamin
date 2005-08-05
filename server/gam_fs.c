@@ -244,7 +244,8 @@ gam_fs_set (const char *fsname, gam_fs_mon_type type, int poll_timeout)
 
 		if (!strcmp (prop->fsname, fsname)) {
 			prop->mon_type = type;
-			prop->poll_timeout = poll_timeout;
+			if (poll_timeout >= 0)
+				prop->poll_timeout = poll_timeout;
 			return;
 		}
 
@@ -255,7 +256,10 @@ gam_fs_set (const char *fsname, gam_fs_mon_type type, int poll_timeout)
 
 	prop->fsname = g_strdup (fsname);
 	prop->mon_type = type;
-	prop->poll_timeout = poll_timeout;
+	if (poll_timeout >= 0)
+		prop->poll_timeout = poll_timeout;
+	else
+		prop->poll_timeout = DEFAULT_POLL_TIMEOUT;
 
 	fs_props = g_list_prepend (fs_props, prop);
 }

@@ -18,9 +18,9 @@
 static gam_fs_mon_type
 gam_conf_string_to_mon_type (const char *method)
 {
-	if (!strcasecmp(method, "KERNEL"))
+	if (!strcasecmp(method, "kernel"))
 		return GFS_MT_KERNEL;
-	if (!strcasecmp(method, "POLL"))
+	if (!strcasecmp(method, "poll"))
 		return GFS_MT_POLL;
 
 	return GFS_MT_NONE;
@@ -51,7 +51,7 @@ gam_conf_read_internal (const char *filename)
 			if (!strcmp(words[0], "fsset")) {
 				gam_fs_mon_type mon_type = GFS_MT_KERNEL;
 				gint poll_timeout = 0;
-				/* We need: fsset <fsname> <method> <poll timeout> */
+				/* We need: fsset <fsname> <method> [poll timeout] */
 				/* fsname */
 				if (!words[1] || !words[1][0]) {
 					g_strfreev(words);
@@ -62,13 +62,12 @@ gam_conf_read_internal (const char *filename)
 					g_strfreev(words);
 					continue;
 				}
-				/* poll timeout */
-				if (!words[3] || !words[3][0]) {
-					g_strfreev(words);
-					continue;
-				}
 				mon_type = gam_conf_string_to_mon_type (words[2]);
-				poll_timeout = atoi (words[3]);
+				/* The poll timeout value is optional, if it isn't provided, the default value will be used */
+				if (!words[3] || !words[3][0]) 
+					poll_timeout = -1;
+				else
+					poll_timeout = atoi (words[3]);
 				gam_fs_set (words[1], mon_type, poll_timeout);
 				g_strfreev(words);
 				continue;
@@ -109,7 +108,8 @@ gam_conf_read_internal (const char *filename)
 void
 gam_conf_read (void)
 {
-	const char *globalconf = "/etc/gaminrc";
+	const char *globalconf = "/etc/gamin/gaminrc";
+	const char *mandatory = "/etc/gamin/mandatory_gaminrc"
 	gchar *userconf = NULL;
 	userconf = g_strconcat(g_get_home_dir(), "/.gaminrc", NULL);
 	if (userconf == NULL) {
@@ -117,9 +117,17 @@ gam_conf_read (void)
 		return;
 	}
 
-	/* We read the system conf file last so that system admins can set better defaults */
-	gam_conf_read_internal (userconf);
+	/* We read three config files in this order,
+	 * 1) System
+	 * 2) User config
+	 * 3) System mandatory 
+	 *
+	 * We read the system mandatory last, so that the system administrator 
+	 * can override potentially dangerous options
+	 */
 	gam_conf_read_internal (globalconf);
+	gam_conf_read_internal (userconf);
+	gam_conf_read_internal (mandatory);
 
 	g_free (userconf);
 }
