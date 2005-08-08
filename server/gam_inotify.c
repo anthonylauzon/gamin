@@ -244,6 +244,64 @@ mask_to_gam_event (gint mask)
 	}
 }
 
+/* Called when a directory is being watched as a file */
+static GaminEventType
+gam_inotify_mask_to_gam_file_event (gint mask)
+{
+	mask &= ~IN_ISDIR;
+	switch (mask)
+	{
+	case IN_MOVED_FROM:
+	case IN_DELETE:
+	case IN_CREATE:
+	case IN_MOVED_TO:
+		return GAMIN_EVENT_CHANGED;
+	break;
+	case IN_DELETE_SELF:
+		return GAMIN_EVENT_DELETED;
+	break;
+	case IN_ATTRIB:
+	case IN_MODIFY:
+	case IN_Q_OVERFLOW:
+	case IN_OPEN:
+	case IN_CLOSE_WRITE:
+	case IN_CLOSE_NOWRITE:
+	case IN_UNMOUNT:
+	case IN_ACCESS:
+	case IN_IGNORED:
+	default:
+		return GAMIN_EVENT_UNKNOWN;
+	break;
+	}
+}
+
+/* Called when a file is watched as a directory */
+static GaminEventType
+gam_inotify_mask_to_gam_dir_event (gint mask)
+{
+	mask &= ~IN_ISDIR;
+	switch (mask)
+	{
+	case IN_MOVED_FROM:
+	case IN_DELETE:
+	case IN_CREATE:
+	case IN_MOVED_TO:
+	case IN_DELETE_SELF:
+	case IN_ATTRIB:
+	case IN_MODIFY:
+	case IN_Q_OVERFLOW:
+	case IN_OPEN:
+	case IN_CLOSE_WRITE:
+	case IN_CLOSE_NOWRITE:
+	case IN_UNMOUNT:
+	case IN_ACCESS:
+	case IN_IGNORED:
+	default:
+		return GAMIN_EVENT_UNKNOWN;
+	break;
+	}
+}
+
 static inotify_data_t *
 gam_inotify_data_new(const char *path, int wd, gboolean dir)
 {
@@ -310,61 +368,6 @@ gam_inotify_event_free (inotify_event_t *event)
 	g_free (event);
 }
 
-static GaminEventType
-gam_inotify_mask_to_gam_file_event (gint mask)
-{
-	mask &= ~IN_ISDIR;
-	switch (mask)
-	{
-	case IN_MOVED_FROM:
-	case IN_DELETE:
-	case IN_CREATE:
-	case IN_MOVED_TO:
-		return GAMIN_EVENT_CHANGED;
-	break;
-	case IN_DELETE_SELF:
-		return GAMIN_EVENT_DELETED;
-	break;
-	case IN_ATTRIB:
-	case IN_MODIFY:
-	case IN_Q_OVERFLOW:
-	case IN_OPEN:
-	case IN_CLOSE_WRITE:
-	case IN_CLOSE_NOWRITE:
-	case IN_UNMOUNT:
-	case IN_ACCESS:
-	case IN_IGNORED:
-	default:
-		return GAMIN_EVENT_UNKNOWN;
-	break;
-	}
-}
-
-static GaminEventType
-gam_inotify_mask_to_gam_dir_event (gint mask)
-{
-	mask &= ~IN_ISDIR;
-	switch (mask)
-	{
-	case IN_MOVED_FROM:
-	case IN_DELETE:
-	case IN_CREATE:
-	case IN_MOVED_TO:
-	case IN_DELETE_SELF:
-	case IN_ATTRIB:
-	case IN_MODIFY:
-	case IN_Q_OVERFLOW:
-	case IN_OPEN:
-	case IN_CLOSE_WRITE:
-	case IN_CLOSE_NOWRITE:
-	case IN_UNMOUNT:
-	case IN_ACCESS:
-	case IN_IGNORED:
-	default:
-		return GAMIN_EVENT_UNKNOWN;
-	break;
-	}
-}
 
 static void
 gam_inotify_emit_one_event (inotify_data_t *data, inotify_event_t *event, GamSubscription *sub)
@@ -496,7 +499,7 @@ gam_inotify_process_event (inotify_event_t *event)
 static gboolean
 gam_inotify_process_event_queue (gpointer data)
 {
-	/* TODO: Preprocess events */
+	/* Try and pair moves here */
 	while (!g_queue_is_empty (event_queue))
 	{
 		inotify_event_t *event = g_queue_pop_head (event_queue);
@@ -742,9 +745,19 @@ gam_inotify_remove_subscription(GamSubscription * sub)
 gboolean
 gam_inotify_remove_all_for(GamListener * listener)
 {
-	/* Remove the subscription here */
-	/* FIXME */
-	return TRUE;
+	GList *subs;
+	GList *l;
+	gboolean success = TRUE;
+
+	subs = gam_listener_get_subscriptions(listener);
+
+	for (l = subs; l != NULL; l = l->next)
+		if (!gam_inotify_remove_subscription(l->data))
+			success = FALSE;
+
+	g_list_free(subs);
+
+	return success;
 }
 
 /**
