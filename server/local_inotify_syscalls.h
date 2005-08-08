@@ -11,11 +11,23 @@
 # define __NR_inotify_init	253
 # define __NR_inotify_add_watch	254
 # define __NR_inotify_rm_watch	255
+#elif defined(__alpha__)
+# define __NR_inotify_init      444
+# define __NR_inotify_add_watch 445
+# define __NR_inotify_rm_watch  446
+#elif defined(__ppc__)
+# define __NR_inotify_init      275
+# define __NR_inotify_add_watch 276
+# define __NR_inotify_rm_watch  277
+#elif defined(__sparc__)
+# define __NR_inotify_init      151
+# define __NR_inotify_add_watch 152
+# define __NR_inotify_rm_watch  156
 #else
 # warning "Unsupported architecture"
 #endif
 
-#if defined(__i386__) || defined(__x86_64)
+#if defined(__i386__) || defined(__x86_64) || defined(__alpha__) || defined(__ppc__) || defined(__sparc__)
 static inline int inotify_init (void)
 {
 	return syscall (__NR_inotify_init);
