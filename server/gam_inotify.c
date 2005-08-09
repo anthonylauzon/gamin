@@ -400,7 +400,7 @@ gam_inotify_event_pair_with (inotify_event_t *event1, inotify_event_t *event2)
 	event1->pair = event2;
 	event2->pair = event1;
 	
-	GAM_DEBUG(DEBUG_INFO, "Pairing a MOVE together\n");
+	GAM_DEBUG(DEBUG_INFO, "inotify: pairing a MOVE together\n");
 	if (g_timeval_lt (&event1->hold_until, &event2->hold_until))
 		event1->hold_until = event2->hold_until;
 
@@ -669,7 +669,6 @@ gam_inotify_read_handler(gpointer user_data)
         }
 
 	GAM_DEBUG(DEBUG_INFO, "inotify recieved %d events\n", events);
-	gam_inotify_process_internal ();
         return TRUE;
 }
 
