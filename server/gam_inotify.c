@@ -466,6 +466,7 @@ gam_inotify_emit_one_event (inotify_data_t *data, inotify_event_t *event, GamSub
 
 	if (gevent == GAMIN_EVENT_UNKNOWN) {
 		GAM_DEBUG(DEBUG_INFO, "inotify: Not handling event %d\n", event->mask);
+		g_free (fullpath);
 		return;
 	}
 
