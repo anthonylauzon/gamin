@@ -1,5 +1,10 @@
 2005-08-09  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_server.c: (gam_init_subscriptions): Revert part of last
+	commit that disabled inotify all the time.
+
+2005-08-09  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_poll.c: (gam_poll_scan_callback),
 	(gam_poll_scan_all_callback), (gam_poll_init_full),
 	(gam_poll_consume_subscriptions): More debug output
