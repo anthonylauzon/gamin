@@ -37,7 +37,8 @@
 #include "gam_event.h"
 #include "gam_excludes.h"
 
-#define VERBOSE_POLL
+// #define VERBOSE_POLL
+// #define VERBOSE_POLL2
 
 #define DEFAULT_POLL_TIMEOUT 1
 
@@ -801,8 +802,8 @@ gam_poll_scan_callback(gpointer data)
         node = (GamNode *) g_list_nth_data(missing_resources, idx);
 
         if (node == NULL) {
-#ifdef VERBOSE_POLL
-            GAM_DEBUG(DEBUG_INFO, "  node %d == NULL\n", idx);
+#ifdef VERBOSE_POLL2
+            GAM_DEBUG(DEBUG_INFO, "missing list node %d == NULL\n", idx);
 #endif
             break;
         }
@@ -839,8 +840,8 @@ gam_poll_scan_callback(gpointer data)
         node = (GamNode *) g_list_nth_data(busy_resources, idx);
 
         if (node == NULL) {
-#ifdef VERBOSE_POLL
-            GAM_DEBUG(DEBUG_INFO, "  node %d == NULL\n", idx);
+#ifdef VERBOSE_POLL2
+            GAM_DEBUG(DEBUG_INFO, "busy list node %d == NULL\n", idx);
 #endif
             break;
         }
@@ -904,6 +905,7 @@ gam_poll_scan_all_callback(gpointer data)
     if (in_poll_callback)
         return (TRUE);
 
+    GAM_DEBUG(DEBUG_INFO, "gam_poll_scan_all_callback\n");
     in_poll_callback++;
 
     if (new_subs != NULL)
@@ -949,10 +951,10 @@ gam_poll_init_full(gboolean start_scan_thread)
         return(FALSE);
 
     if (!start_scan_thread) {
-        g_timeout_add(DEFAULT_POLL_TIMEOUT * 1000, gam_poll_scan_callback, NULL);
+        g_timeout_add(1000, gam_poll_scan_callback, NULL);
         poll_mode = 1;
     } else {
-        g_timeout_add(DEFAULT_POLL_TIMEOUT * 1000, gam_poll_scan_all_callback, NULL);
+        g_timeout_add(1000, gam_poll_scan_all_callback, NULL);
         poll_mode = 2;
     }
     tree = gam_tree_new();
@@ -1260,6 +1262,7 @@ gam_poll_consume_subscriptions(void)
      */
     current_time = time(NULL);
     if (new_subs != NULL) {
+		GAM_DEBUG(DEBUG_INFO, "gam_poll_consume_subscriptions\n");
         /* we don't want to block the main loop */
         subs = new_subs;
         new_subs = NULL;

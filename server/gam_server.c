@@ -115,10 +115,12 @@ gam_init_subscriptions(void)
 
     if (!poll_only) {
 #ifdef ENABLE_INOTIFY
+#if 0
 	if (gam_inotify_init()) {
 	    GAM_DEBUG(DEBUG_INFO, "Using INotify as backend\n");
 	    return(TRUE);
 	}
+#endif
 #endif
 #ifdef ENABLE_DNOTIFY
 	if (gam_dnotify_init()) {
@@ -170,7 +172,10 @@ gam_add_subscription(GamSubscription * sub)
 	if (gam_exclude_check (path)) 
 	{
 		GAM_DEBUG(DEBUG_INFO, "g_a_s: %s excluded\n", path);
-		return gam_poll_add_subscription (sub);
+		if (gam_inotify_is_running())
+			return gam_poll_add_subscription (sub);
+		else
+			return gam_backend_add_subscription(sub);
 	} else {
 		gam_fs_mon_type type;
 		type = gam_fs_get_mon_type (path);
@@ -208,7 +213,10 @@ gam_remove_subscription(GamSubscription * sub)
 
 	if (gam_exclude_check (path)) 
 	{
-		return gam_poll_remove_subscription (sub);
+		if (gam_inotify_is_running())
+			return gam_poll_remove_subscription (sub);
+		else
+			return gam_backend_remove_subscription(sub);
 	} else {
 		gam_fs_mon_type type;
 		type = gam_fs_get_mon_type (path);
