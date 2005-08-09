@@ -96,6 +96,7 @@ gam_show_debug(void) {
 #ifdef ENABLE_DNOTIFY
     gam_dnotify_debug ();
 #endif
+    gam_poll_debug();
 }
 
 /**

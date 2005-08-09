@@ -1,3 +1,9 @@
+Tue Aug  9 18:18:13 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_channel.c: fixed some problem if debugging is enabled
+	* server/gam_poll.c server/gam_poll.h server/gam_server.c: added 
+	  poll debugging informations
+
 2005-08-09  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* server/gam_node.c: (gam_node_new): Add some debug messages

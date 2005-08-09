@@ -29,6 +29,7 @@ typedef enum pollHandlerMode pollHandlerMode;
 typedef void (*GamPollHandler) (const char *path,
 				pollHandlerMode mode);
 
+void       gam_poll_debug                 (void);
 gboolean   gam_poll_init_full             (gboolean start_scan_thread);
 
 gboolean   gam_poll_init                  (void);

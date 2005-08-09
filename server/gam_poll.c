@@ -37,7 +37,7 @@
 #include "gam_event.h"
 #include "gam_excludes.h"
 
-/* #define VERBOSE_POLL */
+#define VERBOSE_POLL
 
 #define DEFAULT_POLL_TIMEOUT 1
 
@@ -807,7 +807,7 @@ gam_poll_scan_callback(gpointer data)
             break;
         }
 #ifdef VERBOSE_POLL
-        GAM_DEBUG(DEBUG_INFO, "Checking missing file %s", data->path);
+        GAM_DEBUG(DEBUG_INFO, "Checking missing file %s", node->path);
 #endif
         if (node->is_dir) {
             gam_poll_scan_directory_internal(node);
@@ -1355,6 +1355,37 @@ gam_poll_set_kernel_handler(GamPollHandler d_handler,
     dir_handler = d_handler;
     file_handler = f_handler;
     type_khandler = type;
+}
+
+static void gam_poll_debug_node(GamNode * node, gpointer user_data) {
+    if (node == NULL)
+        return;
+    GAM_DEBUG(DEBUG_INFO, "dir %d flags %d pflags %d nb subs %d : %s\n",
+        node->is_dir, node->flags, node->pflags, g_list_length(node->subs),
+	node->path);
+}
+
+void
+gam_poll_debug(void)
+{
+    if (missing_resources != NULL) {
+	GAM_DEBUG(DEBUG_INFO, "Dumping poll missing resources\n");
+	g_list_foreach(missing_resources, (GFunc) gam_poll_debug_node, NULL);
+    } else {
+	GAM_DEBUG(DEBUG_INFO, "No poll missing resources\n");
+    }
+    if (busy_resources != NULL) {
+	GAM_DEBUG(DEBUG_INFO, "Dumping poll busy resources\n");
+	g_list_foreach(busy_resources, (GFunc) gam_poll_debug_node, NULL);
+    } else {
+	GAM_DEBUG(DEBUG_INFO, "No poll busy resources\n");
+    }
+    if (all_resources != NULL) {
+	GAM_DEBUG(DEBUG_INFO, "Dumping poll all resources\n");
+	g_list_foreach(all_resources, (GFunc) gam_poll_debug_node, NULL);
+    } else {
+	GAM_DEBUG(DEBUG_INFO, "No poll all resources\n");
+    }
 }
 
 /** @} */
