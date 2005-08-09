@@ -1,3 +1,8 @@
+Tue Aug  9 21:10:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in NEWS doc/config.html doc/gamin.html doc/news.html:
+	  doc update and release of gamin-0.1.4
+
 2005-08-09  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* server/gam_server.c: (gam_init_subscriptions): Revert part of last
