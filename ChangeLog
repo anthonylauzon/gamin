@@ -1,3 +1,8 @@
+Tue Aug  9 21:27:24 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in NEWS doc/config.html doc/gamin.html doc/news.html
+	  gamin.spec.*: real release of gamin-0.1.5
+
 2005-08-09  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* server/gam_inotify.c: (gam_inotify_emit_one_event): Free pathname on
