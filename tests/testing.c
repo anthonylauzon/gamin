@@ -416,6 +416,18 @@ processCommand(char *line, int no)
             return (-1);
         }
         printf("rmfile %s\n", arg);
+	} else if (!strcmp(command, "move")) {
+		if (args != 3)
+		{
+			fprintf(stderr, "move line %d: lacks something\n", no);
+			return (-1);
+		}
+		ret = rename(arg, arg2);
+		if (ret < 0) {
+			fprintf(stderr, "move line %d: failed to move %s\n", no, arg);
+			return (-1);
+		}
+		printf("move %s %s\n", arg, arg2);
     } else if (!strcmp(command, "event")) {
         printEvent(no);
     } else if (!strcmp(command, "events")) {

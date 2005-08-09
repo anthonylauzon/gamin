@@ -51,6 +51,8 @@
 #define GAM_INOTIFY_WD_MISSING -1
 #define GAM_INOTIFY_WD_PERM -2
 
+#define DEFAULT_HOLD_UNTIL_TIME 1000 /* 1 ms */
+#define MOVE_HOLD_UNTIL_TIME 5000 /* 5 ms */
 
 typedef struct {
 	/* The full pathname of this node */
@@ -77,11 +79,15 @@ typedef struct {
 	GList *subs;
 } inotify_data_t;
 
-typedef struct {
+typedef struct _inotify_event_t {
 	gint wd;
 	gint mask;
 	gint cookie;
 	char *name;
+	gboolean seen;
+	gboolean sent;
+	GTimeVal hold_until;
+	struct _inotify_event_t *pair; 
 } inotify_event_t;
 
 typedef struct {
@@ -94,7 +100,9 @@ typedef struct {
 static GHashTable *path_hash = NULL;
 static GHashTable *wd_hash = NULL;
 static GList *missing_list = NULL;
+static GHashTable *cookie_hash = NULL;
 static GQueue *event_queue = NULL;
+static GQueue *events_to_process = NULL;
 static GIOChannel *inotify_read_ioc = NULL;
 static int inotify_device_fd = -1;
 
@@ -112,7 +120,7 @@ static gboolean gam_inotify_scan_missing 	(gpointer userdata);
 static void 	gam_inotify_sanity_check	(void);
 
 static gboolean	g_timeval_lt			(GTimeVal *val1, GTimeVal *val2);
-static gboolean	t_timeval_eq			(GTimeVal *val1, GTimeVal *val2);
+static gboolean	g_timeval_eq			(GTimeVal *val1, GTimeVal *val2);
 
 static void 
 gam_inotify_data_debug (gpointer key, gpointer value, gpointer user_data)
@@ -345,6 +353,7 @@ static inotify_event_t *
 gam_inotify_event_new (struct inotify_event *event)
 {
 	inotify_event_t *gam_event;
+	GTimeVal tv;
 
 	gam_event = g_new0(inotify_event_t, 1);
 
@@ -358,6 +367,10 @@ gam_inotify_event_new (struct inotify_event *event)
 		gam_event->name = g_strdup ("");
 	}
 
+	g_get_current_time (&tv);
+	g_time_val_add (&tv, DEFAULT_HOLD_UNTIL_TIME);
+	gam_event->hold_until = tv;
+
 	return gam_event;
 }
 
@@ -368,6 +381,49 @@ gam_inotify_event_free (inotify_event_t *event)
 	g_free (event);
 }
 
+static void
+gam_inotify_event_pair_with (inotify_event_t *event1, inotify_event_t *event2)
+{
+	g_assert (event1 && event2);
+	/* We should only be pairing events that have the same cookie */
+	g_assert (event1->cookie == event2->cookie);
+	/* We shouldn't pair an event that already is paired */
+	g_assert (event1->pair == NULL && event2->pair == NULL);
+	event1->pair = event2;
+	event2->pair = event1;
+	
+	GAM_DEBUG(DEBUG_INFO, "Pairing a MOVE together\n");
+	if (g_timeval_lt (&event1->hold_until, &event2->hold_until))
+		event1->hold_until = event2->hold_until;
+
+	event2->hold_until = event1->hold_until;
+}
+
+static void
+gam_inotify_event_add_microseconds (inotify_event_t *event, glong ms)
+{
+	g_assert (event);
+	g_time_val_add (&event->hold_until, ms);
+}
+
+static gboolean
+gam_inotify_event_ready (inotify_event_t *event)
+{
+	GTimeVal tv;
+	g_assert (event);
+
+	g_get_current_time (&tv);
+
+	/* An event is ready if,
+	 *
+	 * it has no cookie -- there is nothing to be gained by holding it
+	 * or, it is already paired -- we don't need to hold it anymore
+	 * or, we have held it long enough
+	 */
+	return event->cookie == 0 || 
+	       event->pair != NULL ||
+	       g_timeval_lt(&event->hold_until, &tv) || g_timeval_eq(&event->hold_until, &tv);
+}
 
 static void
 gam_inotify_emit_one_event (inotify_data_t *data, inotify_event_t *event, GamSubscription *sub)
@@ -489,17 +545,81 @@ gam_inotify_process_event (inotify_event_t *event)
 	if (event->mask & IN_Q_OVERFLOW) 
 	{
 		GAM_DEBUG (DEBUG_INFO, "inotify: queue over flowed!\n");
-		// XXX: Kill server here?
+		// XXX: Kill server and hope for the best?
+		// XXX: Or we could send_initial_events , does this work for FAM?
 		return;
 	}
 
 	GAM_DEBUG(DEBUG_INFO, "inotify: error event->mask = %d\n", event->mask);
 }
 
+static void
+gam_inotify_pair_moves (gpointer data, gpointer user_data)
+{
+	inotify_event_t *event = (inotify_event_t *)data;
+
+	if (event->seen == TRUE || event->sent == TRUE)
+		return;
+
+	if (event->cookie != 0)
+	{
+		if (event->mask & IN_MOVED_FROM) {
+			g_hash_table_insert (cookie_hash, GINT_TO_POINTER(event->cookie), event);
+			gam_inotify_event_add_microseconds (event, MOVE_HOLD_UNTIL_TIME);
+		} else if (event->mask & IN_MOVED_TO) {
+			inotify_event_t *match = NULL;
+			match = g_hash_table_lookup (cookie_hash, GINT_TO_POINTER(event->cookie));
+			if (match) {
+				g_hash_table_remove (cookie_hash, GINT_TO_POINTER(event->cookie));
+				gam_inotify_event_pair_with (match, event);
+			}
+		}
+	}
+	event->seen = TRUE;
+}
+
+static void
+gam_inotify_process_internal ()
+{
+	g_queue_foreach (events_to_process, gam_inotify_pair_moves, NULL);
+
+	GAM_DEBUG(DEBUG_INFO, "inotify: Attempting to move events on to event queue\n");
+	while (!g_queue_is_empty (events_to_process)) 
+	{
+		inotify_event_t *event = g_queue_peek_head (events_to_process);
+
+		if (!gam_inotify_event_ready (event))
+			break;
+
+		/* Pop it */
+		event = g_queue_pop_head (events_to_process);
+		/* This must have been sent as part of a MOVED_TO/MOVED_FROM */
+		if (event->sent)
+			continue;
+
+		/* Check if this is a MOVED_FROM that is also sitting in the cookie_hash */
+		if (event->cookie && event->pair == NULL &&
+			g_hash_table_lookup (cookie_hash, GINT_TO_POINTER(event->cookie)))
+		{
+			g_hash_table_remove (cookie_hash, GINT_TO_POINTER(event->cookie));
+			event->sent = TRUE;
+		}
+		
+		GAM_DEBUG(DEBUG_INFO, "Moved event %s onto event queue\n", mask_to_string (event->mask));
+		g_queue_push_tail (event_queue, event);
+		if (event->pair) {
+			// if this event has a pair
+			event->pair->sent = TRUE;
+			GAM_DEBUG(DEBUG_INFO, "Moved event %s onto event queue\n", mask_to_string (event->pair->mask));
+			g_queue_push_tail (event_queue, event->pair);
+		}
+
+	}
+}
+
 static gboolean
 gam_inotify_process_event_queue (gpointer data)
 {
-	/* Try and pair moves here */
 	while (!g_queue_is_empty (event_queue))
 	{
 		inotify_event_t *event = g_queue_pop_head (event_queue);
@@ -527,13 +647,13 @@ gam_inotify_read_handler(gpointer user_data)
                 gsize event_size;
                 event = (struct inotify_event *)&buffer[buffer_i];
                 event_size = sizeof(struct inotify_event) + event->len;
-		g_queue_push_tail (event_queue, gam_inotify_event_new (event));
+		g_queue_push_tail (events_to_process, gam_inotify_event_new (event));
                 buffer_i += event_size;
                 events++;
         }
 
 	GAM_DEBUG(DEBUG_INFO, "inotify recieved %d events\n", events);
-
+	gam_inotify_process_internal ();
         return TRUE;
 }
 
@@ -788,11 +908,13 @@ gam_inotify_init(void)
     g_source_set_callback(source, gam_inotify_read_handler, NULL, NULL);
     g_source_attach(source, NULL);
     g_timeout_add (1000, gam_inotify_scan_missing, NULL);
-    g_timeout_add (50, gam_inotify_process_event_queue, NULL);
+    g_timeout_add (10, gam_inotify_process_event_queue, NULL);
 
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
     wd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
+    cookie_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
     event_queue = g_queue_new ();
+    events_to_process = g_queue_new ();
 
     gam_poll_init ();
     gam_poll_set_kernel_handler (NULL, NULL, GAMIN_K_INOTIFY2);
@@ -1185,7 +1307,7 @@ g_timeval_lt(GTimeVal *val1, GTimeVal *val2)
 }
 
 static gboolean
-t_timeval_eq(GTimeVal *val1, GTimeVal *val2)
+g_timeval_eq(GTimeVal *val1, GTimeVal *val2)
 {
 	return (val1->tv_sec == val2->tv_sec) && (val1->tv_usec == val2->tv_usec);
 }
