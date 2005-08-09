@@ -168,14 +168,21 @@ gam_add_subscription(GamSubscription * sub)
 
 	if (gam_exclude_check (path)) 
 	{
+		GAM_DEBUG(DEBUG_INFO, "g_a_s: %s excluded\n", path);
 		return gam_poll_add_subscription (sub);
 	} else {
 		gam_fs_mon_type type;
 		type = gam_fs_get_mon_type (path);
-		if (type == GFS_MT_KERNEL)
+		if (type == GFS_MT_KERNEL) 
+		{
+			GAM_DEBUG(DEBUG_INFO, "g_a_s: %s using kernel monitoring\n", path);
 			return (gam_backend_add_subscription(sub));
+		}
 		else if (type == GFS_MT_POLL)
+		{
+			GAM_DEBUG(DEBUG_INFO, "g_a_s: %s using poll monitoring\n", path);
 			return gam_poll_add_subscription (sub);
+		}
 	}
 
 	return FALSE;

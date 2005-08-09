@@ -22,6 +22,7 @@
 #include <glib.h>
 #include "gam_event.h"
 #include "gam_node.h"
+#include "gam_error.h"
 
 /**
  * Create a new node
@@ -49,7 +50,7 @@ gam_node_new(const char *path, GamSubscription * sub, gboolean is_dir)
 
     node->poll_time = gam_fs_get_poll_timeout (path);
     node->mon_type = gam_fs_get_mon_type (path);
-
+	GAM_DEBUG(DEBUG_INFO, "g_n_n: node for %s using %s with poll timeout of %d\n", path, node->mon_type == GFS_MT_KERNEL ? "kernel" : "poll", node->poll_time);
     return node;
 }
 
