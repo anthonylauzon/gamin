@@ -1,6 +1,15 @@
 2005-08-08  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* server/gam_inotify.c: (gam_inotify_event_new),
+	(gam_inotify_process_internal), (gam_inotify_process_event_queue),
+	(gam_inotify_init): Fix stupid bug in move pairing code that was slowing 
+	things down big time. Make timings #defines, process the event queue @ 30
+	Hz. Process the internal event queue @ 30 Hz and when events are read from
+	the device fd.
+
+2005-08-08  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* server/gam_inotify.c: (gam_inotify_event_new),
 	(gam_inotify_event_pair_with),
 	(gam_inotify_event_add_microseconds), (gam_inotify_event_ready),
 	(gam_inotify_process_event), (gam_inotify_pair_moves),

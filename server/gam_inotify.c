@@ -51,8 +51,15 @@
 #define GAM_INOTIFY_WD_MISSING -1
 #define GAM_INOTIFY_WD_PERM -2
 
+/* Timings for pairing MOVED_TO / MOVED_FROM events */
+/* These numbers are in microseconds */
 #define DEFAULT_HOLD_UNTIL_TIME 1000 /* 1 ms */
 #define MOVE_HOLD_UNTIL_TIME 5000 /* 5 ms */
+
+/* Timings for main loop */
+/* These numbers are in milliseconds */
+#define SCAN_MISSING_TIME 1000 /* 1 Hz */
+#define PROCESS_EVENTS_TIME 33 /* 30 Hz */ 
 
 typedef struct {
 	/* The full pathname of this node */
@@ -97,14 +104,14 @@ typedef struct {
 	gboolean permission;
 } inotify_missing_t;
 
-static GHashTable *path_hash = NULL;
-static GHashTable *wd_hash = NULL;
-static GList *missing_list = NULL;
-static GHashTable *cookie_hash = NULL;
-static GQueue *event_queue = NULL;
-static GQueue *events_to_process = NULL;
-static GIOChannel *inotify_read_ioc = NULL;
-static int inotify_device_fd = -1;
+static GHashTable *	path_hash = NULL;
+static GHashTable *	wd_hash = NULL;
+static GList *		missing_list = NULL;
+static GHashTable *	cookie_hash = NULL;
+static GQueue *		event_queue = NULL;
+static GQueue *		events_to_process = NULL;
+static GIOChannel *	inotify_read_ioc = NULL;
+static int		inotify_device_fd = -1;
 
 #define GAM_INOTIFY_MASK (IN_MODIFY|IN_ATTRIB|IN_MOVED_FROM|IN_MOVED_TO|IN_DELETE|IN_CREATE|IN_DELETE_SELF|IN_UNMOUNT)
 
@@ -361,7 +368,8 @@ gam_inotify_event_new (struct inotify_event *event)
 	gam_event->mask = event->mask;
 	gam_event->cookie = event->cookie;
 
-	if (event->len) {
+	if (event->len) 
+	{
 		gam_event->name = g_strdup (event->name);
 	} else {
 		gam_event->name = g_strdup ("");
@@ -581,15 +589,17 @@ gam_inotify_pair_moves (gpointer data, gpointer user_data)
 static void
 gam_inotify_process_internal ()
 {
+	int ecount = 0;
 	g_queue_foreach (events_to_process, gam_inotify_pair_moves, NULL);
 
-	GAM_DEBUG(DEBUG_INFO, "inotify: Attempting to move events on to event queue\n");
 	while (!g_queue_is_empty (events_to_process)) 
 	{
 		inotify_event_t *event = g_queue_peek_head (events_to_process);
 
-		if (!gam_inotify_event_ready (event))
+		if (!gam_inotify_event_ready (event)) {
+			GAM_DEBUG(DEBUG_INFO, "inotify: event not ready\n");
 			break;
+		}
 
 		/* Pop it */
 		event = g_queue_pop_head (events_to_process);
@@ -605,21 +615,27 @@ gam_inotify_process_internal ()
 			event->sent = TRUE;
 		}
 		
-		GAM_DEBUG(DEBUG_INFO, "Moved event %s onto event queue\n", mask_to_string (event->mask));
 		g_queue_push_tail (event_queue, event);
+		ecount++;
 		if (event->pair) {
 			// if this event has a pair
 			event->pair->sent = TRUE;
-			GAM_DEBUG(DEBUG_INFO, "Moved event %s onto event queue\n", mask_to_string (event->pair->mask));
 			g_queue_push_tail (event_queue, event->pair);
+			ecount++;
 		}
 
 	}
+	if (ecount)
+		GAM_DEBUG(DEBUG_INFO, "inotify: moved %d events to event queue\n", ecount);
 }
 
 static gboolean
 gam_inotify_process_event_queue (gpointer data)
 {
+	/* Try and move as many events to the event queue */
+	gam_inotify_process_internal ();
+
+	/* Send the events on the event queue to gam clients */
 	while (!g_queue_is_empty (event_queue))
 	{
 		inotify_event_t *event = g_queue_pop_head (event_queue);
@@ -907,8 +923,8 @@ gam_inotify_init(void)
 			       G_IO_IN | G_IO_HUP | G_IO_ERR);
     g_source_set_callback(source, gam_inotify_read_handler, NULL, NULL);
     g_source_attach(source, NULL);
-    g_timeout_add (1000, gam_inotify_scan_missing, NULL);
-    g_timeout_add (10, gam_inotify_process_event_queue, NULL);
+    g_timeout_add (SCAN_MISSING_TIME, gam_inotify_scan_missing, NULL);
+    g_timeout_add (PROCESS_EVENTS_TIME, gam_inotify_process_event_queue, NULL);
 
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
     wd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
@@ -980,7 +996,7 @@ int gam_inotify_rm_watch (const char *path, __u32 wd)
 #define PENDING_MARGINAL_COST(p) ((unsigned int)(1 << (p)))
 #define MAX_QUEUED_EVENTS 8192
 #define AVERAGE_EVENT_SIZE sizeof (struct inotify_event) + 16
-#define PENDING_PAUSE_MICROSECONDS 2000
+#define PENDING_PAUSE_MICROSECONDS 8000
 
 void gam_inotify_read_events (gsize *buffer_size_out, gchar **buffer_out)
 {
