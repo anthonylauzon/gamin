@@ -58,17 +58,19 @@ static GList *new_subs = NULL;
 static GList *missing_resources = NULL;
 static GList *busy_resources = NULL;
 static GList *all_resources = NULL;
-static GamPollHandler dir_handler = NULL;
-static GamPollHandler file_handler = NULL;
-static pollHandlerKernel type_khandler = GAMIN_K_NONE;
 
 static int poll_mode = 0;
 
 static time_t current_time = 0; /* a cache for time() informations */
 
 static GaminEventType poll_file(GamNode * node);
-static void trigger_file_handler(const char *path, pollHandlerMode mode,
-                                 GamNode * node);
+
+static gboolean gam_default_poll_add_subscription(GamSubscription * sub);
+static gboolean gam_default_poll_remove_subscription(GamSubscription * sub);
+static gboolean gam_default_poll_remove_all_for(GamListener * listener);
+
+static void trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node);
+
 
 static int
 gam_errno(void)
@@ -150,20 +152,18 @@ gam_poll_remove_busy(GamNode * node)
 static void
 trigger_dir_handler(const char *path, pollHandlerMode mode, GamNode * node)
 {
-    if (node->mon_type != GFS_MT_KERNEL)
-	    return;
+	if (node->mon_type != GFS_MT_KERNEL)
+		return;
 
-    if (type_khandler == GAMIN_K_DNOTIFY || type_khandler == GAMIN_K_INOTIFY) {
-        if (gam_node_is_dir(node)) {
-	    if (dir_handler != NULL)
-		(*dir_handler) (path, mode);
+	if (gam_server_get_kernel_handler() == GAMIN_K_DNOTIFY || gam_server_get_kernel_handler() == GAMIN_K_INOTIFY) {
+		if (gam_node_is_dir(node)) {
+			gam_kernel_dir_handler (path, mode);
+		} else {
+			trigger_file_handler(path, mode, node);
+		}
 	} else {
-	    trigger_file_handler(path, mode, node);
+	    gam_kernel_dir_handler (path, mode);
 	}
-    } else {
-	if (dir_handler != NULL)
-	    (*dir_handler) (path, mode);
-    }
 }
 
 /**
@@ -176,57 +176,50 @@ trigger_dir_handler(const char *path, pollHandlerMode mode, GamNode * node)
 static void
 trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node)
 {
-    if (node->mon_type != GFS_MT_KERNEL)
-	    return;
+	if (node->mon_type != GFS_MT_KERNEL)
+		return;
 
-    if (type_khandler == GAMIN_K_DNOTIFY || type_khandler == GAMIN_K_INOTIFY) {
-        if (gam_node_is_dir(node)) {
-	    (*file_handler) (path, mode);
+	if (gam_server_get_kernel_handler() == GAMIN_K_DNOTIFY || gam_server_get_kernel_handler() == GAMIN_K_INOTIFY) {
+		if (gam_node_is_dir(node)) {
+			gam_kernel_file_handler (path, mode);
+		} else {
+			const char *dir;
+			GamNode *parent = gam_node_parent(node);
+			if (parent == NULL) {
+				gam_error(DEBUG_INFO, "Failed to find parent for: %s\n", path);
+				return;
+			}
+			dir = parent->path;
+			switch (mode) {
+			case GAMIN_ACTIVATE:
+				GAM_DEBUG(DEBUG_INFO, "File activating kernel monitoring on %s\n", dir);
+				gam_kernel_dir_handler (dir, mode);
+			break;
+			case GAMIN_DESACTIVATE:
+				GAM_DEBUG(DEBUG_INFO, "File deactivating kernel monitoring on %s\n", dir);
+				gam_kernel_dir_handler (dir, mode);
+			break;
+			case GAMIN_FLOWCONTROLSTART:
+				if ((parent->pflags & MON_BUSY) == 0) {
+					GAM_DEBUG(DEBUG_INFO, "File directory busy on %s\n", dir);
+					gam_kernel_dir_handler (dir, mode);
+					gam_poll_add_busy(parent);
+					parent->pflags |= MON_BUSY;
+				}
+			break;
+			case GAMIN_FLOWCONTROLSTOP:
+				if (parent->pflags & MON_BUSY) {
+					GAM_DEBUG(DEBUG_INFO, "File dir no longer busy %s\n", dir);
+					gam_kernel_dir_handler (dir, mode);
+					gam_poll_remove_busy(parent);
+					parent->pflags &= !MON_BUSY;
+				}
+			break;
+			}
+		}
 	} else {
-	    const char *dir;
-	    GamNode *parent = gam_node_parent(node);
-	    if (parent == NULL) {
-                gam_error(DEBUG_INFO,
-                          "Failed to find parent for: %s\n", path);
-	        return;
-	    }
-	    dir = parent->path;
-	    switch (mode) {
-	        case GAMIN_ACTIVATE:
-		    GAM_DEBUG(DEBUG_INFO, "File activating kernel monitoring on %s\n",
-			      dir);
-		    (*dir_handler) (dir, mode);
-		    break;
-	        case GAMIN_DESACTIVATE:
-		    GAM_DEBUG(DEBUG_INFO, "File deactivating kernel monitoring on %s\n",
-			      dir);
-		    (*dir_handler) (dir, mode);
-		    break;
-                case GAMIN_FLOWCONTROLSTART:
-		    if ((parent->pflags & MON_BUSY) == 0) {
-			GAM_DEBUG(DEBUG_INFO, "File directory busy on %s\n",
-				  dir);
-		        (*dir_handler) (dir, mode);
-			gam_poll_add_busy(parent);
-			parent->pflags |= MON_BUSY;
-		    }
-		    break;
-		case GAMIN_FLOWCONTROLSTOP:
-		    if (parent->pflags & MON_BUSY) {
-			GAM_DEBUG(DEBUG_INFO, "File dir no longer busy %s\n",
-				  dir);
-			(*dir_handler) (dir, mode);
-			gam_poll_remove_busy(parent);
-			parent->pflags &= !MON_BUSY;
-		    }
-		    break;
-	    }
-
+		gam_kernel_file_handler (path, mode);
 	}
-    } else {
-	if (file_handler != NULL)
-	    (*file_handler) (path, mode);
-    }
 }
 
 /**
@@ -959,9 +952,11 @@ gam_poll_init_full(gboolean start_scan_thread)
     }
     tree = gam_tree_new();
 
-    gam_backend_add_subscription = gam_poll_add_subscription;
-    gam_backend_remove_subscription = gam_poll_remove_subscription;
-    gam_backend_remove_all_for = gam_poll_remove_all_for;
+    gam_server_install_poll_hooks (GAMIN_P_DEFAULT,
+				   gam_default_poll_add_subscription,
+				   gam_default_poll_remove_subscription,
+				   gam_default_poll_remove_all_for);
+
 
     GAM_DEBUG(DEBUG_INFO, "Initialized Poll\n");
     return TRUE;
@@ -988,7 +983,7 @@ gam_poll_init(void)
  * @returns TRUE if adding the subscription succeeded, FALSE otherwise
  */
 gboolean
-gam_poll_add_subscription(GamSubscription * sub)
+gam_default_poll_add_subscription(GamSubscription * sub)
 {
     const char *path;
     gboolean is_dir;
@@ -1015,7 +1010,7 @@ gam_poll_add_subscription(GamSubscription * sub)
  * trimming the tree and deactivating the kernel back-end if needed.
  */
 static void
-gam_poll_remove_subscription_real(GamSubscription * sub)
+gam_default_poll_remove_subscription_real(GamSubscription * sub)
 {
     GamNode *node;
 
@@ -1071,8 +1066,8 @@ gam_poll_remove_subscription_real(GamSubscription * sub)
  * @param sub a #GamSubscription to remove
  * @returns TRUE if removing the subscription succeeded, FALSE otherwise
  */
-gboolean
-gam_poll_remove_subscription(GamSubscription * sub)
+static gboolean
+gam_default_poll_remove_subscription(GamSubscription * sub)
 {
     GamNode *node;
 
@@ -1095,7 +1090,7 @@ gam_poll_remove_subscription(GamSubscription * sub)
     gam_subscription_cancel(sub);
 
     GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n", gam_tree_get_size(tree));
-    gam_poll_remove_subscription_real(sub);
+    gam_default_poll_remove_subscription_real(sub);
     GAM_DEBUG(DEBUG_INFO, "Tree has %d nodes\n", gam_tree_get_size(tree));
 
     GAM_DEBUG(DEBUG_INFO, "Poll: removed subscription\n");
@@ -1108,8 +1103,8 @@ gam_poll_remove_subscription(GamSubscription * sub)
  * @param listener a #GamListener
  * @returns TRUE if removing the subscriptions succeeded, FALSE otherwise
  */
-gboolean
-gam_poll_remove_all_for(GamListener * listener)
+static gboolean
+gam_default_poll_remove_all_for(GamListener * listener)
 {
     GList *subs, *l = NULL;
 
@@ -1341,24 +1336,6 @@ gam_poll_consume_subscriptions(void)
     }
 }
 
-
-/**
- * gam_poll_set_kernel_handler:
- * @d_handler: function to be called to register directories kernel monitoring
- * @f_handler: function to be called to register file kernel monitoring
- * @type: the type of handler being used
- *
- * Sets the function to be called when fiels and directories loses or gains
- * subscriptions. It also allows to discriminate the polling code based on
- * the kind of backend being used, unfortunately needed for dnotify.
- */
-void
-gam_poll_set_kernel_handler(GamPollHandler d_handler,
-		GamPollHandler f_handler, pollHandlerKernel type) {
-    dir_handler = d_handler;
-    file_handler = f_handler;
-    type_khandler = type;
-}
 
 static void gam_poll_debug_node(GamNode * node, gpointer user_data) {
     if (node == NULL)

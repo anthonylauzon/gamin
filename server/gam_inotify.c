@@ -932,13 +932,13 @@ gam_inotify_init(void)
     event_queue = g_queue_new ();
     events_to_process = g_queue_new ();
 
-    gam_poll_init ();
-    gam_poll_set_kernel_handler (NULL, NULL, GAMIN_K_INOTIFY2);
-    gam_backend_add_subscription = gam_inotify_add_subscription;
-    gam_backend_remove_subscription = gam_inotify_remove_subscription;
-    gam_backend_remove_all_for = gam_inotify_remove_all_for;
+	gam_poll_init ();
+	gam_server_install_kernel_hooks (GAMIN_K_INOTIFY2,
+					 gam_inotify_add_subscription,
+					 gam_inotify_remove_subscription,
+					 gam_inotify_remove_all_for, NULL, NULL);
 
-    GAM_DEBUG(DEBUG_INFO, "inotify backend initialized\n");
+	GAM_DEBUG(DEBUG_INFO, "inotify backend initialized\n");
 
     return TRUE;
 }

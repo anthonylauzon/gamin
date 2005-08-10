@@ -52,9 +52,17 @@
 static int poll_only = 0;
 static const char *session;
 
-gboolean (*gam_backend_add_subscription) (GamSubscription *sub);
-gboolean (*gam_backend_remove_subscription) (GamSubscription *sub);
-gboolean (*gam_backend_remove_all_for)   (GamListener *listener);
+static GamKernelHandler __gam_kernel_handler = GAMIN_K_NONE;
+static gboolean (*__gam_kernel_add_subscription) (GamSubscription *sub) = NULL;
+static gboolean (*__gam_kernel_remove_subscription) (GamSubscription *sub) = NULL;
+static gboolean (*__gam_kernel_remove_all_for) (GamListener *listener) = NULL;
+static void (*__gam_kernel_dir_handler) (const char *path, pollHandlerMode mode) = NULL;
+static void (*__gam_kernel_file_handler) (const char *path, pollHandlerMode mode) = NULL;
+
+static GamPollHandler __gam_poll_handler = GAMIN_P_NONE;
+static gboolean (*__gam_poll_add_subscription) (GamSubscription *sub) = NULL;
+static gboolean (*__gam_poll_remove_subscription) (GamSubscription *sub) = NULL;
+static gboolean (*__gam_poll_remove_all_for) (GamListener *listener) = NULL;
 
 /**
  * gam_exit:
@@ -66,7 +74,6 @@ gboolean (*gam_backend_remove_all_for)   (GamListener *listener);
 static void
 gam_exit(int signo) {
 	gam_shutdown();
-
 	exit(0);
 }
 
@@ -111,42 +118,46 @@ gboolean
 gam_init_subscriptions(void)
 {
 	gam_conf_read ();
-    gam_exclude_init();
+	gam_exclude_init();
 
-    if (!poll_only) {
+	if (!poll_only) {
 #ifdef ENABLE_INOTIFY
-	if (gam_inotify_init()) {
-	    GAM_DEBUG(DEBUG_INFO, "Using INotify as backend\n");
-	    return(TRUE);
-	}
+#if 0
+		if (gam_inotify_init()) {
+			GAM_DEBUG(DEBUG_INFO, "Using inotify as backend\n");
+			return(TRUE);
+		}
+#endif
 #endif
 #ifdef ENABLE_DNOTIFY
-	if (gam_dnotify_init()) {
-	    GAM_DEBUG(DEBUG_INFO, "Using DNotify as backend\n");
-	    return(TRUE);
-	}
+		if (gam_dnotify_init()) {
+			GAM_DEBUG(DEBUG_INFO, "Using dnotify as backend\n");
+			return(TRUE);
+		}
 #endif
 #ifdef ENABLE_KQUEUE
-	if (gam_kqueue_init()) {
-	    GAM_DEBUG(DEBUG_INFO, "Using KQueue as backend\n");
-	    return(TRUE);
-	}
+		if (gam_kqueue_init()) {
+			GAM_DEBUG(DEBUG_INFO, "Using kqueue as backend\n");
+			return(TRUE);
+		}
 #endif
 #ifdef ENABLE_HURD_MACH_NOTIFY
-	if (gam_hurd_notify_init()) {
-	    GAM_DEBUG(DEBUG_INFO, "Using Hurd Notify as backend\n");
-	    return(TRUE);
-	}
+		if (gam_hurd_notify_init()) 
+		{
+			GAM_DEBUG(DEBUG_INFO, "Using hurd notify as backend\n");
+			return(TRUE);
+		}
 #endif	
-    }
-    if (gam_poll_init()) {
-	GAM_DEBUG(DEBUG_INFO, "Using Poll as backend\n");
-	return(TRUE);
-    }
+	}
 
-    GAM_DEBUG(DEBUG_INFO, "Cannot initialize any backend\n");
+	if (gam_poll_init()) {
+		GAM_DEBUG(DEBUG_INFO, "Using poll as backend\n");
+		return(TRUE);
+	}
 
-    return(FALSE);
+	GAM_DEBUG(DEBUG_INFO, "Cannot initialize any backend\n");
+
+	return(FALSE);
 }
 
 /**
@@ -173,14 +184,14 @@ gam_add_subscription(GamSubscription * sub)
 		if (gam_inotify_is_running())
 			return gam_poll_add_subscription (sub);
 		else
-			return gam_backend_add_subscription(sub);
+			return gam_kernel_add_subscription (sub);
 	} else {
 		gam_fs_mon_type type;
 		type = gam_fs_get_mon_type (path);
 		if (type == GFS_MT_KERNEL) 
 		{
 			GAM_DEBUG(DEBUG_INFO, "g_a_s: %s using kernel monitoring\n", path);
-			return (gam_backend_add_subscription(sub));
+			return gam_kernel_add_subscription(sub);
 		}
 		else if (type == GFS_MT_POLL)
 		{
@@ -214,12 +225,12 @@ gam_remove_subscription(GamSubscription * sub)
 		if (gam_inotify_is_running())
 			return gam_poll_remove_subscription (sub);
 		else
-			return gam_backend_remove_subscription(sub);
+			return gam_kernel_remove_subscription(sub);
 	} else {
 		gam_fs_mon_type type;
 		type = gam_fs_get_mon_type (path);
 		if (type == GFS_MT_KERNEL)
-			return (gam_backend_remove_subscription(sub));
+			return gam_kernel_remove_subscription(sub);
 		else if (type == GFS_MT_POLL)
 			return gam_poll_remove_subscription (sub);
 	}
@@ -345,7 +356,124 @@ gam_server_num_listeners(void)
     return g_hash_table_size(listeners);
 }
 
+static GamKernelHandler __gam_kernel_handler;
+static gboolean (*__gam_kernel_add_subscription) (GamSubscription *sub);
+static gboolean (*__gam_kernel_remove_subscription) (GamSubscription *sub);
+static gboolean (*__gam_kernel_remove_all_for) (GamListener *listener);
 
+static GamPollHandler __gam_poll_handler;
+static gboolean (*__gam_poll_add_subscription) (GamSubscription *sub);
+static gboolean (*__gam_poll_remove_subscription) (GamSubscription *sub);
+static gboolean (*__gam_poll_remove_all_for) (GamListener *listener);
+
+
+void
+gam_server_install_kernel_hooks (GamKernelHandler name,
+				 gboolean (*add)(GamSubscription *sub),
+				 gboolean (*remove)(GamSubscription *sub),
+				 gboolean (*remove_all)(GamListener *listener),
+				 void (*dir_handler)(const char *path, pollHandlerMode mode),
+				 void (*file_handler)(const char *path, pollHandlerMode mode))
+{
+	__gam_kernel_handler = name;
+	__gam_kernel_add_subscription = add;
+	__gam_kernel_remove_subscription = remove;
+	__gam_kernel_remove_all_for = remove_all;
+	__gam_kernel_dir_handler = dir_handler;
+	__gam_kernel_file_handler = file_handler;
+}
+
+void
+gam_server_install_poll_hooks (GamPollHandler name,
+				gboolean (*add)(GamSubscription *sub),
+				gboolean (*remove)(GamSubscription *sub),
+				gboolean (*remove_all)(GamListener *listener))
+{
+	__gam_poll_handler = name;
+	__gam_poll_add_subscription = add;
+	__gam_poll_remove_subscription = remove;
+	__gam_poll_remove_all_for = remove_all;
+}
+
+GamKernelHandler
+gam_server_get_kernel_handler (void)
+{
+	return __gam_kernel_handler;
+}
+
+GamPollHandler
+gam_server_get_poll_handler (void)
+{
+	return __gam_kernel_handler;
+}
+
+gboolean
+gam_kernel_add_subscription (GamSubscription *sub)
+{
+	if (__gam_kernel_add_subscription)
+		return __gam_kernel_add_subscription (sub);
+
+	return FALSE;
+}
+
+gboolean
+gam_kernel_remove_subscription (GamSubscription *sub)
+{
+	if (__gam_kernel_remove_subscription)
+		return __gam_kernel_remove_subscription (sub);
+
+	return FALSE;
+}
+
+gboolean
+gam_kernel_remove_all_for (GamListener *listener)
+{
+	if (__gam_kernel_remove_all_for)
+		return __gam_kernel_remove_all_for (listener);
+
+	return FALSE;
+}
+
+void
+gam_kernel_dir_handler(const char *path, pollHandlerMode mode)
+{
+	if (__gam_kernel_dir_handler)
+		__gam_kernel_dir_handler (path, mode);
+}
+
+void
+gam_kernel_file_handler(const char *path, pollHandlerMode mode)
+{
+	if (__gam_kernel_file_handler)
+		__gam_kernel_file_handler (path, mode);
+}
+
+gboolean
+gam_poll_add_subscription (GamSubscription *sub)
+{
+	if (__gam_poll_add_subscription)
+		return __gam_poll_add_subscription (sub);
+
+	return FALSE;
+}
+
+gboolean
+gam_poll_remove_subscription (GamSubscription *sub)
+{
+	if (__gam_poll_remove_subscription)
+		return __gam_poll_remove_subscription (sub);
+
+	return FALSE;
+}
+
+gboolean
+gam_poll_remove_all_for (GamListener *listener)
+{
+	if (__gam_poll_remove_all_for)
+		return __gam_poll_remove_all_for (listener);
+
+	return FALSE;
+}
 
 /**
  * gam_server_init:

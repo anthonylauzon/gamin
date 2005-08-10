@@ -411,15 +411,15 @@ gam_dnotify_init(void)
 
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
     fd_hash = g_hash_table_new(g_direct_hash, g_direct_equal);
-    gam_poll_set_kernel_handler(gam_dnotify_directory_handler,
-                                gam_dnotify_file_handler,
-				GAMIN_K_DNOTIFY);
 
     GAM_DEBUG(DEBUG_INFO, "dnotify initialized\n");
 
-    gam_backend_add_subscription = gam_dnotify_add_subscription;
-    gam_backend_remove_subscription = gam_dnotify_remove_subscription;
-    gam_backend_remove_all_for = gam_dnotify_remove_all_for;
+	gam_server_install_kernel_hooks (GAMIN_K_DNOTIFY, 
+					 gam_dnotify_add_subscription,
+					 gam_dnotify_remove_subscription,
+					 gam_dnotify_remove_all_for,
+					 gam_dnotify_directory_handler,
+					 gam_dnotify_file_handler);
 
     return TRUE;
 }

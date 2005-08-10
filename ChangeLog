@@ -1,3 +1,29 @@
+2005-08-10  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* server/gam_dnotify.c: (gam_dnotify_init): Use the new
+	gam_server_install_kernel_hooks.
+	* server/gam_inotify.c: (gam_inotify_init): Here to
+	* server/gam_poll.c: (trigger_dir_handler), (trigger_file_handler),
+	(gam_poll_init_full), (gam_default_poll_add_subscription),
+	(gam_default_poll_remove_subscription_real),
+	(gam_default_poll_remove_subscription),
+	(gam_default_poll_remove_all_for): Use the gam_kernel_dir/file_handler
+	from gam_server.h instead of dir/file_handler.
+	* server/gam_poll.h: Move a bunch of functions to gam_server.h
+	* server/gam_server.c: (gam_exit), (gam_init_subscriptions),
+	(gam_add_subscription), (gam_remove_subscription),
+	(gam_server_install_kernel_hooks), (gam_server_install_poll_hooks),
+	(gam_server_get_kernel_handler), (gam_server_get_poll_handler),
+	(gam_kernel_add_subscription), (gam_kernel_remove_subscription),
+	(gam_kernel_remove_all_for), (gam_kernel_dir_handler),
+	(gam_kernel_file_handler), (gam_poll_add_subscription),
+	(gam_poll_remove_subscription), (gam_poll_remove_all_for): Provide
+	a set of generic kernel/poll backend functions. Now poll backends are pluggable.
+	Code now uses these instead of the backend_ variables.
+	* server/gam_server.h: Function prototypes.
+
+	Both test suites pass under dnotify with these changes.
+
 Tue Aug  9 21:27:24 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in NEWS doc/config.html doc/gamin.html doc/news.html
