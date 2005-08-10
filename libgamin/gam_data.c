@@ -471,7 +471,11 @@ gamin_data_new(void)
     }
     if (is_threaded > 0) {
 	pthread_mutexattr_init(&attr);
+#ifndef PTHREAD_MUTEX_RECURSIVE
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
+#else
+	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+#endif
 	pthread_mutex_init(&ret->lock, &attr);
 	pthread_mutexattr_destroy(&attr);
     }

@@ -7,9 +7,9 @@
 
 char *gam_get_pidname (int pid)
 {
+    gchar *pidname = NULL;
 #ifdef HAVE_LINUX
     gchar *procname;
-    gchar *pidname = NULL;
     FILE *fp;
 #endif
 

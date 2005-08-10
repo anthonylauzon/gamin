@@ -52,6 +52,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/stat.h>
@@ -327,7 +328,7 @@ gam_kqueue_get_uint_sysctl (const char *name, unsigned int *value)
 {
   unsigned int value_len = sizeof(*value);
 
-  if (sysctlbyname(name, value, &value_len, NULL, 0) < 0)
+  if (sysctlbyname(name, value, &value_len, (void *)NULL, 0) < 0)
     {
       gam_error(DEBUG_INFO, "unable to retrieve %s: %s\n", name, g_strerror(errno));
       return FALSE;
@@ -1031,7 +1032,7 @@ gam_kqueue_kevent_cb (GIOChannel *source,
     }
 
   for (i = 0; i < nevents; i++)
-    MONITOR(ev[i].udata)->handle_kevent(ev[i].udata, &ev[i]);
+    MONITOR(ev[i].udata)->handle_kevent(MONITOR(ev[i].udata), &ev[i]);
   
   return TRUE;			/* keep source */
 }

@@ -64,6 +64,21 @@ static gboolean (*__gam_poll_add_subscription) (GamSubscription *sub) = NULL;
 static gboolean (*__gam_poll_remove_subscription) (GamSubscription *sub) = NULL;
 static gboolean (*__gam_poll_remove_all_for) (GamListener *listener) = NULL;
 
+#ifndef ENABLE_INOTIFY
+/**
+ * gam_inotify_is_running
+ *
+ * Unless built with inotify support, always
+ * return false.
+ */
+gboolean
+gam_inotify_is_running(void)
+{
+	return FALSE;
+}
+#endif
+
+
 /**
  * gam_exit:
  *
