@@ -11,7 +11,6 @@ gboolean	gam_poll_init			(void);
 gboolean	gam_poll_init_full		(gboolean start_scan_thread);
 void		gam_poll_scan_directory		(const char *path);
 void		gam_poll_debug			(void);
-void		gam_poll_consume_subscriptions	(void);
 						 
 G_END_DECLS
 

@@ -1,5 +1,20 @@
 2005-08-10  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_dnotify.c: (gam_dnotify_add_subscription),
+	(gam_dnotify_remove_subscription), (gam_dnotify_remove_all_for): Remove
+	the consume_subscription garbage.
+	* server/gam_listener.c:
+	* server/gam_poll.c: (gam_poll_scan_all_callback),
+	(gam_default_poll_add_subscription),
+	(gam_default_poll_remove_subscription), (gam_poll_first_scan_dir): Remove
+	consume subscription garbage
+	* server/gam_poll.h: Again.
+	* server/gam_subscription.c: Typo
+
+	Both test suites pass under dnotify with these changes.
+
+2005-08-10  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_dnotify.c: (gam_dnotify_init): Use the new
 	gam_server_install_kernel_hooks.
 	* server/gam_inotify.c: (gam_inotify_init): Here to

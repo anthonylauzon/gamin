@@ -28,7 +28,7 @@
 #include "gam_event.h"
 #include "gam_error.h"
 
-// #define GAM_SUB_VERBOSE
+//#define GAM_SUB_VERBOSE
 
 struct _GamSubscription {
     char *path;

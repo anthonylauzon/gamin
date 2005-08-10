@@ -37,8 +37,8 @@
 #include "gam_event.h"
 #include "gam_excludes.h"
 
-// #define VERBOSE_POLL
-// #define VERBOSE_POLL2
+//#define VERBOSE_POLL
+//#define VERBOSE_POLL2
 
 #define DEFAULT_POLL_TIMEOUT 1
 
@@ -54,7 +54,6 @@
 #define MON_WRONG_TYPE	1 << 3  /* Expecting a directory and got a file */
 
 static GamTree *tree = NULL;
-static GList *new_subs = NULL;
 static GList *missing_resources = NULL;
 static GList *busy_resources = NULL;
 static GList *all_resources = NULL;
@@ -70,7 +69,7 @@ static gboolean gam_default_poll_remove_subscription(GamSubscription * sub);
 static gboolean gam_default_poll_remove_all_for(GamListener * listener);
 
 static void trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node);
-
+static void gam_poll_first_scan_dir(GamSubscription * sub, GamNode * dir_node, const char *dpath);
 
 static int
 gam_errno(void)
@@ -231,7 +230,6 @@ trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node)
  *
  * Returns 0 in case of success and -1 in case of failure
  */
-
 static int
 node_add_subscription(GamNode * node, GamSubscription * sub)
 {
@@ -901,9 +899,6 @@ gam_poll_scan_all_callback(gpointer data)
     GAM_DEBUG(DEBUG_INFO, "gam_poll_scan_all_callback\n");
     in_poll_callback++;
 
-    if (new_subs != NULL)
-	gam_poll_consume_subscriptions ();
-
     current_time = time(NULL);
     for (idx = 0;; idx++) {
 
@@ -985,21 +980,75 @@ gam_poll_init(void)
 gboolean
 gam_default_poll_add_subscription(GamSubscription * sub)
 {
-    const char *path;
-    gboolean is_dir;
+	const char *path = gam_subscription_get_path (sub);
+	gboolean is_dir = gam_subscription_is_dir (sub);
+	GamNode *node = gam_tree_get_at_path (tree, path);
+	int node_is_dir = FALSE;
 
-    if (g_list_find(new_subs, sub))
-        return FALSE;
+	gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
 
-    path = gam_subscription_get_path(sub);
-    is_dir = gam_subscription_is_dir(sub);
+    current_time = time(NULL);
 
-    gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
+	if (!node) 
+	{
+		node = gam_tree_add_at_path(tree, path, gam_subscription_is_dir(sub));
+	}
 
-    new_subs = g_list_prepend(new_subs, sub);
+	if (node_add_subscription(node, sub) < 0) 
+	{
+		gam_error(DEBUG_INFO, "Failed to add subscription for: %s\n", path);
+		return FALSE;
+	}
 
-    GAM_DEBUG(DEBUG_INFO, "Poll: added subscription\n");
-    return TRUE;
+	node_is_dir = gam_node_is_dir(node);
+	if (node_is_dir) 
+	{
+		gam_poll_first_scan_dir(sub, node, path);
+	} else {
+		GaminEventType event;
+
+		event = poll_file(node);
+		GAM_DEBUG(DEBUG_INFO, "New file subscription: %s event %d\n", path, event);
+
+		if ((event == 0) || (event == GAMIN_EVENT_EXISTS) ||
+		    (event == GAMIN_EVENT_CHANGED) ||
+		    (event == GAMIN_EVENT_CREATED)) 
+		{
+			if (gam_subscription_is_dir(sub)) {
+				/* we are watching a file but requested a directory */
+				gam_server_emit_one_event(path, node_is_dir, GAMIN_EVENT_DELETED, sub, 0);
+			} else {
+				gam_server_emit_one_event(path, node_is_dir, GAMIN_EVENT_EXISTS, sub, 0);
+			}
+		} else if (event != 0) {
+			gam_server_emit_one_event(path, node_is_dir, GAMIN_EVENT_DELETED, sub, 0);
+		}
+
+		gam_server_emit_one_event(path, node_is_dir, GAMIN_EVENT_ENDEXISTS, sub, 0);
+	}
+
+	if ((node->pflags & MON_MISSING) ||
+	    (node->pflags & MON_NOKERNEL)) 
+	{
+		gam_poll_add_missing(node);
+	}
+
+	if (!node_is_dir) {
+		char *parent;
+		parent = g_path_get_dirname(path);
+		node = gam_tree_get_at_path(tree, parent);
+		if (!node) 
+		{
+			node = gam_tree_add_at_path(tree, parent, gam_subscription_is_dir (sub));
+		}
+		g_free(parent);
+	}
+
+	if (g_list_find(all_resources, node) == NULL)
+		all_resources = g_list_prepend(all_resources, node);
+
+	GAM_DEBUG(DEBUG_INFO, "Poll: added subscription\n");
+	return TRUE;
 }
 
 /**
@@ -1070,15 +1119,6 @@ static gboolean
 gam_default_poll_remove_subscription(GamSubscription * sub)
 {
     GamNode *node;
-
-    /*
-     * make sure the subscription still isn't in the new subscription queue
-     */
-    if (g_list_find(new_subs, sub)) {
-        GAM_DEBUG(DEBUG_INFO, "new subscription is removed\n");
-        new_subs = g_list_remove_all(new_subs, sub);
-	return TRUE;
-    }
 
     node = gam_tree_get_at_path(tree, gam_subscription_get_path(sub));
     if (node == NULL) {
@@ -1241,101 +1281,6 @@ gam_poll_first_scan_dir(GamSubscription * sub, GamNode * dir_node,
 
     GAM_DEBUG(DEBUG_INFO, "Done scanning %s\n", dpath);
 }
-
-/**
- * Commits all pending added/removed subscriptions.  For new subscriptions,
- * this includes scanning directories.
- *
- */
-void
-gam_poll_consume_subscriptions(void)
-{
-    GList *subs, *l;
-
-    /* check for new dir subs which need special handling
-     * (specifically, sending them the EXIST event)
-     */
-    current_time = time(NULL);
-    if (new_subs != NULL) {
-		GAM_DEBUG(DEBUG_INFO, "gam_poll_consume_subscriptions\n");
-        /* we don't want to block the main loop */
-        subs = new_subs;
-        new_subs = NULL;
-
-        GAM_DEBUG(DEBUG_INFO,
-                  "%d new subscriptions.\n", g_list_length(subs));
-
-        for (l = subs; l; l = l->next) {
-            GamSubscription *sub = l->data;
-            GamNode *node;
-            int node_is_dir;
-
-            const char *path = gam_subscription_get_path(sub);
-
-            node = gam_tree_get_at_path(tree, path);
-            if (!node) {
-                node = gam_tree_add_at_path(tree, path,
-                                            gam_subscription_is_dir(sub));
-            }
-
-            if (node_add_subscription(node, sub) < 0) {
-                gam_error(DEBUG_INFO,
-                          "Failed to add subscription for: %s\n", path);
-                return;
-            }
-
-            node_is_dir = gam_node_is_dir(node);
-            if (node_is_dir) {
-                gam_poll_first_scan_dir(sub, node, path);
-            } else {
-                GaminEventType event;
-
-                event = poll_file(node);
-                GAM_DEBUG(DEBUG_INFO,
-                          "New file subscription: %s event %d\n", path,
-                          event);
-                if ((event == 0) || (event == GAMIN_EVENT_EXISTS)
-                    || (event == GAMIN_EVENT_CHANGED)
-                    || (event == GAMIN_EVENT_CREATED)) {
-		    if (gam_subscription_is_dir(sub)) {
-		        /* we are watching a file but requested a directory */
-			gam_server_emit_one_event(path, node_is_dir,
-						  GAMIN_EVENT_DELETED, sub, 0);
-		    } else {
-			gam_server_emit_one_event(path, node_is_dir,
-						  GAMIN_EVENT_EXISTS, sub, 0);
-		    }
-                } else if (event != 0) {
-                    gam_server_emit_one_event(path, node_is_dir,
-                                              GAMIN_EVENT_DELETED, sub, 0);
-                }
-                gam_server_emit_one_event(path, node_is_dir,
-                                          GAMIN_EVENT_ENDEXISTS, sub, 0);
-            }
-            if ((node->pflags & MON_MISSING) ||
-		(node->pflags & MON_NOKERNEL)) {
-                gam_poll_add_missing(node);
-            }
-
-	    if (!node_is_dir) {
-                char *parent;
-                parent = g_path_get_dirname(path);
-                node = gam_tree_get_at_path(tree, parent);
-                if (!node) {
-                    node = gam_tree_add_at_path(tree, parent,
-                                                gam_subscription_is_dir
-                                                (sub));
-                }
-                g_free(parent);
-	    }
-            if (g_list_find(all_resources, node) == NULL)
-                all_resources = g_list_prepend(all_resources, node);
-        }
-
-        g_list_free(subs);
-    }
-}
-
 
 static void gam_poll_debug_node(GamNode * node, gpointer user_data) {
     if (node == NULL)

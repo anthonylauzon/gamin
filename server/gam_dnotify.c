@@ -56,8 +56,6 @@ static GQueue *changes = NULL;
 static GIOChannel *pipe_read_ioc = NULL;
 static GIOChannel *pipe_write_ioc = NULL;
 
-static gboolean have_consume_idler = FALSE;
-
 static void 
 gam_dnotify_data_debug (gpointer key, gpointer value, gpointer user_data)
 {
@@ -322,31 +320,6 @@ gam_dnotify_pipe_handler(gpointer user_data)
     return TRUE;
 }
 
-static gboolean
-gam_dnotify_consume_subscriptions_real(gpointer data)
-{
-    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_consume_subscriptions_real()\n");
-    gam_poll_consume_subscriptions();
-    have_consume_idler = FALSE;
-    return FALSE;
-}
-
-static void
-gam_dnotify_consume_subscriptions(void)
-{
-    GSource *source;
-
-    if (have_consume_idler)
-        return;
-
-    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_consume_subscriptions()\n");
-    have_consume_idler = TRUE;
-    source = g_idle_source_new();
-    g_source_set_callback(source, gam_dnotify_consume_subscriptions_real,
-                          NULL, NULL);
-    g_source_attach(source, NULL);
-}
-
 /**
  * @defgroup DNotify DNotify Backend
  * @ingroup Backends
@@ -433,15 +406,12 @@ gam_dnotify_init(void)
 gboolean
 gam_dnotify_add_subscription(GamSubscription * sub)
 {
-    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_add_subscription\n");
+	GAM_DEBUG(DEBUG_INFO, "dnotify: Adding subscription for %s\n", gam_subscription_get_path (sub));
 
     if (!gam_poll_add_subscription(sub)) {
         return FALSE;
     }
 
-    gam_dnotify_consume_subscriptions();
-
-    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_add_subscription: done\n");
     return TRUE;
 }
 
@@ -454,15 +424,12 @@ gam_dnotify_add_subscription(GamSubscription * sub)
 gboolean
 gam_dnotify_remove_subscription(GamSubscription * sub)
 {
-    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_remove_subscription\n");
+	GAM_DEBUG(DEBUG_INFO, "dnotify: Removing subscription for %s\n", gam_subscription_get_path (sub));
 
     if (!gam_poll_remove_subscription(sub)) {
         return FALSE;
     }
 
-    gam_dnotify_consume_subscriptions();
-
-    GAM_DEBUG(DEBUG_INFO, "gam_dnotify_remove_subscription: done\n");
     return TRUE;
 }
 
@@ -475,11 +442,11 @@ gam_dnotify_remove_subscription(GamSubscription * sub)
 gboolean
 gam_dnotify_remove_all_for(GamListener * listener)
 {
+	GAM_DEBUG(DEBUG_INFO, "dnotify: Removing all subscriptions for %s\n", gam_listener_get_pidname (listener));
+
     if (!gam_poll_remove_all_for(listener)) {
         return FALSE;
     }
-
-    gam_dnotify_consume_subscriptions();
 
     return TRUE;
 }

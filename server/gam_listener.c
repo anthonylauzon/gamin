@@ -26,7 +26,7 @@
 #include "gam_error.h"
 #include "gam_pidname.h"
 
-// #define GAM_LISTENER_VERBOSE
+//#define GAM_LISTENER_VERBOSE
 /* private struct representing a single listener */
 struct _GamListener {
     void *service;
