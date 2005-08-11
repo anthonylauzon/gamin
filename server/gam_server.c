@@ -137,12 +137,10 @@ gam_init_subscriptions(void)
 
 	if (!poll_only) {
 #ifdef ENABLE_INOTIFY
-#if 0
-		if (gam_inotify_init()) {
+		if (!getenv("GAM_TEST_DNOTIFY") && gam_inotify_init()) {
 			GAM_DEBUG(DEBUG_INFO, "Using inotify as backend\n");
 			return(TRUE);
 		}
-#endif
 #endif
 #ifdef ENABLE_DNOTIFY
 		if (gam_dnotify_init()) {

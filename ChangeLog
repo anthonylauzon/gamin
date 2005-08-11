@@ -1,3 +1,8 @@
+2005-08-11  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* server/gam_server.c: (gam_init_subscriptions): If the environment
+	variable GAM_TEST_DNOTIFY is set, inotify won't be used.
+
 Thu Aug 11 10:57:19 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_server.c: fixed compilation when inotify support
