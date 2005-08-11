@@ -1,5 +1,20 @@
 2005-08-11  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* lib/gam_error.c: (gam_error_init): 
+	* server/gam_node.c: (gam_node_set_pflag), (gam_node_unset_pflag),
+	(gam_node_has_pflag), (gam_node_set_pflags), (gam_node_has_pflags):
+	* server/gam_node.h: Move MON_* pflags into gam_node. Add access/mutators
+	for pflags. 
+	* server/gam_poll.c: (trigger_file_handler),
+	(node_remove_subscription), (poll_file),
+	(gam_poll_scan_directory_internal), (gam_poll_scan_callback),
+	(gam_poll_scan_all_callback), (gam_poll_init),
+	(gam_default_poll_add_subscription), (gam_poll_first_scan_dir),
+	(gam_poll_debug_node), (gam_poll_debug): Convert all code touching
+	->pflags to use the access/mutators from gam_node. Indentation fixes.
+
+2005-08-11  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_server.c: (gam_init_subscriptions): If the environment
 	variable GAM_TEST_DNOTIFY is set, inotify won't be used.
 

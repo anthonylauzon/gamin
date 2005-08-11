@@ -42,17 +42,6 @@
 
 #define DEFAULT_POLL_TIMEOUT 1
 
-#define FLAG_NEW_NODE 1 << 5
-
-
-/*
- * Special monitoring modes
- */
-#define MON_MISSING	1 << 0  /* The resource is missing */
-#define MON_NOKERNEL	1 << 1  /* file(system) not monitored by the kernel */
-#define MON_BUSY	1 << 2  /* Too busy to be monitored by the kernel */
-#define MON_WRONG_TYPE	1 << 3  /* Expecting a directory and got a file */
-
 static GamTree *tree = NULL;
 static GList *missing_resources = NULL;
 static GList *busy_resources = NULL;
@@ -199,19 +188,19 @@ trigger_file_handler(const char *path, pollHandlerMode mode, GamNode * node)
 				gam_kernel_dir_handler (dir, mode);
 			break;
 			case GAMIN_FLOWCONTROLSTART:
-				if ((parent->pflags & MON_BUSY) == 0) {
+				if (!gam_node_has_pflag (parent, MON_BUSY)) {
 					GAM_DEBUG(DEBUG_INFO, "File directory busy on %s\n", dir);
 					gam_kernel_dir_handler (dir, mode);
 					gam_poll_add_busy(parent);
-					parent->pflags |= MON_BUSY;
+					gam_node_set_pflag (parent, MON_BUSY);
 				}
 			break;
 			case GAMIN_FLOWCONTROLSTOP:
-				if (parent->pflags & MON_BUSY) {
+				if (gam_node_has_pflag (parent, MON_BUSY)) {
 					GAM_DEBUG(DEBUG_INFO, "File dir no longer busy %s\n", dir);
 					gam_kernel_dir_handler (dir, mode);
 					gam_poll_remove_busy(parent);
-					parent->pflags &= !MON_BUSY;
+					gam_node_unset_pflag (parent, MON_BUSY);
 				}
 			break;
 			}
@@ -272,37 +261,38 @@ node_add_subscription(GamNode * node, GamSubscription * sub)
 static int
 node_remove_subscription(GamNode * node, GamSubscription * sub)
 {
-    const char *path;
+	const char *path;
 
-    if ((node == NULL) || (sub == NULL))
-        return (-1);
+	if ((node == NULL) || (sub == NULL))
+		return (-1);
 
-    if ((node->path == NULL) || (node->path[0] != '/'))
-        return (-1);
+	if ((node->path == NULL) || (node->path[0] != '/'))
+		return (-1);
 
-    GAM_DEBUG(DEBUG_INFO, "node_remove_subscription(%s)\n", node->path);
+	GAM_DEBUG(DEBUG_INFO, "node_remove_subscription(%s)\n", node->path);
 
-    gam_node_remove_subscription(node, sub);
+	gam_node_remove_subscription(node, sub);
 
-    path = node->path;
-    if (gam_exclude_check(path) || gam_fs_get_mon_type (path) == GFS_MT_POLL) {
-        GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
-        return (0);
-    }
-    if (node->pflags == MON_BUSY) {
-        GAM_DEBUG(DEBUG_INFO, "  node is busy\n");
-    } else if (node->pflags != 0) {
-        GAM_DEBUG(DEBUG_INFO, "  node has flag %d\n", node->pflags);
+	path = node->path;
+	if (gam_exclude_check(path) || gam_fs_get_mon_type (path) == GFS_MT_POLL) {
+		GAM_DEBUG(DEBUG_INFO, "  gam_exclude_check: true\n");
+		return (0);
+	}
+
+	if (node->pflags == MON_BUSY) {
+		GAM_DEBUG(DEBUG_INFO, "  node is busy\n");
+	} else if (gam_node_has_pflags (node, MON_ALL_PFLAGS)) {
+		GAM_DEBUG(DEBUG_INFO, "  node has flag %d\n", node->pflags);
+		return (0);
+	}
+
+	/* DNotify makes our life miserable here */
+	if (gam_node_is_dir(node))
+		trigger_dir_handler(path, GAMIN_DESACTIVATE, node);
+	else
+		trigger_file_handler(path, GAMIN_DESACTIVATE, node);
+
 	return (0);
-    }
-
-    /* DNotify makes our life miserable here */
-    if (gam_node_is_dir(node))
-	trigger_dir_handler(path, GAMIN_DESACTIVATE, node);
-    else
-	trigger_file_handler(path, GAMIN_DESACTIVATE, node);
-
-    return (0);
 }
 
 static void
@@ -449,160 +439,164 @@ gam_poll_flowoff_node(GamNode * node)
 static GaminEventType
 poll_file(GamNode * node)
 {
-    GaminEventType event;
-    struct stat sbuf;
-    int stat_ret;
-    const char *path;
+	GaminEventType event;
+	struct stat sbuf;
+	int stat_ret;
+	const char *path;
 
-    /* If not enough time has passed since the last time we polled this node, stop here */
-    if (node->lasttime && (current_time - node->lasttime) < node->poll_time) 
-	    return 0;
+	/* If not enough time has passed since the last time we polled this node, stop here */
+	if (node->lasttime && (current_time - node->lasttime) < node->poll_time) 
+		return 0;
 
-    path = gam_node_get_path(node);
+	path = gam_node_get_path(node);
 #ifdef VERBOSE_POLL
-    GAM_DEBUG(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
+	GAM_DEBUG(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
 #endif
 
-    memset(&sbuf, 0, sizeof(struct stat));
-    if (node->lasttime == 0) {
-        GAM_DEBUG(DEBUG_INFO, "Poll: file is new\n");
-        stat_ret = stat(node->path, &sbuf);
-        if (stat_ret != 0)
-            node->pflags |= MON_MISSING;
-        else
-            gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
-        if (gam_exclude_check(path) || gam_fs_get_mon_type (path) != GFS_MT_KERNEL)
-            node->pflags |= MON_NOKERNEL;
-        memcpy(&(node->sbuf), &(sbuf), sizeof(struct stat));
-        node->lasttime = current_time;
+	memset(&sbuf, 0, sizeof(struct stat));
+	if (node->lasttime == 0) {
+		GAM_DEBUG(DEBUG_INFO, "Poll: file is new\n");
+		stat_ret = stat(node->path, &sbuf);
+		if (stat_ret != 0)
+			gam_node_set_pflag (node, MON_MISSING);
+		else
+			gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
 
-        if (stat_ret == 0)
-            return 0;
-        else
-            return GAMIN_EVENT_DELETED;
-    }
+		if (gam_exclude_check(path) || gam_fs_get_mon_type (path) != GFS_MT_KERNEL)
+			gam_node_set_pflag (node, MON_NOKERNEL);
+
+		memcpy(&(node->sbuf), &(sbuf), sizeof(struct stat));
+		node->lasttime = current_time;
+
+		if (stat_ret == 0)
+			return 0;
+		else
+			return GAMIN_EVENT_DELETED;
+	}
+
 #ifdef VERBOSE_POLL
-    GAM_DEBUG(DEBUG_INFO, " at %d delta %d : %d\n", current_time,
-              current_time - node->lasttime, node->checks);
+	GAM_DEBUG(DEBUG_INFO, " at %d delta %d : %d\n", current_time, current_time - node->lasttime, node->checks);
 #endif
 
-    event = 0;
+	event = 0;
 
-    stat_ret = stat(node->path, &sbuf);
-    if (stat_ret != 0) {
-        if ((gam_errno() == ENOENT) && (!(node->pflags & MON_MISSING))) {
-            /* deleted */
-            node->pflags = MON_MISSING;
+	stat_ret = stat(node->path, &sbuf);
+	if (stat_ret != 0) {
+		if ((gam_errno() == ENOENT) && (!gam_node_has_pflag(node, MON_MISSING))) {
+			/* deleted */
+			gam_node_set_pflags (node, MON_MISSING);
 
-            gam_poll_remove_busy(node);
-            if (gam_node_get_subscriptions(node) != NULL) {
-                gam_poll_delist_node(node);
-                gam_poll_add_missing(node);
-            }
-            event = GAMIN_EVENT_DELETED;
-        }
-    } else if (node->pflags & MON_MISSING) {
-        /* created */
-        node->pflags &= ~MON_MISSING;
-        event = GAMIN_EVENT_CREATED;
+			gam_poll_remove_busy(node);
+			if (gam_node_get_subscriptions(node) != NULL) {
+				gam_poll_delist_node(node);
+				gam_poll_add_missing(node);
+			}
+			event = GAMIN_EVENT_DELETED;
+		}
+	} else if (gam_node_has_pflag (node, MON_MISSING)) {
+		/* created */
+		gam_node_unset_pflag (node, MON_MISSING);
+		event = GAMIN_EVENT_CREATED;
 #ifdef ST_MTIM_NSEC
-    } else if ((node->sbuf.st_mtim.tv_sec != sbuf.st_mtim.tv_sec) ||
-               (node->sbuf.st_mtim.tv_nsec != sbuf.st_mtim.tv_nsec) ||
-               (node->sbuf.st_size != sbuf.st_size) ||
-               (node->sbuf.st_ctim.tv_sec != sbuf.st_ctim.tv_sec) ||
-               (node->sbuf.st_ctim.tv_nsec != sbuf.st_ctim.tv_nsec)) {
-        event = GAMIN_EVENT_CHANGED;
-    } else {
+	} else if ((node->sbuf.st_mtim.tv_sec != sbuf.st_mtim.tv_sec) ||
+		   (node->sbuf.st_mtim.tv_nsec != sbuf.st_mtim.tv_nsec) ||
+		   (node->sbuf.st_size != sbuf.st_size) ||
+	  	   (node->sbuf.st_ctim.tv_sec != sbuf.st_ctim.tv_sec) ||
+		   (node->sbuf.st_ctim.tv_nsec != sbuf.st_ctim.tv_nsec)) 
+	{
+		event = GAMIN_EVENT_CHANGED;
+	} else {
 #ifdef VERBOSE_POLL
-        GAM_DEBUG(DEBUG_INFO, "Poll: poll_file %s unchanged\n", path);
-        GAM_DEBUG(DEBUG_INFO, "%d %d : %d %d\n", node->sbuf.st_mtim.tv_sec,
-                  node->sbuf.st_mtim.tv_nsec, sbuf.st_mtim.tv_sec,
-                  sbuf.st_mtim.tv_nsec);
+		GAM_DEBUG(DEBUG_INFO, "Poll: poll_file %s unchanged\n", path);
+		GAM_DEBUG(DEBUG_INFO, "%d %d : %d %d\n", node->sbuf.st_mtim.tv_sec, node->sbuf.st_mtim.tv_nsec, sbuf.st_mtim.tv_sec, sbuf.st_mtim.tv_nsec);
 #endif
 #else
-    } else if ((node->sbuf.st_mtime != sbuf.st_mtime) ||
-               (node->sbuf.st_size != sbuf.st_size) ||
-               (node->sbuf.st_ctime != sbuf.st_ctime)) {
-        event = GAMIN_EVENT_CHANGED;
+	} else if ((node->sbuf.st_mtime != sbuf.st_mtime) ||
+		   (node->sbuf.st_size != sbuf.st_size) ||
+		   (node->sbuf.st_ctime != sbuf.st_ctime)) 
+	{
+		event = GAMIN_EVENT_CHANGED;
 #ifdef VERBOSE_POLL
-        GAM_DEBUG(DEBUG_INFO, "%d : %d\n", node->sbuf.st_mtime,
-                  sbuf.st_mtime);
+		GAM_DEBUG(DEBUG_INFO, "%d : %d\n", node->sbuf.st_mtime, sbuf.st_mtime);
 #endif
 #endif
     }
 
-    /*
-     * TODO: handle the case where a file/dir is removed and replaced by 
-     *       a dir/file
-     */
-    if (stat_ret == 0)
-        gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
+	/*
+	* TODO: handle the case where a file/dir is removed and replaced by 
+	*       a dir/file
+	*/
+	if (stat_ret == 0)
+		gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
 
-    memcpy(&(node->sbuf), &(sbuf), sizeof(struct stat));
-    node->sbuf.st_mtime = sbuf.st_mtime; // VALGRIND!
+	memcpy(&(node->sbuf), &(sbuf), sizeof(struct stat));
+	node->sbuf.st_mtime = sbuf.st_mtime; // VALGRIND!
 
-    /*
-     * if kernel monitoring prohibited, stop here
-     */
-    if (node->pflags & MON_NOKERNEL)
-        return (event);
+	/*
+	* if kernel monitoring prohibited, stop here
+	*/
+	if (gam_node_has_pflag (node, MON_NOKERNEL))
+		return (event);
 
-    /*
-     * load control, switch back to poll on very busy resources
-     * and back when no update has happened in 5 seconds
-     */
-    if (current_time == node->lasttime) {
-        if (!(node->pflags & MON_BUSY)) {
-            if (node->sbuf.st_mtime == current_time)
-                node->checks++;
-        }
-    } else {
-        node->lasttime = current_time;
-        if (node->pflags & MON_BUSY) {
-            if (event == 0)
-                node->checks++;
-        } else {
-            node->checks = 0;
-        }
-    }
+	/*
+	* load control, switch back to poll on very busy resources
+	* and back when no update has happened in 5 seconds
+	*/
+	if (current_time == node->lasttime) {
+		if (!gam_node_has_pflag (node, MON_BUSY)) {
+			if (node->sbuf.st_mtime == current_time)
+				node->checks++;
+		}
+	} else {
+		node->lasttime = current_time;
+		if (gam_node_has_pflag (node, MON_BUSY)) {
+			if (event == 0)
+				node->checks++;
+		} else {
+			node->checks = 0;
+		}
+	}
 
-    if ((node->checks >= 4) && (!(node->pflags & MON_BUSY))) {
-        if ((gam_node_get_subscriptions(node) != NULL) &&
-            (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) {
-            GAM_DEBUG(DEBUG_INFO, "switching %s back to polling\n", path);
-            node->pflags |= MON_BUSY;
-            node->checks = 0;
-            gam_poll_add_busy(node);
-            gam_poll_flowon_node(node);
-            /*
-             * DNotify can be nasty here, we will miss events for parent dir
-             * if we are not careful about it
-             */
-            if (!gam_node_is_dir(node)) {
-                GamNode *parent = gam_node_parent(node);
+	if ((node->checks >= 4) && (!gam_node_has_pflag (node, MON_BUSY))) {
+		if ((gam_node_get_subscriptions(node) != NULL) &&
+		    (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) 
+		{
+			GAM_DEBUG(DEBUG_INFO, "switching %s back to polling\n", path);
+			gam_node_set_pflag (node, MON_BUSY);
+			node->checks = 0;
+			gam_poll_add_busy(node);
+			gam_poll_flowon_node(node);
+			/*
+			* DNotify can be nasty here, we will miss events for parent dir
+			* if we are not careful about it
+			*/
+			if (!gam_node_is_dir(node)) {
+				GamNode *parent = gam_node_parent(node);
 
-                if ((parent != NULL) &&
-                    (gam_node_get_subscriptions(parent) != NULL)) {
-                    gam_poll_add_busy(parent);
-                    /* gam_poll_flowon_node(parent); */
-                }
-            }
-        }
-    }
+				if ((parent != NULL) &&
+				    (gam_node_get_subscriptions(parent) != NULL)) 
+				{
+					gam_poll_add_busy(parent);
+					/* gam_poll_flowon_node(parent); */
+				}
+			}
+		}
+	}
 
-    if ((event == 0) && (node->pflags & MON_BUSY) && (node->checks > 5)) {
-        if ((gam_node_get_subscriptions(node) != NULL) &&
-            (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) {
-            GAM_DEBUG(DEBUG_INFO,
-                      "switching %s back to kernel monitoring\n", path);
-            node->pflags &= ~MON_BUSY;
-            node->checks = 0;
-            gam_poll_remove_busy(node);
-            gam_poll_flowoff_node(node);
-        }
-    }
+	if ((event == 0) && gam_node_has_pflag (node, MON_BUSY) && (node->checks > 5)) 
+	{
+		if ((gam_node_get_subscriptions(node) != NULL) &&
+		    (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) 
+		{
+			GAM_DEBUG(DEBUG_INFO, "switching %s back to kernel monitoring\n", path);
+			gam_node_unset_pflag (node, MON_BUSY);
+			node->checks = 0;
+			gam_poll_remove_busy(node);
+			gam_poll_flowoff_node(node);
+		}
+	}
 
-    return (event);
+	return (event);
 }
 
 static void
@@ -674,38 +668,40 @@ gam_poll_scan_directory_internal(GamNode * dir_node)
   scan_files:
 
 
-    /* FIXME: 
-     * Shouldn't is_dir_node be assigned inside the loop? */
-    is_dir_node = gam_node_is_dir(dir_node);
-    children = gam_tree_get_children(tree, dir_node);
-    for (l = children; l; l = l->next) {
+	/* FIXME: 
+	* Shouldn't is_dir_node be assigned inside the loop? */
+	is_dir_node = gam_node_is_dir(dir_node);
+	children = gam_tree_get_children(tree, dir_node);
+	for (l = children; l; l = l->next) {
+		node = (GamNode *) l->data;
 
-        node = (GamNode *) l->data;
+		fevent = poll_file(node);
 
-        fevent = poll_file(node);
+		if (gam_node_has_flag(node, FLAG_NEW_NODE)) {
+			if (is_dir_node && gam_node_get_subscriptions(node)) {
+				gam_node_unset_flag(node, FLAG_NEW_NODE);
+				gam_poll_scan_directory_internal(node);
+			} else {
+				gam_node_unset_flag(node, FLAG_NEW_NODE);
+				fevent = GAMIN_EVENT_CREATED;
+			}
+		}
 
-        if (gam_node_has_flag(node, FLAG_NEW_NODE)) {
-            if (is_dir_node && gam_node_get_subscriptions(node)) {
-                gam_node_unset_flag(node, FLAG_NEW_NODE);
-                gam_poll_scan_directory_internal(node);
-            } else {
-                gam_node_unset_flag(node, FLAG_NEW_NODE);
-                fevent = GAMIN_EVENT_CREATED;
-            }
-        }
+		if (fevent != 0) {
+			gam_poll_emit_event(node, fevent);
+		} else {
+			/* just send the EXIST events if the node exists */
 
-        if (fevent != 0) {
-            gam_poll_emit_event(node, fevent);
-        } else {
-            /* just send the EXIST events if the node exists */
-            if (!(node->pflags & MON_MISSING))
-                gam_server_emit_event(gam_node_get_path(node),
-                                      gam_node_is_dir(node),
-                                      GAMIN_EVENT_EXISTS, NULL, 0);
-        }
-    }
+			if (!gam_node_has_pflag (node, MON_MISSING)) 
+			{
+				gam_server_emit_event(gam_node_get_path(node),
+						      gam_node_is_dir(node),
+						      GAMIN_EVENT_EXISTS, NULL, 0);
+			}
+		}
+	}
 
-    g_list_free(children);
+	g_list_free(children);
 }
 
 static void
@@ -769,98 +765,101 @@ remove_directory_subscription(GamNode * node, GamSubscription * sub)
 static gboolean
 gam_poll_scan_callback(gpointer data)
 {
-    int idx;
-    static int in_poll_callback = 0;
+	int idx;
+	static int in_poll_callback = 0;
 
 #ifdef VERBOSE_POLL
-    GAM_DEBUG(DEBUG_INFO,
-              "gam_poll_scan_callback(): %d, %d missing, %d busy\n",
-              in_poll_callback, g_list_length(missing_resources),
-              g_list_length(busy_resources));
+	GAM_DEBUG(DEBUG_INFO, "gam_poll_scan_callback(): %d, %d missing, %d busy\n", in_poll_callback, g_list_length(missing_resources), g_list_length(busy_resources));
 #endif
-    if (in_poll_callback)
-        return (TRUE);
+	if (in_poll_callback)
+		return TRUE;
 
-    in_poll_callback++;
+	in_poll_callback++;
 
-    current_time = time(NULL);
-    for (idx = 0;; idx++) {
-        GamNode *node;
+	current_time = time(NULL);
 
-        /*
-         * do not simply walk the list as it may be modified in the callback
-         */
-        node = (GamNode *) g_list_nth_data(missing_resources, idx);
+	for (idx = 0;; idx++) 
+	{
+		GamNode *node;
 
-        if (node == NULL) {
+		/*
+		 * do not simply walk the list as it may be modified in the callback
+		 */
+		node = (GamNode *) g_list_nth_data(missing_resources, idx);
+
+		if (node == NULL) {
 #ifdef VERBOSE_POLL2
-            GAM_DEBUG(DEBUG_INFO, "missing list node %d == NULL\n", idx);
+			GAM_DEBUG(DEBUG_INFO, "missing list node %d == NULL\n", idx);
 #endif
-            break;
-        }
+			break;
+		}
 #ifdef VERBOSE_POLL
-        GAM_DEBUG(DEBUG_INFO, "Checking missing file %s", node->path);
+		GAM_DEBUG(DEBUG_INFO, "Checking missing file %s", node->path);
 #endif
-        if (node->is_dir) {
-            gam_poll_scan_directory_internal(node);
-        } else {
-            GaminEventType event;
+		if (node->is_dir) {
+			gam_poll_scan_directory_internal(node);
+		} else {
+			GaminEventType event;
 
-            event = poll_file(node);
-            gam_poll_emit_event(node, event);
-        }
+			event = poll_file(node);
+			gam_poll_emit_event(node, event);
+		}
 
-        /*
-         * if the resource exists again and is not in a special monitoring
-         * mode then switch back to dnotify for monitoring.
-         */
-        if ((node->pflags == 0) && (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) {
-            gam_poll_remove_missing(node);
-            if (gam_node_get_subscriptions(node) != NULL) {
-                gam_poll_relist_node(node);
-            }
-        }
-    }
+		/*
+		 * if the resource exists again and is not in a special monitoring
+		 * mode then switch back to dnotify for monitoring.
+		 */
+		if (!gam_node_has_pflags (node, MON_ALL_PFLAGS) && (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) 
+		{
+			gam_poll_remove_missing(node);
+			if (gam_node_get_subscriptions(node) != NULL) {
+				gam_poll_relist_node(node);
+			}
+		}
+	}
 
-    for (idx = 0;; idx++) {
-        GamNode *node;
+	for (idx = 0;; idx++) 
+	{
+		GamNode *node;
 
-        /*
-         * do not simply walk the list as it may be modified in the callback
-         */
-        node = (GamNode *) g_list_nth_data(busy_resources, idx);
+		/*
+		* do not simply walk the list as it may be modified in the callback
+		*/
+		node = (GamNode *) g_list_nth_data(busy_resources, idx);
 
-        if (node == NULL) {
+		if (node == NULL) 
+		{
 #ifdef VERBOSE_POLL2
-            GAM_DEBUG(DEBUG_INFO, "busy list node %d == NULL\n", idx);
+			GAM_DEBUG(DEBUG_INFO, "busy list node %d == NULL\n", idx);
 #endif
-            break;
-        }
+			break;
+		}
 #ifdef VERBOSE_POLL
-        GAM_DEBUG(DEBUG_INFO, "Checking busy file %s", node->path);
+		GAM_DEBUG(DEBUG_INFO, "Checking busy file %s", node->path);
 #endif
-        if (node->is_dir) {
-            gam_poll_scan_directory_internal(node);
-        } else {
-            GaminEventType event;
+		if (node->is_dir) {
+			gam_poll_scan_directory_internal(node);
+		} else {
+			GaminEventType event;
 
-            event = poll_file(node);
-            gam_poll_emit_event(node, event);
-        }
+			event = poll_file(node);
+			gam_poll_emit_event(node, event);
+		}
 
-        /*
-         * if the resource exists again and is not in a special monitoring
-         * mode then switch back to dnotify for monitoring.
-         */
-        if ((node->pflags == 0) && (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) {
-            gam_poll_remove_busy(node);
-            if (gam_node_get_subscriptions(node) != NULL) {
-                gam_poll_flowoff_node(node);
-            }
-        }
-    }
-    in_poll_callback = 0;
-    return (TRUE);
+		/*
+		* if the resource exists again and is not in a special monitoring
+		* mode then switch back to dnotify for monitoring.
+		*/
+		if (!gam_node_has_pflags (node, MON_ALL_PFLAGS) && (!gam_exclude_check(node->path) && gam_fs_get_mon_type (node->path) == GFS_MT_KERNEL)) 
+		{
+			gam_poll_remove_busy(node);
+			if (gam_node_get_subscriptions(node) != NULL) {
+				gam_poll_flowoff_node(node);
+			}
+		}
+	}
+	in_poll_callback = 0;
+	return TRUE;
 }
 
 static void
@@ -896,7 +895,6 @@ gam_poll_scan_all_callback(gpointer data)
     if (in_poll_callback)
         return (TRUE);
 
-    GAM_DEBUG(DEBUG_INFO, "gam_poll_scan_all_callback\n");
     in_poll_callback++;
 
     current_time = time(NULL);
@@ -968,7 +966,7 @@ gam_poll_init_full(gboolean start_scan_thread)
 gboolean
 gam_poll_init(void)
 {
-    return gam_poll_init_full(TRUE);
+	return gam_poll_init_full(TRUE);
 }
 
 /**
@@ -1027,11 +1025,8 @@ gam_default_poll_add_subscription(GamSubscription * sub)
 		gam_server_emit_one_event(path, node_is_dir, GAMIN_EVENT_ENDEXISTS, sub, 0);
 	}
 
-	if ((node->pflags & MON_MISSING) ||
-	    (node->pflags & MON_NOKERNEL)) 
-	{
+	if (gam_node_has_pflag (node, MON_MISSING) || gam_node_has_pflag (node, MON_NOKERNEL)) 
 		gam_poll_add_missing(node);
-	}
 
 	if (!node_is_dir) {
 		char *parent;
@@ -1199,118 +1194,127 @@ static void
 gam_poll_first_scan_dir(GamSubscription * sub, GamNode * dir_node,
                         const char *dpath)
 {
-    GDir *dir;
-    char *path;
-    GList *subs;
-    int with_exists = 1;
-    const char *name;
-    GamNode *node;
+	GDir *dir;
+	char *path;
+	GList *subs;
+	int with_exists = 1;
+	const char *name;
+	GamNode *node;
 
-    GAM_DEBUG(DEBUG_INFO, "Looking for existing files in: %s...\n", dpath);
+	GAM_DEBUG(DEBUG_INFO, "Looking for existing files in: %s...\n", dpath);
 
-    if (gam_subscription_has_option(sub, GAM_OPT_NOEXISTS)) {
-        with_exists = 0;
-        GAM_DEBUG(DEBUG_INFO, "   Exists not wanted\n");
-    }
+	if (gam_subscription_has_option(sub, GAM_OPT_NOEXISTS)) 
+	{
+		with_exists = 0;
+		GAM_DEBUG(DEBUG_INFO, "   Exists not wanted\n");
+	}
 
-    subs = g_list_prepend(NULL, sub);
+	subs = g_list_prepend(NULL, sub);
 
-    if (!g_file_test(dpath, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
-        GAM_DEBUG(DEBUG_INFO, "Monitoring missing dir: %s\n", dpath);
+	if (!g_file_test(dpath, G_FILE_TEST_EXISTS | G_FILE_TEST_IS_DIR)) {
+		GAM_DEBUG(DEBUG_INFO, "Monitoring missing dir: %s\n", dpath);
 
-        gam_server_emit_event(dpath, 1, GAMIN_EVENT_DELETED, subs, 1);
+		gam_server_emit_event(dpath, 1, GAMIN_EVENT_DELETED, subs, 1);
 
-        stat(dir_node->path, &(dir_node->sbuf));
-        dir_node->lasttime = current_time;
+		stat(dir_node->path, &(dir_node->sbuf));
+		dir_node->lasttime = current_time;
 
-        if (g_file_test(dpath, G_FILE_TEST_EXISTS)) {
-            dir_node->pflags = MON_WRONG_TYPE;
-            dir_node->is_dir = 0;
-        } else {
-            dir_node->pflags = MON_MISSING;
-            gam_poll_add_missing(dir_node);
-        }
-        goto done;
-    }
+		if (g_file_test(dpath, G_FILE_TEST_EXISTS)) {
+			gam_node_set_pflags (dir_node, MON_WRONG_TYPE);
+			dir_node->is_dir = 0;
+		} else {
+			gam_node_set_pflags (dir_node, MON_MISSING);
+			gam_poll_add_missing(dir_node);
+		}
+		goto done;
+	}
 
-    if (dir_node->lasttime == 0)
-	poll_file(dir_node);
+	if (dir_node->lasttime == 0)
+		poll_file(dir_node);
 
-    if (with_exists)
-        gam_server_emit_event(dpath, 1, GAMIN_EVENT_EXISTS, subs, 1);
+	if (with_exists)
+		gam_server_emit_event(dpath, 1, GAMIN_EVENT_EXISTS, subs, 1);
 
 
-    dir = g_dir_open(dpath, 0, NULL);
+	dir = g_dir_open(dpath, 0, NULL);
 
-    if (dir == NULL) {
-        goto done;
-    }
+	if (dir == NULL) {
+		goto done;
+	}
 
-    while ((name = g_dir_read_name(dir)) != NULL) {
-        path = g_build_filename(dpath, name, NULL);
+	while ((name = g_dir_read_name(dir)) != NULL) 
+	{
+		path = g_build_filename(dpath, name, NULL);
 
-        node = gam_tree_get_at_path(tree, path);
+		node = gam_tree_get_at_path(tree, path);
 
-        if (!node) {
-            GAM_DEBUG(DEBUG_INFO, "Unregistered node %s\n", path);
-            if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
-                node = gam_node_new(path, NULL, FALSE);
-            } else {
-                node = gam_node_new(path, NULL, TRUE);
-            }
-            stat(node->path, &(node->sbuf));
-            gam_node_set_is_dir(node, (S_ISDIR(node->sbuf.st_mode) != 0));
-            if (gam_exclude_check(path) || gam_fs_get_mon_type(path) != GFS_MT_KERNEL)
-                node->pflags |= MON_NOKERNEL;
-            node->lasttime = current_time;
-            gam_tree_add(tree, dir_node, node);
-        }
-        if (with_exists)
-            gam_server_emit_event(name, 1, GAMIN_EVENT_EXISTS, subs, 1);
+		if (!node) 
+		{
+			GAM_DEBUG(DEBUG_INFO, "Unregistered node %s\n", path);
+			if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
+				node = gam_node_new(path, NULL, FALSE);
+			} else {
+				node = gam_node_new(path, NULL, TRUE);
+			}
+			stat(node->path, &(node->sbuf));
+			gam_node_set_is_dir(node, (S_ISDIR(node->sbuf.st_mode) != 0));
 
-        g_free(path);
-    }
+			if (gam_exclude_check(path) || gam_fs_get_mon_type(path) != GFS_MT_KERNEL)
+				gam_node_set_pflag (node, MON_NOKERNEL);
 
-    g_dir_close(dir);
+			node->lasttime = current_time;
+				gam_tree_add(tree, dir_node, node);
+		}
 
-  done:
-    if (with_exists)
-        gam_server_emit_event(dpath, 1, GAMIN_EVENT_ENDEXISTS, subs, 1);
+		if (with_exists)
+			gam_server_emit_event(name, 1, GAMIN_EVENT_EXISTS, subs, 1);
 
-    g_list_free(subs);
+		g_free(path);
+	}
 
-    GAM_DEBUG(DEBUG_INFO, "Done scanning %s\n", dpath);
+	g_dir_close(dir);
+
+done:
+	if (with_exists)
+		gam_server_emit_event(dpath, 1, GAMIN_EVENT_ENDEXISTS, subs, 1);
+
+	g_list_free(subs);
+
+	GAM_DEBUG(DEBUG_INFO, "Done scanning %s\n", dpath);
 }
 
-static void gam_poll_debug_node(GamNode * node, gpointer user_data) {
-    if (node == NULL)
-        return;
-    GAM_DEBUG(DEBUG_INFO, "dir %d flags %d pflags %d nb subs %d : %s\n",
-        node->is_dir, node->flags, node->pflags, g_list_length(node->subs),
-	node->path);
+static void 
+gam_poll_debug_node(GamNode * node, gpointer user_data) 
+{
+	if (node == NULL)
+		return;
+
+	GAM_DEBUG(DEBUG_INFO, "dir %d flags %d pflags %d nb subs %d : %s\n", node->is_dir, node->flags, node->pflags, g_list_length(node->subs), node->path);
 }
 
 void
 gam_poll_debug(void)
 {
-    if (missing_resources != NULL) {
-	GAM_DEBUG(DEBUG_INFO, "Dumping poll missing resources\n");
-	g_list_foreach(missing_resources, (GFunc) gam_poll_debug_node, NULL);
-    } else {
-	GAM_DEBUG(DEBUG_INFO, "No poll missing resources\n");
-    }
-    if (busy_resources != NULL) {
-	GAM_DEBUG(DEBUG_INFO, "Dumping poll busy resources\n");
-	g_list_foreach(busy_resources, (GFunc) gam_poll_debug_node, NULL);
-    } else {
-	GAM_DEBUG(DEBUG_INFO, "No poll busy resources\n");
-    }
-    if (all_resources != NULL) {
-	GAM_DEBUG(DEBUG_INFO, "Dumping poll all resources\n");
-	g_list_foreach(all_resources, (GFunc) gam_poll_debug_node, NULL);
-    } else {
-	GAM_DEBUG(DEBUG_INFO, "No poll all resources\n");
-    }
+	if (missing_resources != NULL) {
+		GAM_DEBUG(DEBUG_INFO, "Dumping poll missing resources\n");
+		g_list_foreach(missing_resources, (GFunc) gam_poll_debug_node, NULL);
+	} else {
+		GAM_DEBUG(DEBUG_INFO, "No poll missing resources\n");
+	}
+
+	if (busy_resources != NULL) {
+		GAM_DEBUG(DEBUG_INFO, "Dumping poll busy resources\n");
+		g_list_foreach(busy_resources, (GFunc) gam_poll_debug_node, NULL);
+	} else {
+		GAM_DEBUG(DEBUG_INFO, "No poll busy resources\n");
+	}
+
+	if (all_resources != NULL) {
+		GAM_DEBUG(DEBUG_INFO, "Dumping poll all resources\n");
+		g_list_foreach(all_resources, (GFunc) gam_poll_debug_node, NULL);
+	} else {
+		GAM_DEBUG(DEBUG_INFO, "No poll all resources\n");
+	}
 }
 
 /** @} */

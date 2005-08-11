@@ -64,6 +64,7 @@ gam_error_init(void) {
         if (getenv("GAM_DEBUG") != NULL) {
             do_debug = 1;
 	    gam_debug_active = 1;
+        gam_error_handle_signal();
 	}
 	prev = signal(SIGUSR2, gam_error_signal);
 	/* if there is already an handler switch back to the original

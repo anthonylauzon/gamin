@@ -11,6 +11,17 @@
 
 G_BEGIN_DECLS
 
+#define FLAG_NEW_NODE 1 << 5
+
+/*
+ * Special monitoring modes (pflags)
+ */
+#define MON_MISSING 1 << 0  /* The resource is missing */
+#define MON_NOKERNEL    1 << 1  /* file(system) not monitored by the kernel */
+#define MON_BUSY    1 << 2  /* Too busy to be monitored by the kernel */
+#define MON_WRONG_TYPE  1 << 3  /* Expecting a directory and got a file */
+#define MON_ALL_PFLAGS (MON_MISSING|MON_NOKERNEL|MON_BUSY|MON_WRONG_TYPE)
+
 typedef struct _GamNode GamNode;
 
 typedef gboolean (*GamSubFilterFunc) (GamSubscription *sub);
@@ -75,6 +86,19 @@ void                  gam_node_unset_flag          (GamNode         *node,
 						   int             flag);
 gboolean              gam_node_has_flag            (GamNode         *node,
 						   int             flag);
+
+void                  gam_node_set_pflag            (GamNode         *node,
+						     int             flag);
+void                  gam_node_unset_pflag          (GamNode         *node,
+						     int             flag);
+gboolean              gam_node_has_pflag            (GamNode         *node,
+						     int             flag);
+void                  gam_node_set_pflags           (GamNode         *node,
+						     int             flags);
+gboolean              gam_node_has_pflags           (GamNode         *node,
+						     int             flags);
+
+
 
 G_END_DECLS
 

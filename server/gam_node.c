@@ -272,4 +272,80 @@ gam_node_has_flag(GamNode * node, int flag)
     return node->flags & flag;
 }
 
+/**
+ * Set a pflag on a node
+ *
+ * @param node the node
+ * @param flag the flag to set
+ */
+void
+gam_node_set_pflag(GamNode * node, int flag)
+{
+    g_assert(node);
+    /* Make sure we set exactly one flag.  */
+    g_assert((flag & (flag - 1)) == 0);
+    node->pflags |= flag;
+}
+
+/**
+ * Clears a pflag from a node
+ *
+ * @param node the node
+ * @param flag the flag
+ */
+void
+gam_node_unset_pflag(GamNode * node, int flag)
+{
+    g_assert(node);
+    /* Make sure we clear exactly one flag.  */
+    g_assert((flag & (flag - 1)) == 0);
+    node->pflags &= ~flag;
+}
+
+/**
+ * Checks whether a pflag is set on a node
+ *
+ * @param node the node
+ * @param flag the flag
+ * @returns TRUE if the flag is set, FALSE otherwise
+ */
+gboolean
+gam_node_has_pflag(GamNode * node, int flag)
+{
+    g_assert(node);
+    /* Check exactly one flag.  */
+    g_assert((flag & (flag - 1)) == 0);
+    return node->pflags & flag;
+}
+
+/**
+ * Set the pflags on a node
+ *
+ * @param node the node
+ * @param flags the flags
+ */
+void
+gam_node_set_pflags(GamNode * node, int flags)
+{
+    g_assert(node);
+    node->pflags = flags;
+}
+
+
+/**
+ * Checks whether some pflags are set on a node
+ *
+ * @param node the node
+ * @param flags the flags
+ * @returns TRUE if the flag is set, FALSE otherwise
+ */
+gboolean
+gam_node_has_pflags(GamNode * node, int flags)
+{
+    g_assert(node);
+    return node->pflags & flags;
+}
+
+
+
 /** @} */
