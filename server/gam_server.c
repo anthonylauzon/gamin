@@ -196,9 +196,11 @@ gam_add_subscription(GamSubscription * sub)
 	if (gam_exclude_check (path)) 
 	{
 		GAM_DEBUG(DEBUG_INFO, "g_a_s: %s excluded\n", path);
+#if ENABLE_INOTIFY
 		if (gam_inotify_is_running())
 			return gam_poll_add_subscription (sub);
 		else
+#endif
 			return gam_kernel_add_subscription (sub);
 	} else {
 		gam_fs_mon_type type;
@@ -237,9 +239,11 @@ gam_remove_subscription(GamSubscription * sub)
 
 	if (gam_exclude_check (path)) 
 	{
+#if ENABLE_INOTIFY
 		if (gam_inotify_is_running())
 			return gam_poll_remove_subscription (sub);
 		else
+#endif
 			return gam_kernel_remove_subscription(sub);
 	} else {
 		gam_fs_mon_type type;
@@ -326,12 +330,15 @@ gam_server_emit_one_event(const char *path, int node_is_dir,
 
     reqno = gam_subscription_get_reqno(sub);
 
+#ifdef ENABLE_INOTIFY
 	if (gam_inotify_is_running())
 	{
 		gam_queue_event(conn, reqno, event, subpath, len);
-	} else {
+	} else
+#endif
+	{
 		if (gam_send_event(conn, reqno, event, subpath, len) < 0) {
-		GAM_DEBUG(DEBUG_INFO, "Failed to send event to PID %d\n",
+		    GAM_DEBUG(DEBUG_INFO, "Failed to send event to PID %d\n",
 			  gam_connection_get_pid(conn));
 		}
 	}

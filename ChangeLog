@@ -1,3 +1,8 @@
+Thu Aug 11 10:57:19 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_server.c: fixed compilation when inotify support
+	  is not configured in.
+
 Wed Aug 10 23:59:02 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_data.c server/gam_kqueue.c server/gam_pidname.c
