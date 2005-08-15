@@ -1,5 +1,14 @@
 2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_inotify.c: (mask_to_gam_event),
+	(gam_inotify_mask_to_gam_file_event),
+	(gam_inotify_mask_to_gam_dir_event), (gam_inotify_process_event): Treat
+	IN_MOVE_SELF the same as IN_DELETE_SELF
+	* server/local_inotify.h: Updated
+	* server/local_inotify_syscalls.h: Updated
+
+2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_poll_dnotify.c: (gam_poll_dnotify_poll_file),
 	(gam_poll_dnotify_scan_callback): Fix compilation when #define
 	POLL_VERBOSE is set.

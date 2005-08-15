@@ -113,7 +113,7 @@ static GQueue *		events_to_process = NULL;
 static GIOChannel *	inotify_read_ioc = NULL;
 static int		inotify_device_fd = -1;
 
-#define GAM_INOTIFY_MASK (IN_MODIFY|IN_ATTRIB|IN_MOVED_FROM|IN_MOVED_TO|IN_DELETE|IN_CREATE|IN_DELETE_SELF|IN_UNMOUNT)
+#define GAM_INOTIFY_MASK (IN_MODIFY|IN_ATTRIB|IN_MOVED_FROM|IN_MOVED_TO|IN_DELETE|IN_CREATE|IN_DELETE_SELF|IN_UNMOUNT|IN_MOVE_SELF)
 
 static int 	gam_inotify_add_watch 		(const char *path, __u32 mask, int *err);
 static int 	gam_inotify_rm_watch 		(const char *path, __u32 wd);
@@ -237,6 +237,7 @@ mask_to_gam_event (gint mask)
 	case IN_ATTRIB:
 		return GAMIN_EVENT_CHANGED;
 	break;
+	case IN_MOVE_SELF:
 	case IN_MOVED_FROM:
 	case IN_DELETE:
 	case IN_DELETE_SELF:
@@ -272,6 +273,7 @@ gam_inotify_mask_to_gam_file_event (gint mask)
 	case IN_MOVED_TO:
 		return GAMIN_EVENT_CHANGED;
 	break;
+	case IN_MOVE_SELF:
 	case IN_DELETE_SELF:
 		return GAMIN_EVENT_DELETED;
 	break;
@@ -301,6 +303,7 @@ gam_inotify_mask_to_gam_dir_event (gint mask)
 	case IN_DELETE:
 	case IN_CREATE:
 	case IN_MOVED_TO:
+	case IN_MOVE_SELF:
 	case IN_DELETE_SELF:
 	case IN_ATTRIB:
 	case IN_MODIFY:
@@ -522,7 +525,7 @@ gam_inotify_process_event (inotify_event_t *event)
 		return;
 	}
 
-	if (event->mask & IN_DELETE_SELF)
+	if (event->mask & IN_DELETE_SELF || event->mask & IN_MOVE_SELF)
 	{
 		GAM_DEBUG (DEBUG_INFO, "inotify: resource %s went away. Adding it to missing list\n", data->path);
 		/* Remove the wd from the hash table */
