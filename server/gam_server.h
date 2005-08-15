@@ -4,6 +4,7 @@
 #include <glib.h>
 #include "gam_connection.h"
 #include "gam_subscription.h"
+#include "gam_node.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,7 +21,8 @@ typedef enum {
 
 typedef enum {
 	GAMIN_P_NONE = 0,
-	GAMIN_P_DEFAULT = 1
+	GAMIN_P_DNOTIFY = 1,
+	GAMIN_P_BASIc = 2
 } GamPollHandler;
 
 typedef enum pollHandlerMode {
@@ -57,7 +59,8 @@ void		gam_server_install_kernel_hooks	(GamKernelHandler name,
 void		gam_server_install_poll_hooks	(GamPollHandler name,
 						 gboolean (*add)(GamSubscription *sub),
 						 gboolean (*remove)(GamSubscription *sub),
-						 gboolean (*remove_all)(GamListener *listener));
+						 gboolean (*remove_all)(GamListener *listener),
+						 GaminEventType (*poll_file)(GamNode *node));
 
 
 GamKernelHandler gam_server_get_kernel_handler	(void);
@@ -72,6 +75,7 @@ void		gam_kernel_file_handler		(const char *path, pollHandlerMode mode);
 gboolean	gam_poll_add_subscription	(GamSubscription *sub);
 gboolean	gam_poll_remove_subscription	(GamSubscription *sub);
 gboolean	gam_poll_remove_all_for		(GamListener *listener);
+GaminEventType	gam_poll_file			(GamNode *node);
 
 #ifdef __cplusplus
 }

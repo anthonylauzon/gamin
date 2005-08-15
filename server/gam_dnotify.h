@@ -3,7 +3,6 @@
 #define __MD_DNOTIFY_H__
 
 #include <glib.h>
-#include "gam_poll.h"
 #include "gam_subscription.h"
 
 G_BEGIN_DECLS

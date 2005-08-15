@@ -346,6 +346,35 @@ gam_node_has_pflags(GamNode * node, int flags)
     return node->pflags & flags;
 }
 
+void
+gam_node_emit_event (GamNode *node, GaminEventType event)
+{
+	GList *l;
+	GamNode *parent;
+	GList *subs;
+	int is_dir_node = gam_node_is_dir(node);
 
+#ifdef VERBOSE_POLL
+	GAM_DEBUG(DEBUG_INFO, "Poll: emit events %d for %s\n", event, gam_node_get_path(node));
+#endif
+	subs = gam_node_get_subscriptions(node);
+
+	if (subs)
+		subs = g_list_copy(subs);
+
+	parent = gam_node_parent(node);
+	if (parent) {
+		GList *parent_subs = gam_node_get_subscriptions(parent);
+
+		for (l = parent_subs; l; l = l->next) {
+			if (!g_list_find(subs, l->data))
+				subs = g_list_prepend(subs, l->data);
+		}
+	}
+
+	gam_server_emit_event(gam_node_get_path(node), is_dir_node, event, subs, 0);
+
+	g_list_free(subs);
+}
 
 /** @} */

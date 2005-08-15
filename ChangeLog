@@ -1,3 +1,50 @@
+2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* lib/gam_error.c: (gam_error), (gam_errno):
+	* lib/gam_error.h: Move gam_errno here (was in gam_poll)
+	* server/Makefile.am:
+	* server/gam_dnotify.c: (gam_dnotify_pipe_handler),
+	(gam_dnotify_init):
+	* server/gam_dnotify.h: Adapt to gam_poll_generic/gam_poll_dnotify.
+	* server/gam_inotify.c: (gam_inotify_init):
+	* server/gam_inotify.h: Adapt to gam_poll_generic/gam_poll_dnotify.
+	* server/gam_node.c: (gam_node_emit_event):
+	* server/gam_node.h: Rename gam_poll_emit_event to gam_node_emit_event.
+	* server/gam_poll_dnotify.c: (gam_poll_dnotify_init),
+	(gam_poll_dnotify_delist_node), (gam_poll_dnotify_relist_node),
+	(gam_poll_dnotify_flowon_node), (gam_poll_dnotify_flowoff_node),
+	(gam_poll_dnotify_poll_file), (node_add_subscription),
+	(node_remove_subscription), (node_remove_directory_subscription),
+	(gam_poll_dnotify_add_subscription),
+	(gam_poll_dnotify_remove_subscription_real),
+	(gam_poll_dnotify_remove_subscription),
+	(gam_poll_dnotify_remove_all_for),
+	(gam_poll_dnotify_scan_callback):
+	* server/gam_poll_dnotify.h: Dnotify specific portions of gam_poll.[ch]
+	* server/gam_poll_generic.c: (gam_poll_generic_init),
+	(gam_poll_debug_node), (gam_poll_generic_debug),
+	(gam_poll_generic_add_missing), (gam_poll_generic_remove_missing),
+	(gam_poll_generic_add_busy), (gam_poll_generic_remove_busy),
+	(gam_poll_generic_add), (gam_poll_generic_remove),
+	(gam_poll_generic_get_time), (gam_poll_generic_update_time),
+	(gam_poll_generic_get_delta_time),
+	(gam_poll_generic_trigger_file_handler),
+	(gam_poll_generic_trigger_dir_handler),
+	(gam_poll_generic_trigger_handler),
+	(gam_poll_generic_scan_directory_internal),
+	(gam_poll_generic_scan_directory),
+	(gam_poll_generic_first_scan_dir), (gam_poll_generic_get_tree),
+	(gam_poll_generic_get_missing_list),
+	(gam_poll_generic_get_busy_list), (gam_poll_generic_get_all_list),
+	(gam_poll_generic_get_dead_list),
+	(gam_poll_generic_unregister_node), (gam_poll_generic_prune_tree):
+	* server/gam_poll_generic.h: Generic portions of gam_poll.[ch]
+	* server/gam_server.c: (gam_show_debug), (gam_init_subscriptions),
+	(gam_server_install_poll_hooks), (gam_poll_remove_all_for),
+	(gam_poll_file):
+	* server/gam_server.h: Adapt to poll changes. Add poll_file callback for
+	poll backend.
+
 2005-08-11  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* lib/gam_error.c: (gam_error_init): 

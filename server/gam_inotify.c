@@ -33,7 +33,7 @@
 #include "gam_debugging.h"
 #endif
 #include "gam_error.h"
-#include "gam_poll.h"
+#include "gam_poll_generic.h"
 #ifdef HAVE_LINUX_INOTIFY_H
 #include <linux/inotify.h>
 #else
@@ -932,7 +932,7 @@ gam_inotify_init(void)
     event_queue = g_queue_new ();
     events_to_process = g_queue_new ();
 
-	gam_poll_init ();
+	gam_poll_generic_init ();
 	gam_server_install_kernel_hooks (GAMIN_K_INOTIFY2,
 					 gam_inotify_add_subscription,
 					 gam_inotify_remove_subscription,

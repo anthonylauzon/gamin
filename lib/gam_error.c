@@ -3,6 +3,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <errno.h>
 #include "gam_error.h"
 
 typedef void (*signal_handler)(int);
@@ -119,6 +120,12 @@ gam_error(const char *file, int line, const char *function,
     va_end(args);
     if (debug_out)
 	fflush(debug_out);
+}
+
+int
+gam_errno(void)
+{
+	return (errno);
 }
 
 /**

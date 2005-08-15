@@ -27,8 +27,10 @@ gam_server_SOURCES =					\
 	gam_node.h					\
 	gam_tree.c					\
 	gam_tree.h					\
-	gam_poll.c					\
-	gam_poll.h					\
+	gam_poll_dnotify.c				\
+	gam_poll_dnotify.h				\
+	gam_poll_generic.c				\
+	gam_poll_generic.h				\
 	gam_pidname.c 					\
 	gam_pidname.h					\
 	gam_channel.c					\

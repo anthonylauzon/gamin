@@ -25,7 +25,7 @@
 #include <stdio.h>
 #include <glib.h>
 #include "gam_error.h"
-#include "gam_poll.h"
+#include "gam_poll_dnotify.h"
 #include "gam_dnotify.h"
 #include "gam_tree.h"
 #include "gam_event.h"
@@ -312,7 +312,7 @@ gam_dnotify_pipe_handler(gpointer user_data)
 
         GAM_DEBUG(DEBUG_INFO, "handling signal\n");
 
-        gam_poll_scan_directory(data->path);
+        gam_poll_generic_scan_directory(data->path);
         i++;
     }
 
@@ -349,7 +349,7 @@ gam_dnotify_init(void)
     int fds[2];
     GSource *source;
 
-    g_return_val_if_fail(gam_poll_init_full(FALSE), FALSE);
+    g_return_val_if_fail(gam_poll_dnotify_init (), FALSE);
 
     if (pipe(fds) < 0) {
         g_warning("Could not create pipe.\n");

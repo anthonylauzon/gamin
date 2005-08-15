@@ -99,6 +99,8 @@ gboolean              gam_node_has_pflags           (GamNode         *node,
 						     int             flags);
 
 
+void	gam_node_emit_event (GamNode *node, GaminEventType event);
+
 
 G_END_DECLS
 

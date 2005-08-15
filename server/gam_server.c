@@ -32,7 +32,7 @@
 #include "gam_server.h"
 #include "gam_channel.h"
 #include "gam_subscription.h"
-#include "gam_poll.h"
+#include "gam_poll_generic.h"
 #ifdef ENABLE_INOTIFY
 #include "gam_inotify.h"
 #endif
@@ -63,6 +63,7 @@ static GamPollHandler __gam_poll_handler = GAMIN_P_NONE;
 static gboolean (*__gam_poll_add_subscription) (GamSubscription *sub) = NULL;
 static gboolean (*__gam_poll_remove_subscription) (GamSubscription *sub) = NULL;
 static gboolean (*__gam_poll_remove_all_for) (GamListener *listener) = NULL;
+static GaminEventType (*__gam_poll_file) (GamNode *node) = NULL;
 
 #ifndef ENABLE_INOTIFY
 /**
@@ -118,7 +119,7 @@ gam_show_debug(void) {
 #ifdef ENABLE_DNOTIFY
     gam_dnotify_debug ();
 #endif
-    gam_poll_debug();
+    gam_poll_generic_debug();
 }
 
 /**
@@ -163,7 +164,7 @@ gam_init_subscriptions(void)
 #endif	
 	}
 
-	if (gam_poll_init()) {
+	if (gam_poll_generic_init()) {
 		GAM_DEBUG(DEBUG_INFO, "Using poll as backend\n");
 		return(TRUE);
 	}
@@ -407,12 +408,14 @@ void
 gam_server_install_poll_hooks (GamPollHandler name,
 				gboolean (*add)(GamSubscription *sub),
 				gboolean (*remove)(GamSubscription *sub),
-				gboolean (*remove_all)(GamListener *listener))
+				gboolean (*remove_all)(GamListener *listener),
+				GaminEventType (*poll_file)(GamNode *node))
 {
 	__gam_poll_handler = name;
 	__gam_poll_add_subscription = add;
 	__gam_poll_remove_subscription = remove;
 	__gam_poll_remove_all_for = remove_all;
+	__gam_poll_file = poll_file;
 }
 
 GamKernelHandler
@@ -493,6 +496,15 @@ gam_poll_remove_all_for (GamListener *listener)
 		return __gam_poll_remove_all_for (listener);
 
 	return FALSE;
+}
+
+GaminEventType
+gam_poll_file (GamNode *node)
+{
+	if (__gam_poll_file)
+		return __gam_poll_file (node);
+
+	return 0;
 }
 
 /**

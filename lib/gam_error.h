@@ -45,6 +45,8 @@ extern "C" {
 void	gam_error(const char *file, int line, const char* function,
                   const char* format, ...);
 
+int gam_errno(void);
+
 #ifdef GAM_DEBUG_ENABLED
 
 #ifdef GAMIN_DEBUG_API
