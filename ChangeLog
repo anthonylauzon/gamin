@@ -1,5 +1,11 @@
 2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_poll_dnotify.c: (gam_poll_dnotify_poll_file),
+	(gam_poll_dnotify_scan_callback): Fix compilation when #define
+	POLL_VERBOSE is set.
+
+2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_poll.c:
 	* server/gam_poll.h: Remove old files
 
