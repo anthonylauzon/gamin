@@ -1,5 +1,10 @@
 2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_poll.c:
+	* server/gam_poll.h: Remove old files
+
+2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* lib/gam_error.c: (gam_error), (gam_errno):
 	* lib/gam_error.h: Move gam_errno here (was in gam_poll)
 	* server/Makefile.am:
