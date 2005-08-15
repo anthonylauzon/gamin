@@ -83,7 +83,7 @@ gam_poll_dnotify_delist_node(GamNode * node)
 
 	subs = gam_node_get_subscriptions(node);
 	while (subs != NULL) {
-		gam_poll_generic_trigger_handler (path, GAMIN_DESACTIVATE, node);
+		gam_poll_generic_trigger_handler (path, GAMIN_DEACTIVATE, node);
 		subs = subs->next;
 	}
 }
@@ -396,7 +396,7 @@ node_remove_subscription(GamNode * node, GamSubscription * sub)
     }
 
     /* DNotify makes our life miserable here */
-	gam_poll_generic_trigger_handler (node->path, GAMIN_DESACTIVATE, node);
+	gam_poll_generic_trigger_handler (node->path, GAMIN_DEACTIVATE, node);
 
     return (0);
 }

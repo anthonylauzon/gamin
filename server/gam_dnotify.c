@@ -111,7 +111,7 @@ gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
         case GAMIN_ACTIVATE:
 	    GAM_DEBUG(DEBUG_INFO, "Adding %s to dnotify\n", path);
 	    break;
-        case GAMIN_DESACTIVATE:
+        case GAMIN_DEACTIVATE:
 	    GAM_DEBUG(DEBUG_INFO, "Removing %s from dnotify\n", path);
 	    break;
 	case GAMIN_FLOWCONTROLSTART:
@@ -160,7 +160,7 @@ gam_dnotify_directory_handler_internal(const char *path, pollHandlerMode mode)
 #ifdef GAMIN_DEBUG_API
         gam_debug_report(GAMDnotifyCreate, path, 0);
 #endif
-    } else if (mode == GAMIN_DESACTIVATE) {
+    } else if (mode == GAMIN_DEACTIVATE) {
         data = g_hash_table_lookup(path_hash, path);
 
         if (!data) {

@@ -1,5 +1,14 @@
 2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_dnotify.c: (gam_dnotify_directory_handler_internal):
+	* server/gam_poll_dnotify.c: (gam_poll_dnotify_delist_node),
+	(node_remove_subscription):
+	* server/gam_poll_generic.c:
+	(gam_poll_generic_trigger_file_handler):
+	* server/gam_server.h: s/DESACTIVATE/DEACTIVATE
+
+2005-08-15  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_inotify.c: (mask_to_gam_event),
 	(gam_inotify_mask_to_gam_file_event),
 	(gam_inotify_mask_to_gam_dir_event), (gam_inotify_process_event): Treat

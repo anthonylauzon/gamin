@@ -27,7 +27,7 @@ typedef enum {
 
 typedef enum pollHandlerMode {
 	GAMIN_ACTIVATE = 1,         /* Activate kernel monitoring */
-	GAMIN_DESACTIVATE = 2,      /* Desactivate kernel monitoring */
+	GAMIN_DEACTIVATE = 2,       /* Deactivate kernel monitoring */
 	GAMIN_FLOWCONTROLSTART = 3, /* Request flow control start */
 	GAMIN_FLOWCONTROLSTOP = 4   /* Request flow control stop */
 } pollHandlerMode;

@@ -213,7 +213,7 @@ gam_poll_generic_trigger_file_handler (const char *path, pollHandlerMode mode, G
 				GAM_DEBUG(DEBUG_INFO, "poll: Activating kernel monitoring on %s\n", dir);
 				gam_kernel_dir_handler (dir, mode);
 			break;
-			case GAMIN_DESACTIVATE:
+			case GAMIN_DEACTIVATE:
 				GAM_DEBUG(DEBUG_INFO, "poll: Deactivating kernel monitoring on %s\n", dir);
 				gam_kernel_dir_handler (dir, mode);
 			break;
