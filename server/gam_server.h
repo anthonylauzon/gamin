@@ -22,7 +22,7 @@ typedef enum {
 typedef enum {
 	GAMIN_P_NONE = 0,
 	GAMIN_P_DNOTIFY = 1,
-	GAMIN_P_BASIc = 2
+	GAMIN_P_BASIC = 2
 } GamPollHandler;
 
 typedef enum pollHandlerMode {
