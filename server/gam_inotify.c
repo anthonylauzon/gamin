@@ -501,7 +501,7 @@ gam_inotify_process_event (inotify_event_t *event)
 
 	if (!data) 
 	{
-		GAM_DEBUG (DEBUG_INFO, "inotify: got an event for unknown wd %d\n", event->wd);
+		GAM_DEBUG (DEBUG_INFO, "inotify: got %s event for unknown wd %d\n", mask_to_string (event->mask), event->wd);
 		return;
 	}
 
