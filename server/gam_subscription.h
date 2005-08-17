@@ -46,6 +46,9 @@ gboolean             gam_subscription_wants_event  (GamSubscription *sub,
 						    GaminEventType   event,
 						    int force);
 void                 gam_subscription_debug        (GamSubscription *sub);
+
+void				gam_subscription_shutdown ();
+
 G_END_DECLS
 
 #endif /* __GAM_SUBSCRIPTION_H__ */

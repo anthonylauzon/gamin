@@ -1,5 +1,20 @@
 2005-08-16  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_inotify.c: (gam_inotify_data_new),
+	(gam_inotify_process_event), (gam_inotify_send_initial_events),
+	(gam_inotify_add_subscription), (gam_inotify_remove_subscription),
+	(gam_inotify_init), (gam_inotify_is_missing),
+	(gam_inotify_add_missing), (gam_inotify_rm_missing),
+	(gam_inotify_nolonger_missing), (gam_inotify_scan_missing),
+	(gam_inotify_is_link), (gam_inotify_nolonger_link),
+	(links_list_compare), (gam_inotify_add_link),
+	(gam_inotify_rm_link), (gam_inotify_scan_links): Attempt to handle links
+	according to the FAM specification. Racey as hell.
+	* server/gam_subscription.c: (gam_subscription_shutdown):
+	* server/gam_subscription.h: Add shutdown function -- not used though.
+
+2005-08-16  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/Makefile.am:
 	* server/gam_poll_basic.c: (gam_poll_basic_init),
 	(gam_poll_basic_add_subscription),

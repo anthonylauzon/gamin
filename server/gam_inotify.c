@@ -50,6 +50,7 @@
 #define GAM_INOTIFY_SANITY
 #define GAM_INOTIFY_WD_MISSING -1
 #define GAM_INOTIFY_WD_PERM -2
+#define GAM_INOTIFY_WD_LINK -3
 
 /* Timings for pairing MOVED_TO / MOVED_FROM events */
 /* These numbers are in microseconds */
@@ -59,6 +60,7 @@
 /* Timings for main loop */
 /* These numbers are in milliseconds */
 #define SCAN_MISSING_TIME 1000 /* 1 Hz */
+#define SCAN_LINKS_TIME 1000 /* 1 Hz */
 #define PROCESS_EVENTS_TIME 33 /* 30 Hz */ 
 
 typedef struct {
@@ -72,6 +74,7 @@ typedef struct {
 	/* State */
 	gboolean busy;
 	gboolean missing;
+	gboolean link;
 	gboolean permission; /* Exists, but don't have read access */
 	gboolean deactivated;
 	gboolean ignored;
@@ -104,9 +107,17 @@ typedef struct {
 	gboolean permission;
 } inotify_missing_t;
 
+typedef struct {
+	char *path;
+	struct stat sbuf;
+	GTime last_scan_time;
+	GTime scan_interval;
+} inotify_links_t;
+
 static GHashTable *	path_hash = NULL;
 static GHashTable *	wd_hash = NULL;
 static GList *		missing_list = NULL;
+static GList *		links_list = NULL;
 static GHashTable *	cookie_hash = NULL;
 static GQueue *		event_queue = NULL;
 static GQueue *		events_to_process = NULL;
@@ -123,6 +134,12 @@ static gboolean gam_inotify_nolonger_missing 	(const char *path);
 static void 	gam_inotify_add_missing 	(const char *path, gboolean perm);
 static void 	gam_inotify_rm_missing 		(const char *path);
 static gboolean gam_inotify_scan_missing 	(gpointer userdata);
+
+static gboolean	gam_inotify_is_link		(const char *path);
+static gboolean gam_inotify_nolonger_link	(const char *path);
+static void	gam_inotify_add_link		(const char *path);
+static void	gam_inotify_rm_link		(const char *path);
+static gboolean	gam_inotify_scan_links		(gpointer userdata);
 
 static void 	gam_inotify_sanity_check	(void);
 
@@ -338,6 +355,10 @@ gam_inotify_data_new(const char *path, int wd, gboolean dir)
 		data->permission = TRUE;
 	else
 		data->permission = FALSE;
+	if (wd == GAM_INOTIFY_WD_LINK)
+		data->link = TRUE;
+	else
+		data->link = FALSE;
 	data->deactivated = FALSE;
 	data->ignored = FALSE;
 	data->refcount = 1;
@@ -556,9 +577,12 @@ gam_inotify_process_event (inotify_event_t *event)
 
 	if (event->mask & IN_Q_OVERFLOW) 
 	{
-		GAM_DEBUG (DEBUG_INFO, "inotify: queue over flowed!\n");
+		/* At this point we have missed some events, and no longer have a consistent
+		 * view of the filesystem.
+		 */
 		// XXX: Kill server and hope for the best?
 		// XXX: Or we could send_initial_events , does this work for FAM?
+		GAM_DEBUG (DEBUG_INFO, "inotify: DANGER, queue over flowed! Events have been missed.\n");
 		return;
 	}
 
@@ -692,7 +716,7 @@ gam_inotify_send_initial_events (inotify_data_t *data, GamSubscription *sub)
 	struct stat sb;
 	memset(&sb, 0, sizeof (struct stat));
 	
-	exists = stat (data->path, &sb) >= 0;
+	exists = lstat (data->path, &sb) >= 0;
 	is_dir = (exists && (sb.st_mode & S_IFDIR) != 0) ? TRUE : FALSE;
 
 	if (was_missing) {
@@ -729,7 +753,7 @@ gam_inotify_send_initial_events (inotify_data_t *data, GamSubscription *sub)
 					gboolean file_is_dir = FALSE;
 					struct stat fsb;
 					memset(&fsb, 0, sizeof (struct stat));
-					stat(fullname, &fsb);
+					lstat(fullname, &fsb);
 					file_is_dir = (fsb.st_mode & S_IFDIR) != 0 ? TRUE : FALSE;
 					gam_server_emit_one_event (fullname, file_is_dir ? 1 : 0, gevent, sub, 1);
 					g_free (fullname);
@@ -795,6 +819,19 @@ gam_inotify_add_subscription(GamSubscription * sub)
 		return TRUE;
 	}
 
+	if (gam_inotify_is_link (path))
+	{
+		data = gam_inotify_data_new (path, GAM_INOTIFY_WD_LINK, FALSE);
+		gam_inotify_add_link (path);
+		gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
+		g_hash_table_insert(path_hash, data->path, data);
+		data->subs = g_list_prepend (data->subs, sub);
+		gam_inotify_send_initial_events (data, sub);
+		GAM_DEBUG (DEBUG_INFO, "inotify: could not add watch for %s\n", path);
+		GAM_DEBUG (DEBUG_INFO, "inotify: adding %s to links list\n", path);
+		return TRUE;
+	}
+
 	wd = gam_inotify_add_watch (path, GAM_INOTIFY_MASK, &err);
 	if (wd < 0) {
 		GAM_DEBUG (DEBUG_INFO, "inotify: could not add watch for %s\n", path);
@@ -808,7 +845,7 @@ gam_inotify_add_subscription(GamSubscription * sub)
 	} else {
 		struct stat sbuf;
 		memset(&sbuf, 0, sizeof (struct stat));
-		stat (path, &sbuf);
+		lstat (path, &sbuf);
 		/* Just in case,
 		 * Clear this path off the missing list */
 		gam_inotify_rm_missing (path);
@@ -819,7 +856,6 @@ gam_inotify_add_subscription(GamSubscription * sub)
 	gam_debug_report(GAMDnotifyCreate, path, 0);
 #endif
 	gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
-
 
 	g_hash_table_insert(path_hash, data->path, data);
 	data->subs = g_list_prepend (data->subs, sub);
@@ -846,8 +882,12 @@ gam_inotify_remove_subscription(GamSubscription * sub)
 	/* No one is watching this path anymore */
 	if (!data->subs && data->refcount == 0)
 	{
-		if (data->missing) 
+		if (data->link)
 		{
+			g_assert (data->wd == GAM_INOTIFY_WD_LINK);
+			g_hash_table_remove (path_hash, data->path);
+			gam_inotify_rm_link (data->path);
+		} else if (data->missing) {
 			g_assert (data->wd == GAM_INOTIFY_WD_MISSING);
 			g_hash_table_remove (path_hash, data->path);
 			gam_inotify_rm_missing (data->path);
@@ -927,6 +967,7 @@ gam_inotify_init(void)
     g_source_set_callback(source, gam_inotify_read_handler, NULL, NULL);
     g_source_attach(source, NULL);
     g_timeout_add (SCAN_MISSING_TIME, gam_inotify_scan_missing, NULL);
+    g_timeout_add (SCAN_LINKS_TIME, gam_inotify_scan_links, NULL);
     g_timeout_add (PROCESS_EVENTS_TIME, gam_inotify_process_event_queue, NULL);
 
     path_hash = g_hash_table_new(g_str_hash, g_str_equal);
@@ -1070,7 +1111,7 @@ gboolean gam_inotify_is_missing (const char *path)
 	struct stat sbuf;
 
 	/* If the file doesn't exist, it is missing. */
-	if (stat (path, &sbuf) < 0)
+	if (lstat (path, &sbuf) < 0)
 		return TRUE;
 
 	/* If we can't read the file, it is missing. */
@@ -1107,6 +1148,8 @@ static void gam_inotify_add_missing (const char *path, gboolean perm)
 	missing->last_scan_time = time (NULL);
 	missing->permission = perm;
 
+	GAM_DEBUG (DEBUG_INFO, "inotify-missing: add - %s\n", path);
+
 	missing_list = g_list_prepend (missing_list, missing);
 }
 
@@ -1122,6 +1165,7 @@ static void gam_inotify_rm_missing (const char *path)
 	if (!node)
 		return;
 
+	GAM_DEBUG (DEBUG_INFO, "inotify-missing: rm - %s\n", path);
 	missing = node->data;
 	g_free (missing->path);
 	g_free (missing);
@@ -1135,6 +1179,24 @@ static gboolean gam_inotify_nolonger_missing (const char *path)
 	inotify_data_t *data = NULL;
 	struct stat sbuf;
 	memset(&sbuf, 0, sizeof (struct stat));
+
+	data = g_hash_table_lookup (path_hash, path);
+	if (!data) {
+		GAM_DEBUG (DEBUG_INFO, "inotify: Could not find missing %s in hash table.\n", path);
+		return FALSE;
+	}
+
+	if (gam_inotify_is_link (path))
+	{
+		GAM_DEBUG(DEBUG_INFO, "inotify: Missing resource %s exists now BUT IT IS A LINK\n", path);
+		data->missing = FALSE;
+		data->permission = FALSE;
+		data->link = TRUE;
+		data->wd = GAM_INOTIFY_WD_LINK;
+		gam_inotify_add_link (path);
+		gam_inotify_send_initial_events_all (data);
+		return TRUE;
+	}
 
 	wd = gam_inotify_add_watch (path, GAM_INOTIFY_MASK,&err);
 	if (wd < 0) {
@@ -1153,14 +1215,8 @@ static gboolean gam_inotify_nolonger_missing (const char *path)
 	}
 
 	GAM_DEBUG(DEBUG_INFO, "inotify: Missing resource %s exists now\n", path);
-	data = g_hash_table_lookup (path_hash, path);
-	if (!data) {
-		GAM_DEBUG (DEBUG_INFO, "inotify: Could not find missing %s in hash table.\n", path);
-		gam_inotify_rm_watch (path, wd);
-		return FALSE;
-	}
 
-	stat (path, &sbuf);
+	lstat (path, &sbuf);
 	data->dir = (sbuf.st_mode & S_IFDIR);
 	data->wd = wd;
 	g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
@@ -1189,6 +1245,7 @@ static gboolean gam_inotify_scan_missing (gpointer userdata)
 		if (time(NULL) - missing->last_scan_time < missing->scan_interval)
 			continue;
 		
+		missing->last_scan_time = time(NULL);
 		if (!gam_inotify_is_missing (missing->path))
 		{
 			if (gam_inotify_nolonger_missing (missing->path))
@@ -1197,6 +1254,150 @@ static gboolean gam_inotify_scan_missing (gpointer userdata)
 				gam_debug_report(GAMDnotifyCreate, missing->path, 0);
 #endif
 				gam_inotify_rm_missing (missing->path);
+			}
+		}
+	}
+
+	gam_inotify_sanity_check ();
+	return TRUE;
+}
+
+
+static gboolean	
+gam_inotify_is_link (const char *path)
+{
+	struct stat sbuf;
+
+	if (lstat(path, &sbuf) < 0)
+		return FALSE;
+
+	return S_ISLNK(sbuf.st_mode) != 0;
+}
+
+static gboolean 
+gam_inotify_nolonger_link (const char *path)
+{
+	int wd = -1, err;
+	inotify_data_t *data = NULL;
+	struct stat sbuf;
+	memset(&sbuf, 0, sizeof (struct stat));
+
+	GAM_DEBUG(DEBUG_INFO, "inotify: link resource %s no longer a link\n", path);
+	data = g_hash_table_lookup (path_hash, path);
+	if (!data) {
+		GAM_DEBUG (DEBUG_INFO, "inotify: Could not find link %s in hash table.\n", path);
+		return FALSE;
+	}
+
+	data->link = FALSE;
+
+	wd = gam_inotify_add_watch (path, GAM_INOTIFY_MASK, &err);
+	if (wd < 0) {
+		/* The file must not exist anymore, so we add it to the missing list */
+		/* Check if we don't have access to the new file */
+		if (err == EACCES)
+		{
+			data->wd = GAM_INOTIFY_WD_PERM;
+			data->permission = TRUE;
+			data->missing = FALSE;
+		} else {
+			data->wd = GAM_INOTIFY_WD_MISSING;
+			data->permission = FALSE;
+			data->missing = TRUE;
+		}
+
+		gam_inotify_add_missing (path, data->permission);
+		return TRUE;
+	}
+
+	lstat (path, &sbuf);
+	data->dir = (sbuf.st_mode & S_IFDIR);
+	data->wd = wd;
+	g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
+	gam_inotify_send_initial_events_all (data);
+	data->missing = FALSE;
+	data->permission = FALSE;
+
+	return TRUE;
+
+}
+
+static gint links_list_compare (gconstpointer a, gconstpointer b)
+{
+	const inotify_links_t *links = NULL;
+	
+	g_assert (a);
+	g_assert (b);
+	links = a;
+	g_assert (links->path);
+
+	return strcmp (links->path, b);
+}
+
+static void
+gam_inotify_add_link (const char *path)
+{
+	inotify_links_t *links = NULL;
+
+	g_assert (path);
+
+	links = g_new0 (inotify_links_t, 1);
+
+	g_assert (links);
+
+	GAM_DEBUG (DEBUG_INFO, "inotify-link: add - %s\n", path);
+	links->path = g_strdup (path);
+	links->scan_interval = gam_fs_get_poll_timeout (path);
+	links->last_scan_time = 0;
+	links_list = g_list_prepend (links_list, links);
+}
+
+static void
+gam_inotify_rm_link (const char *path)
+{
+	GList *node = NULL;
+	inotify_links_t *links = NULL;
+
+	g_assert (path && *path);
+
+	node = g_list_find_custom (links_list, path, links_list_compare);
+
+	if (!node)
+		return;
+
+	GAM_DEBUG (DEBUG_INFO, "inotify-link: rm - %s\n", path);
+	links = node->data;
+	g_free (links->path);
+	g_free (links);
+
+	links_list = g_list_remove_link (links_list, node);
+
+}
+
+static gboolean 
+gam_inotify_scan_links (gpointer userdata)
+{
+	guint i;
+
+	gam_inotify_sanity_check ();
+	/* We have to walk the list like this because entries might be removed while we walk the list */
+	for (i = 0; ; i++)
+	{
+		inotify_links_t *links = g_list_nth_data (links_list, i);
+
+		if (!links)
+			break;
+
+		/* Not enough time has passed since the last scan */
+		if (time(NULL) - links->last_scan_time < links->scan_interval)
+			continue;
+		
+		links->last_scan_time = time(NULL);
+		if (!gam_inotify_is_link (links->path))
+		{
+			if (gam_inotify_nolonger_link (links->path))
+			{
+				gam_inotify_rm_link (links->path);
 			}
 		}
 	}

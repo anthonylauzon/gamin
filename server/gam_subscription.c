@@ -347,5 +347,9 @@ gam_subscription_debug(GamSubscription *sub) {
 #endif
 }
 
+void
+gam_subscription_shutdown ()
+{
+}
 
 /** @} */
