@@ -129,6 +129,7 @@ static int		inotify_device_fd = -1;
 static int 	gam_inotify_add_watch 		(const char *path, __u32 mask, int *err);
 static int 	gam_inotify_rm_watch 		(const char *path, __u32 wd);
 static void 	gam_inotify_read_events 	(gsize *buffer_size_out, gchar **buffer_out);
+
 static gboolean gam_inotify_is_missing		(const char *path);
 static gboolean gam_inotify_nolonger_missing 	(const char *path);
 static void 	gam_inotify_add_missing 	(const char *path, gboolean perm);
@@ -140,6 +141,7 @@ static gboolean gam_inotify_nolonger_link	(const char *path);
 static void	gam_inotify_add_link		(const char *path);
 static void	gam_inotify_rm_link		(const char *path);
 static gboolean	gam_inotify_scan_links		(gpointer userdata);
+static void	gam_inotify_poll_link		(inotify_links_t *links);
 
 static void 	gam_inotify_sanity_check	(void);
 
@@ -819,19 +821,6 @@ gam_inotify_add_subscription(GamSubscription * sub)
 		return TRUE;
 	}
 
-	if (gam_inotify_is_link (path))
-	{
-		data = gam_inotify_data_new (path, GAM_INOTIFY_WD_LINK, FALSE);
-		gam_inotify_add_link (path);
-		gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
-		g_hash_table_insert(path_hash, data->path, data);
-		data->subs = g_list_prepend (data->subs, sub);
-		gam_inotify_send_initial_events (data, sub);
-		GAM_DEBUG (DEBUG_INFO, "inotify: could not add watch for %s\n", path);
-		GAM_DEBUG (DEBUG_INFO, "inotify: adding %s to links list\n", path);
-		return TRUE;
-	}
-
 	wd = gam_inotify_add_watch (path, GAM_INOTIFY_MASK, &err);
 	if (wd < 0) {
 		GAM_DEBUG (DEBUG_INFO, "inotify: could not add watch for %s\n", path);
@@ -842,6 +831,13 @@ gam_inotify_add_subscription(GamSubscription * sub)
 		}
 		data = gam_inotify_data_new (path, err == EACCES ? GAM_INOTIFY_WD_PERM : GAM_INOTIFY_WD_MISSING, FALSE);
 		gam_inotify_add_missing (path, err == EACCES ? TRUE : FALSE);
+	} else if (gam_inotify_is_link (path)) {
+		/* The file turned out to be a link, cancel the watch, and add it to the links list */
+		gam_inotify_rm_watch (path, wd);
+		GAM_DEBUG (DEBUG_INFO, "inotify: could not add watch for %s\n", path);
+		GAM_DEBUG (DEBUG_INFO, "inotify: adding %s to links list\n", path);
+		data = gam_inotify_data_new (path, GAM_INOTIFY_WD_LINK, FALSE);
+		gam_inotify_add_link (path);
 	} else {
 		struct stat sbuf;
 		memset(&sbuf, 0, sizeof (struct stat));
@@ -852,6 +848,7 @@ gam_inotify_add_subscription(GamSubscription * sub)
 		data = gam_inotify_data_new (path, wd, sbuf.st_mode & S_IFDIR);
 		g_hash_table_insert(wd_hash, GINT_TO_POINTER(data->wd), data);
 	}
+
 #ifdef GAMIN_DEBUG_API
 	gam_debug_report(GAMDnotifyCreate, path, 0);
 #endif
@@ -885,14 +882,17 @@ gam_inotify_remove_subscription(GamSubscription * sub)
 		if (data->link)
 		{
 			g_assert (data->wd == GAM_INOTIFY_WD_LINK);
+			g_assert (data->missing == FALSE && data->permission == FALSE);
 			g_hash_table_remove (path_hash, data->path);
 			gam_inotify_rm_link (data->path);
 		} else if (data->missing) {
 			g_assert (data->wd == GAM_INOTIFY_WD_MISSING);
+			g_assert (data->link == FALSE && data->permission == FALSE);
 			g_hash_table_remove (path_hash, data->path);
 			gam_inotify_rm_missing (data->path);
 		} else if (data->permission) {
 			g_assert (data->wd == GAM_INOTIFY_WD_PERM);
+			g_assert (data->link == FALSE && data->missing == FALSE);
 			g_hash_table_remove (path_hash, data->path);
 			gam_inotify_rm_missing (data->path);
 		} else {
@@ -1186,17 +1186,7 @@ static gboolean gam_inotify_nolonger_missing (const char *path)
 		return FALSE;
 	}
 
-	if (gam_inotify_is_link (path))
-	{
-		GAM_DEBUG(DEBUG_INFO, "inotify: Missing resource %s exists now BUT IT IS A LINK\n", path);
-		data->missing = FALSE;
-		data->permission = FALSE;
-		data->link = TRUE;
-		data->wd = GAM_INOTIFY_WD_LINK;
-		gam_inotify_add_link (path);
-		gam_inotify_send_initial_events_all (data);
-		return TRUE;
-	}
+	g_assert ((data->missing == TRUE || data->permission == TRUE) && data->link == FALSE);
 
 	wd = gam_inotify_add_watch (path, GAM_INOTIFY_MASK,&err);
 	if (wd < 0) {
@@ -1212,7 +1202,20 @@ static gboolean gam_inotify_nolonger_missing (const char *path)
 			data->missing = TRUE;
 		}
 		return FALSE;
+	} else if (gam_inotify_is_link (path)) {
+		GAM_DEBUG(DEBUG_INFO, "inotify: Missing resource %s exists now BUT IT IS A LINK\n", path);
+		/* XXX: See NOTE1 */
+		if (g_hash_table_lookup (wd_hash, GINT_TO_POINTER(wd)) == NULL)
+			gam_inotify_rm_watch (path, wd);
+		data->missing = FALSE;
+		data->permission = FALSE;
+		data->link = TRUE;
+		data->wd = GAM_INOTIFY_WD_LINK;
+		gam_inotify_add_link (path);
+		gam_inotify_send_initial_events_all (data);
+		return TRUE;
 	}
+
 
 	GAM_DEBUG(DEBUG_INFO, "inotify: Missing resource %s exists now\n", path);
 
@@ -1289,11 +1292,12 @@ gam_inotify_nolonger_link (const char *path)
 		return FALSE;
 	}
 
-	data->link = FALSE;
+	g_assert (data->link == TRUE && data->missing == FALSE && data->permission == FALSE);
 
 	wd = gam_inotify_add_watch (path, GAM_INOTIFY_MASK, &err);
 	if (wd < 0) {
 		/* The file must not exist anymore, so we add it to the missing list */
+		data->link = FALSE;
 		/* Check if we don't have access to the new file */
 		if (err == EACCES)
 		{
@@ -1306,8 +1310,26 @@ gam_inotify_nolonger_link (const char *path)
 			data->missing = TRUE;
 		}
 
+		gam_server_emit_event (path, data->dir, GAMIN_EVENT_DELETED, data->subs, 1);
 		gam_inotify_add_missing (path, data->permission);
 		return TRUE;
+	} else if (gam_inotify_is_link (path)) {
+		GAM_DEBUG(DEBUG_INFO, "inotify: Link resource %s re-appeared as a link...\n", path);
+		/* NOTE1: This is tricky, because inotify works on the inode level and
+		 * we are dealing with a link, we can be watching the same inode 
+		 * from two different paths (the wd's will be the same). So,
+		 * if the wd isn't in the hash table, we can remvoe the watch, 
+		 * otherwise we just leave the watch. This should probably be
+		 * handled by ref counting
+		 */
+		if (g_hash_table_lookup (wd_hash, GINT_TO_POINTER(wd)) == NULL)
+			gam_inotify_rm_watch (path, wd);
+		data->missing = FALSE;
+		data->permission = FALSE;
+		data->link = TRUE;
+		data->wd = GAM_INOTIFY_WD_LINK;
+		gam_inotify_send_initial_events_all (data);
+		return FALSE;
 	}
 
 	lstat (path, &sbuf);
@@ -1317,9 +1339,7 @@ gam_inotify_nolonger_link (const char *path)
 	gam_inotify_send_initial_events_all (data);
 	data->missing = FALSE;
 	data->permission = FALSE;
-
 	return TRUE;
-
 }
 
 static gint links_list_compare (gconstpointer a, gconstpointer b)
@@ -1338,6 +1358,7 @@ static void
 gam_inotify_add_link (const char *path)
 {
 	inotify_links_t *links = NULL;
+	struct stat sbuf;
 
 	g_assert (path);
 
@@ -1349,6 +1370,8 @@ gam_inotify_add_link (const char *path)
 	links->path = g_strdup (path);
 	links->scan_interval = gam_fs_get_poll_timeout (path);
 	links->last_scan_time = 0;
+	lstat(path, &sbuf);
+	links->sbuf = sbuf;
 	links_list = g_list_prepend (links_list, links);
 }
 
@@ -1399,11 +1422,50 @@ gam_inotify_scan_links (gpointer userdata)
 			{
 				gam_inotify_rm_link (links->path);
 			}
+		} else {
+			gam_inotify_poll_link (links);
 		}
+
 	}
 
 	gam_inotify_sanity_check ();
 	return TRUE;
+}
+
+static gboolean
+gam_inotify_stat_changed (struct stat sbuf1, struct stat sbuf2)
+{
+#ifdef ST_MTIM_NSEC
+	return ((sbuf1.st_mtim.tv_sec != sbuf2.st_mtim.tv_sec) ||
+		(sbuf1.st_mtim.tv_nsec != sbuf2.st_mtim.tv_nsec) ||
+		(sbuf1.st_size != sbuf2.st_size) ||
+		(sbuf1.st_ctim.tv_sec != sbuf2.st_ctim.tv_sec) ||
+		(sbuf1.st_ctim.tv_nsec != sbuf2.st_ctim.tv_nsec));
+#else
+	return ((sbuf1.st_mtime != sbuf2.st_mtime) ||
+		(sbuf1.st_size != sbuf2.st_size) ||
+		(sbuf1.st_ctime != sbuf2.st_ctime));
+#endif
+}
+
+static void
+gam_inotify_poll_link (inotify_links_t *links)
+{
+	struct stat sbuf;
+	g_assert (links);
+
+	/* Next time around, we will detect the deletion, and send the event */
+	if (lstat (links->path, &sbuf) < 0)
+		return;
+
+	if (gam_inotify_stat_changed (sbuf, links->sbuf))
+	{
+		inotify_data_t *data = g_hash_table_lookup (path_hash, links->path);
+		g_assert (data);
+		gam_server_emit_event (data->path, data->dir, GAMIN_EVENT_CHANGED, data->subs, 1);
+	}
+
+	links->sbuf = sbuf;
 }
 
 static void
