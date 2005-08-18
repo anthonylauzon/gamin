@@ -291,6 +291,11 @@ gam_poll_generic_scan_directory_internal (GamNode *dir_node)
 	if (!gam_node_get_subscriptions(dir_node))
 		goto scan_files;
 
+	if (node->lasttime && gam_poll_generic_get_delta_time (node->lasttime) <= node->poll_time)
+		return;
+
+	GAM_DEBUG(DEBUG_INFO, "poll-generic: scanning directory %s\n", dpath);
+
 	event = gam_poll_file(dir_node);
 
 	if (event != 0)
@@ -312,8 +317,8 @@ gam_poll_generic_scan_directory_internal (GamNode *dir_node)
 #endif
 	while ((name = g_dir_read_name(dir)) != NULL) {
 		path = g_build_filename(gam_node_get_path(dir_node), name, NULL);
-
 		node = gam_tree_get_at_path(tree, path);
+		GAM_DEBUG(DEBUG_INFO, "poll-generic: scan dir - checking %s\n", dpath);
 
 		if (!node) {
 			if (!g_file_test(path, G_FILE_TEST_IS_DIR)) {
@@ -333,13 +338,11 @@ gam_poll_generic_scan_directory_internal (GamNode *dir_node)
 	g_dir_close(dir);
 
 scan_files:
-
-
 	/* FIXME: Shouldn't is_dir_node be assigned inside the loop? */
-	is_dir_node = gam_node_is_dir(dir_node);
 	children = gam_tree_get_children(tree, dir_node);
 	for (l = children; l; l = l->next) {
 		node = (GamNode *) l->data;
+		is_dir_node = gam_node_is_dir(dir_node);
 
 		fevent = gam_poll_file(node);
 

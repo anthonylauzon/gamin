@@ -57,6 +57,7 @@ gam_poll_basic_init ()
 				       gam_poll_basic_poll_file);
 
 	g_timeout_add(1000, gam_poll_basic_scan_callback, NULL);
+	GAM_DEBUG(DEBUG_INFO, "basic poll backend initialized\n");
 	return TRUE;
 }
 
@@ -271,20 +272,27 @@ gam_poll_basic_poll_file(GamNode * node)
 	GaminEventType event;
 	struct stat sbuf;
 	int stat_ret;
-	const char *path;
-
-	/* If not enough time has passed since the last time we polled this node, stop here */
-	if (node->lasttime && gam_poll_generic_get_delta_time (node->lasttime) < node->poll_time)
-		return 0;
+	const char *path = NULL;
 
 	path = gam_node_get_path(node);
+	/* If not enough time has passed since the last time we polled this node, stop here */
+	if (node->lasttime && gam_poll_generic_get_delta_time (node->lasttime) <= node->poll_time)
+	{
+		GAM_DEBUG(DEBUG_INFO, "poll-basic: not enough time passed for %s\n", path);
+		return 0;
+	} else {
+		GAM_DEBUG(DEBUG_INFO, "poll-basic: %d && %d < %d\n", node->lasttime, gam_poll_generic_get_delta_time (node->lasttime), node->poll_time);
+	}
+
 #ifdef VERBOSE_POLL
 	GAM_DEBUG(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
 #endif
 	memset(&sbuf, 0, sizeof(struct stat));
 	if (node->lasttime == 0) 
 	{
+#ifdef VERBOSE_POLL
 		GAM_DEBUG(DEBUG_INFO, "Poll: file is new\n");
+#endif
 		stat_ret = stat(node->path, &sbuf);
 
 		if (stat_ret != 0)
@@ -303,6 +311,7 @@ gam_poll_basic_poll_file(GamNode * node)
 	}
 
 	event = 0;
+	node->lasttime = gam_poll_generic_get_time ();
 
 	stat_ret = stat(node->path, &sbuf);
 	if (stat_ret != 0) {
@@ -359,7 +368,12 @@ gam_poll_basic_scan_callback(gpointer data)
 			break;
 		}
 
-		gam_poll_generic_scan_directory_internal(node);
+		if (node->is_dir) {
+			gam_poll_generic_scan_directory_internal(node);
+		} else {
+			GaminEventType event = gam_poll_basic_poll_file (node);
+			gam_node_emit_event(node, event);
+		}
 	}
 
 	/*
@@ -373,7 +387,7 @@ gam_poll_basic_scan_callback(gpointer data)
 			break;
 
 #ifdef VERBOSE_POLL
-		GAM_DEBUG(DEBUG_INFO, "Checking missing file %s", node->path);
+		GAM_DEBUG(DEBUG_INFO, "Checking missing file %s\n", node->path);
 #endif
 		if (node->is_dir) {
 			gam_poll_generic_scan_directory_internal(node);

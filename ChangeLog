@@ -1,3 +1,15 @@
+2005-08-18  John McCutchan,,,  <set EMAIL_ADDRESS environment variable>
+
+	* python/tests/basic4.py: show callback debug
+	* server/gam_inotify.c: (gam_inotify_init): Enable the basic poll
+	backend. The basic backend will be used for paths/filesystems marked
+	as poll when inotify is enabled
+	* server/gam_poll_basic.c: (gam_poll_basic_init),
+	(gam_poll_basic_poll_file), (gam_poll_basic_scan_callback):
+	* server/gam_poll_generic.c:
+	(gam_poll_generic_scan_directory_internal): Bug fixes to poll
+	backends. 
+
 2005-08-17  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* server/gam_inotify.c: (gam_inotify_add_subscription),
