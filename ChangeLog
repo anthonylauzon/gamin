@@ -1,5 +1,14 @@
 2005-08-19  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* TODO: Clarify a TODO item.
+	* lib/gam_error.c: (gam_error_handle_signal), (gam_error_signal),
+	(gam_error_init), (gam_error_check), (gam_errno), (gam_error),
+	(gam_debug): Fix a bug in starting up /tmp/gamin debug stream.
+	* server/gam_poll_generic.c:
+	(gam_poll_generic_scan_directory_internal): Fix crasher.
+
+2005-08-19  John McCutchan  <ttb@tentacle.dhs.org>
+
 	Patch from TomPh <tpgww@onepost.net>
 
 	* configure.in: Properly define HAVE_LINUX when configured with

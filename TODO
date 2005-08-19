@@ -13,7 +13,7 @@
    on ext2/ext3, especially for directories.
  - avoid deadlock on reconnect due to event piling up in both directions.
    probably need a protocol upgrade.
- - handling of symlinks.
+ - handling of symlinks with dnotify.
                                                                                 
 Regression tests:
  - try all the file length on the client till error.

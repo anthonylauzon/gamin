@@ -271,12 +271,12 @@ gam_poll_generic_trigger_handler(const char *path, pollHandlerMode mode, GamNode
 void
 gam_poll_generic_scan_directory_internal (GamNode *dir_node)
 {
-	GDir *dir;
-	const char *name, *dpath;
-	char *path;
-	GamNode *node;
+	GDir *dir = NULL;
+	const char *name = NULL, *dpath = NULL;
+	char *path = NULL;
+	GamNode *node = NULL;
 	GaminEventType event = 0, fevent;
-	GList *children, *l;
+	GList *children = NULL, *l = NULL;
 	unsigned int exists = 0;
 	int is_dir_node;
 
@@ -291,7 +291,7 @@ gam_poll_generic_scan_directory_internal (GamNode *dir_node)
 	if (!gam_node_get_subscriptions(dir_node))
 		goto scan_files;
 
-	if (node->lasttime && gam_poll_generic_get_delta_time (node->lasttime) <= node->poll_time)
+	if (dir_node->lasttime && gam_poll_generic_get_delta_time (dir_node->lasttime) <= dir_node->poll_time)
 		return;
 
 	GAM_DEBUG(DEBUG_INFO, "poll-generic: scanning directory %s\n", dpath);
