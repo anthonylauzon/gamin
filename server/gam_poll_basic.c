@@ -274,6 +274,8 @@ gam_poll_basic_poll_file(GamNode * node)
 	int stat_ret;
 	const char *path = NULL;
 
+	g_assert (node);
+
 	path = gam_node_get_path(node);
 	/* If not enough time has passed since the last time we polled this node, stop here */
 	if (node->lasttime && gam_poll_generic_get_delta_time (node->lasttime) <= node->poll_time)
@@ -364,9 +366,10 @@ gam_poll_basic_scan_callback(gpointer data)
 		 */
 		GamNode *node = (GamNode *) g_list_nth_data(gam_poll_generic_get_all_list(), idx);
 
-		if (node == NULL) {
+		if (node == NULL)
 			break;
-		}
+
+		g_assert (node);
 
 		if (node->is_dir) {
 			gam_poll_generic_scan_directory_internal(node);
@@ -385,6 +388,8 @@ gam_poll_basic_scan_callback(gpointer data)
 
 		if (node == NULL)
 			break;
+
+		g_assert (node);
 
 #ifdef VERBOSE_POLL
 		GAM_DEBUG(DEBUG_INFO, "Checking missing file %s\n", node->path);
@@ -406,7 +411,6 @@ gam_poll_basic_scan_callback(gpointer data)
 			gam_poll_generic_add (node);
 		}
 	}
-
 
 	return TRUE;
 }
