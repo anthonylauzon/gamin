@@ -29,8 +29,6 @@ gam_server_SOURCES =					\
 	gam_tree.h					\
 	gam_poll_basic.c				\
 	gam_poll_basic.h				\
-	gam_poll_dnotify.c				\
-	gam_poll_dnotify.h				\
 	gam_poll_generic.c				\
 	gam_poll_generic.h				\
 	gam_pidname.c 					\
@@ -43,8 +41,6 @@ gam_server_SOURCES =					\
 	gam_debugging.c					\
 	gam_excludes.c					\
 	gam_excludes.h					\
-	local_inotify.h					\
-	local_inotify_syscalls.h			\
 	gam_fs.c					\
 	gam_fs.h					\
 	gam_conf.c					\
@@ -54,11 +50,13 @@ gam_server_SOURCES =					\
 	server_config.h
 
 if ENABLE_INOTIFY
-gam_server_SOURCES += gam_inotify.c gam_inotify.h
+gam_server_SOURCES += gam_inotify.c gam_inotify.h	\
+	local_inotify.h local_inotify_syscalls.h
 endif
 
 if ENABLE_DNOTIFY
-gam_server_SOURCES += gam_dnotify.c gam_dnotify.h
+gam_server_SOURCES += gam_dnotify.c gam_dnotify.h	\
+	gam_poll_dnotify.c gam_poll_dnotify.h
 endif
 
 if ENABLE_KQUEUE

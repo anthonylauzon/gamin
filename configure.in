@@ -1,5 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 
+# get any external flags setting before we start playing with the CFLAGS variable
+ENV_CFLAGS=$CFLAGS
+
 AC_PREREQ(2.52)
 AC_INIT(libgamin)
 AM_CONFIG_HEADER(config.h)
@@ -38,6 +41,12 @@ dnl for the spec file
 RELDATE=`date +'%a %b %e %Y'`
 AC_SUBST(RELDATE)
 
+AC_ARG_ENABLE(docs,
+	AC_HELP_STRING([--enable-docs], [Build documentation (requires Doxygen)]),
+	[build_docs="${enableval}"], [build_docs=no])
+
+AM_CONDITIONAL(BUILD_DOCS, test x$build_docs = xyes)
+
 ##################################################
 # Check for gtk-doc.
 ##################################################
@@ -63,9 +72,11 @@ else
 fi
 
 dnl Let people disable the gtk-doc stuff.
-AC_ARG_ENABLE(gtk-doc, [  --enable-gtk-doc  Use gtk-doc to build documentation [default=auto]], enable_gtk_doc="$enableval", enable_gtk_doc=auto)
+AC_ARG_ENABLE(gtk-doc, 
+	AC_HELP_STRING([--enable-gtk-doc],  [Use gtk-doc to build documentation (default=auto)]),
+	[enable_gtk_doc="$enableval"], [enable_gtk_doc=auto])
 
-if test x$enable_gtk_doc = xauto ; then
+if test x$enable_gtk_doc = xauto -o x$enable_gtk_doc = xyes ; then
   if test x$GTKDOC = xtrue ; then
     enable_gtk_doc=yes
   else
@@ -93,54 +104,25 @@ PKG_CHECK_MODULES(TEST, glib-2.0)
 AC_SUBST(TEST_LIBS)
 AC_SUBST(TEST_CFLAGS)
 
-dnl Turn on the additional warnings last, so -Werror doesn't affect other tests.
-
 AC_ARG_ENABLE(more-warnings,
-[  --enable-more-warnings  Maximum compiler warnings],
-set_more_warnings="$enableval",[
-if test -f $srcdir/CVSVERSION; then
-	is_cvs_version=true
-	set_more_warnings=yes
-else
-	set_more_warnings=no
-fi
-])
-AC_MSG_CHECKING(for more warnings, including -Werror)
-if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
-	AC_MSG_RESULT(yes)
-	CFLAGS="\
-	-Wall \
-	-Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes \
-	-Wnested-externs \
-	-Wsign-compare \
-	$CFLAGS"
-
-	for option in -Wno-sign-compare; do
-		SAVE_CFLAGS="$CFLAGS"
-		CFLAGS="$option $CFLAGS"
-		AC_MSG_CHECKING([whether gcc understands $option])
-		AC_TRY_COMPILE([], [],
-			has_option=yes,
-			has_option=no,)
-		if test $has_option = no; then
-			CFLAGS="$SAVE_CFLAGS"
-		fi
-		AC_MSG_RESULT($has_option)
-		unset has_option
-		unset SAVE_CFLAGS
-	done
-	unset option
-else
-	AC_MSG_RESULT(no)
-fi
+	AC_HELP_STRING([--disable-more-warnings], [Minimum compiler warnings]),
+	[set_more_warnings="${enableval}"], [
+#		if test -d $srcdir/CVS; then
+			warnings_default=yes
+#		else
+#			warnings_default=no
+#		fi
+	])
 
 AC_ARG_ENABLE(debug,
-[  --enable-debug  Enable debugging messages],
-[case "${enableval}" in
-	yes) debug=yes ;;
-	no) debug=no ;;
-	*) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
-esac],[debug=yes])
+	AC_HELP_STRING([--enable-debug], [Enable debugging messages]),
+	[debug=$enableval], [
+	if test -d $srcdir/CVS; then
+    	debug=yes
+	else
+		debug=no
+	fi
+	])
 
 if test x$debug = xyes ; then
     AC_DEFINE([GAMIN_DEBUG], [], [Enable debugging messages])
@@ -148,59 +130,52 @@ fi
 
 AM_CONDITIONAL(GAMIN_DEBUG, test x$debug = xyes)
 
-debug_api=no
-if test "`hostname`" = "paphio" -a "`pwd`" = "/u/veillard/gamin"
-then
-    debug_api=yes
-fi
 AC_ARG_ENABLE(debug-api,
-[  --enable-debug-api  Enable debugging API],
-[case "${enableval}" in
-	yes) debug_api=yes ;;
-	no) debug_api=no ;;
-	*) AC_MSG_ERROR(bad value ${enableval} for --enable-debug-api) ;;
-esac])
+	AC_HELP_STRING([--enable-debug-api], [Enable debugging API]),
+	[debug_api="${enableval}"],[
+	if test -d $srcdir/CVS; then
+    	debug_api=yes
+	else
+		debug_api=no
+	fi
+	])
 
 if test x$debug_api = xyes ; then
     AC_DEFINE([GAMIN_DEBUG_API], [], [Enable debugging API])
 fi
 
-AC_ARG_ENABLE(docs,
-[  --enable-docs   Build documentation (requires Doxygen)],
-[case "${enableval}" in
-  yes) build_docs=yes ;;
-  no)  build_docs=no ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --enable-docs) ;;
-esac],[build_docs=yes])
-AM_CONDITIONAL(BUILD_DOCS, test x$build_docs = xyes)
+dnl check what OS we're on
+#AM_CONDITIONAL(HAVE_LINUX, test x$target_os = xlinux-gnu)
+if test x$target_os = xlinux-gnu; then
+	AC_DEFINE([HAVE_LINUX],[],[Whether we are using linux or not])
+fi
 
 AC_ARG_ENABLE(kernel,
-[  --disable-kernel Use polling regardless of what kernel-level systems are available],
-[case "${enableval}" in
-  yes) os=${target_os} ;;
-  no)  os="BogusOS" ;;
-  *) AC_MSG_ERROR(bad value ${enableval} for --disable-kernel) ;;
-esac],[os=${target_os}])
+	AC_HELP_STRING([--disable-kernel], [Use polling regardless of what kernel-level systems are available]),
+	[os="${enableval}"], [os=${target_os}])
 
-dnl check what OS we're on
-AM_CONDITIONAL(HAVE_LINUX, test x$os = xlinux-gnu)
+if test x$os = xyes; then
+	os="BogusOS"
+elif test x$os = xno; then
+	os=${target_os}
+fi
 
-# We use polling no matter what.
+dnl We use polling no matter what.
 AC_DEFINE(ENABLE_POLLING,1,[Use polling as backend])
 backends="polling"
 
 if test x$os = xlinux-gnu; then
-	AC_DEFINE([HAVE_LINUX],[],[Whether we are using linux or not])
-fi	
-
-if test x$os = xlinux-gnu; then
 	AC_ARG_ENABLE(dnotify,
-	[  --disable-dnotify Disable the DNotify backend],
-	[case "${enableval}" in
-	  yes) dnotify=true ;;
-	  no)  dnotify=false ;;
-	  *) AC_MSG_ERROR(bad value ${enableval} for --disable-dnotify) ;;
-	esac],[dnotify=true])
+		AC_HELP_STRING([--disable-dnotify], [Disable the DNotify backend]),
+		[dnotify="${enableval}"], [dnotify=true])
+		
+	if test x$dnotify = xyes; then
+		dnotify=true
+	elif test x$dnotify = xno; then
+		dnotify=false
+	elif test x$dnotify != xtrue; then
+		AC_MSG_ERROR(bad value ${enableval} for --disable-dnotify)
+	fi
 fi
 
 dnl check if dnotify backend is enabled
@@ -213,12 +188,16 @@ fi
 
 if test x$os = xlinux-gnu; then
 	AC_ARG_ENABLE(inotify,
-	[  --disable-inotify Disable the INotify backend],
-	[case "${enableval}" in
-	  yes) inotify=true ;;
-	  no) inotify=false;;
-	  *) AC_MSG_ERROR(bad value ${enableval} for --disable-inotify) ;;
-	esac],[inotify=true])
+		AC_HELP_STRING([--disable-inotify], [Disable the INotify backend]),
+		[inotify="${enableval}"], [inotify=true])
+
+	if test x$inotify = xyes; then
+		inotify=true
+	elif test x$inotify = xno; then
+		inotify=false
+	elif test x$inotify != xtrue; then
+		AC_MSG_ERROR(bad value ${enableval} for --disable-inotify)
+	fi
 fi
 
 dnl check if inotify backend is enabled
@@ -234,12 +213,16 @@ if test x$os != xBogusOS; then
     	AC_CHECK_FUNC(kevent,[have_kevent=1],)
 	if test x$have_kevent = x1 ; then
 	    AC_ARG_ENABLE(kqueue,
-            [ --disable-kqueue Disable the KQueue backend],
-	    [case "${enableval}" in
-	      yes) kqueue=true ;;
-	      no) kqueue=false ;;
-	      *) AC_MSG_ERROR(bad value ${enableval} for --disable-kqueue) ;;
-	    esac],[kqueue=true])
+			AC_HELP_STRING([--disable-kqueue], [Disable the KQueue backend]),
+			[kqueue="${enableval}"], [kqueue=true])
+			
+		if test x$kqueue = xyes; then
+			kqueue=true
+		elif test x$kqueue = xno; then
+			kqueue=false
+		elif test x$kqueue != xtrue; then
+			AC_MSG_ERROR(bad value ${enableval} for --disable-kqueue)
+		fi
 	fi
 fi
 
@@ -283,13 +266,17 @@ AC_SUBST(WITH_THREADS)
 #   if echo x$os | grep -E -e '^xgnu[0-9]*\.?[0-9]*$' >/dev/null;
 # won't work as m4 eats the []s.
 if case x$os in xgnu*) true;; *) false;; esac; then
-	AC_ARG_ENABLE(hurd_mach_notify,
-	[  --disable-hurd_mach_notify Disable the Hurd Mach Notify backend],
-	[case "${enableval}" in
-	  yes) hurd_mach_notify=true ;;
-	  no) hurd_mach_notify=false;;
-	  *) AC_MSG_ERROR(bad value ${enableval} for --disable-hurd_mach_notify) ;;
-	esac],[hurd_mach_notify=true])
+	AC_ARG_ENABLE(kqueue,
+		AC_HELP_STRING([--disable-hurd_mach_notify], [Disable the Hurd Mach Notify backend]),
+		[hurd_mach_notify="${enableval}"], [hurd_mach_notify=true])
+		
+	if test x$hurd_mach_notify = xyes; then
+		hurd_mach_notify=true
+	elif test x$hurd_mach_notify = xno; then
+		hurd_mach_notify=false
+	elif test x$hurd_mach_notify != xtrue; then
+		AC_MSG_ERROR(bad value ${enableval} for --disable-hurd_mach_notify)
+	fi
 fi
 
 dnl check if hurd_mach_notify backend is enabled
@@ -487,6 +474,47 @@ AC_SUBST(PYTHON_VERSION)
 AC_SUBST(PYTHON_SUBDIR)
 AC_SUBST(PYTHON_INCLUDES)
 AC_SUBST(PYTHON_SITE_PACKAGES)
+
+dnl After all config-related tweaking of CFLAGS, set it to its "build" value
+
+AC_MSG_CHECKING(for more compiler warnings)
+if test "$GCC" = "yes" -a "$set_more_warnings" != "no"; then
+	AC_MSG_RESULT(yes)
+	CFLAGS="\
+ -Wall\
+ -Wchar-subscripts -Wmissing-declarations -Wmissing-prototypes\
+ -Wnested-externs\
+ -Wsign-compare"
+
+	for option in -Wno-sign-compare; do
+		SAVE_CFLAGS="$CFLAGS"
+		CFLAGS="$CFLAGS $option"
+		AC_MSG_CHECKING([whether gcc understands $option])
+		AC_TRY_COMPILE([], [],
+			has_option=yes,
+			has_option=no,)
+		if test $has_option = no; then
+			CFLAGS="$SAVE_CFLAGS"
+		fi
+		AC_MSG_RESULT($has_option)
+		unset has_option
+		unset SAVE_CFLAGS
+	done
+	unset option
+else
+	AC_MSG_RESULT(no)
+	unset CFLAGS
+fi
+
+if test "$GCC" = "yes" -a "$debug" = "yes"; then
+	CFLAGS="$CFLAGS -g"
+#don't optimise with -g
+else
+	if test -z "$ENV_CFLAGS"; then
+		ENV_CFLAGS="-O2"
+	fi
+fi
+CFLAGS="$CFLAGS $ENV_CFLAGS"
 
 dnl ==========================================================================
 
