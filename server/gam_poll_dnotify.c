@@ -654,6 +654,9 @@ gam_poll_dnotify_scan_callback(gpointer data)
 
 		if (node == NULL) 
 			break;
+
+		g_assert (node);
+
 #ifdef VERBOSE_POLL
 		GAM_DEBUG(DEBUG_INFO, "Checking missing file %s", node->path);
 #endif
@@ -687,6 +690,8 @@ gam_poll_dnotify_scan_callback(gpointer data)
 		 */
 		if (node == NULL)
 			break;
+
+		g_assert (node);
 #ifdef VERBOSE_POLL
 		GAM_DEBUG(DEBUG_INFO, "Checking busy file %s", node->path);
 #endif

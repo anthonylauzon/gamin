@@ -1,5 +1,10 @@
 2005-08-19  John McCutchan  <ttb@tentacle.dhs.org>
 
+	* server/gam_poll_dnotify.c: (gam_poll_dnotify_scan_callback): Sprinkle in
+	some asserts.
+
+2005-08-19  John McCutchan  <ttb@tentacle.dhs.org>
+
 	* server/gam_poll_basic.c: (gam_poll_basic_poll_file),
 	(gam_poll_basic_scan_callback): Fix another crasher.
 
