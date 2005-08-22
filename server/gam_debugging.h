@@ -12,12 +12,7 @@ typedef enum {
     GAMDnotifyDelete=2,
     GAMDnotifyChange=3,
     GAMDnotifyFlowOn=4,
-    GAMDnotifyFlowOff=5,
-    GAMinotifyCreate=6,
-    GAMinotifyDelete=7,
-    GAMinotifyChange=8,
-    GAMinotifyFlowOn=9,
-    GAMinotifyFlowOff=10
+    GAMDnotifyFlowOff=5
 } GAMDebugEvent;
 
 void gam_debug_add(GamConnDataPtr conn, const char *value, int options);

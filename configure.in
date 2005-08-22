@@ -152,7 +152,7 @@ fi
 
 AC_ARG_ENABLE(kernel,
 	AC_HELP_STRING([--disable-kernel], [Use polling regardless of what kernel-level systems are available]),
-	[os="${enableval}"], [os=${target_os}])
+	[os=${enableval}],[os=${target_os}])
 
 if test x$os = xyes; then
 	os="BogusOS"
@@ -514,7 +514,8 @@ else
 		ENV_CFLAGS="-O2"
 	fi
 fi
-CFLAGS="$CFLAGS $ENV_CFLAGS"
+# force the inclusion of debug data
+CFLAGS="$CFLAGS $ENV_CFLAGS -g"
 
 dnl ==========================================================================
 

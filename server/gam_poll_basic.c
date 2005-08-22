@@ -278,7 +278,7 @@ gam_poll_basic_poll_file(GamNode * node)
 
 	path = gam_node_get_path(node);
 	/* If not enough time has passed since the last time we polled this node, stop here */
-	if (node->lasttime && gam_poll_generic_get_delta_time (node->lasttime) <= node->poll_time)
+	if (node->lasttime && gam_poll_generic_get_delta_time (node->lasttime) < node->poll_time)
 	{
 		GAM_DEBUG(DEBUG_INFO, "poll-basic: not enough time passed for %s\n", path);
 		return 0;

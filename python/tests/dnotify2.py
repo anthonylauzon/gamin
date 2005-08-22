@@ -18,7 +18,7 @@ expect = [gamin.GAMExists, gamin.GAMEndExist]
 def debug(path, type, data):
     global dbg, db_expect, ok
 
-#    print "Got debug %s, %s, %s" % (path, type, data)
+    print "Got debug %s, %s, %s" % (path, type, data)
     if path[-8:] != "temp_dir":
         print "Error got debug path unexpected %s" % (path)
 	ok = 0

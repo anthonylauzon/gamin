@@ -1,3 +1,15 @@
+2005-08-22  John McCutchan  <ttb@tentacle.dhs.org>
+
+	* configure.in: White noise.
+	* python/tests/dnotify2.py: Print some debug output.
+	* server/gam_debugging.h: Remove the inotify definitions (they were never
+	used).
+	* server/gam_poll_basic.c: (gam_poll_basic_poll_file): Fix a poll limiter
+	bug.
+	* server/gam_poll_generic.c: (gam_poll_generic_remove_missing): Remove an
+	assertion that was causing a crash.
+	(gam_poll_generic_scan_directory_internal): Fix a poll limiter bug
+
 2005-08-19  John McCutchan  <ttb@tentacle.dhs.org>
 
 	* server/gam_poll_dnotify.c: (gam_poll_dnotify_scan_callback): Sprinkle in

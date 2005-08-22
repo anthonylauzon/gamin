@@ -116,9 +116,11 @@ gam_poll_generic_add_missing(GamNode * node)
 void
 gam_poll_generic_remove_missing(GamNode * node)
 {
-	g_assert (g_list_find (missing_resources, node));
-	GAM_DEBUG(DEBUG_INFO, "Poll: removing missing node %s\n", gam_node_get_path(node));
-	missing_resources = g_list_remove_all(missing_resources, node);
+	if (g_list_find (missing_resources, node))
+	{
+		GAM_DEBUG(DEBUG_INFO, "Poll: removing missing node %s\n", gam_node_get_path(node));
+		missing_resources = g_list_remove_all(missing_resources, node);
+	}
 }
 
 /**
@@ -291,7 +293,7 @@ gam_poll_generic_scan_directory_internal (GamNode *dir_node)
 	if (!gam_node_get_subscriptions(dir_node))
 		goto scan_files;
 
-	if (dir_node->lasttime && gam_poll_generic_get_delta_time (dir_node->lasttime) <= dir_node->poll_time)
+	if (dir_node->lasttime && gam_poll_generic_get_delta_time (dir_node->lasttime) < dir_node->poll_time)
 		return;
 
 	GAM_DEBUG(DEBUG_INFO, "poll-generic: scanning directory %s\n", dpath);
