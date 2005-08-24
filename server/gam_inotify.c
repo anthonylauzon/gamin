@@ -1275,7 +1275,7 @@ gam_inotify_is_link (const char *path)
 	if (lstat(path, &sbuf) < 0)
 		return FALSE;
 
-	return S_IFLNK(sbuf.st_mode) != 0;
+	return S_ISLNK(sbuf.st_mode) != 0;
 }
 
 static gboolean 
