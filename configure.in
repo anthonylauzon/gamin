@@ -115,30 +115,31 @@ AC_ARG_ENABLE(more-warnings,
 	])
 
 AC_ARG_ENABLE(debug,
-	AC_HELP_STRING([--enable-debug], [Enable debugging messages]),
-	[debug=$enableval], [
-	if test -d $srcdir/CVS; then
-    	debug=yes
-	else
-		debug=no
-	fi
-	])
+#	AC_HELP_STRING([--enable-debug], [Enable debugging support]),
+#	[debug=$enableval], [
+#	if test -d $srcdir/CVS; then
+#		debug=yes
+#	else
+#		debug=no
+#	fi
+#	])
+	AC_HELP_STRING([--disable-debug], [Disable debugging support]),
+	[debug=$enableval], [debug=yes])
 
 if test x$debug = xyes ; then
-    AC_DEFINE([GAMIN_DEBUG], [], [Enable debugging messages])
+    AC_DEFINE([GAMIN_DEBUG], [], [Enable debugging support])
 fi
 
 AM_CONDITIONAL(GAMIN_DEBUG, test x$debug = xyes)
 
-AC_ARG_ENABLE(debug-api,
-	AC_HELP_STRING([--enable-debug-api], [Enable debugging API]),
-	[debug_api="${enableval}"],[
-	if test -d $srcdir/CVS; then
-    	debug_api=yes
-	else
-		debug_api=no
-	fi
-	])
+AC_ARG_ENABLE(debug_api,
+AC_HELP_STRING([--enable-debug-api], [Enable debugging API]),
+[debug_api="${enableval}"])
+
+if test "$debug_api" = "" -a -d $srcdir/CVS; then
+	echo "Building from CVS, enabling debug api"
+	debug_api=yes
+fi
 
 if test x$debug_api = xyes ; then
     AC_DEFINE([GAMIN_DEBUG_API], [], [Enable debugging API])
@@ -155,36 +156,16 @@ AC_ARG_ENABLE(kernel,
 	[os=${enableval}],[os=${target_os}])
 
 if test x$os = xyes; then
-	os="BogusOS"
-elif test x$os = xno; then
 	os=${target_os}
+elif test x$os = xno; then
+	os="BogusOS"
+elif test x$os != x${target_os}; then
+	AC_MSG_ERROR(bad value ${enableval} for --disable-kernel)
 fi
 
 dnl We use polling no matter what.
 AC_DEFINE(ENABLE_POLLING,1,[Use polling as backend])
 backends="polling"
-
-if test x$os = xlinux-gnu; then
-	AC_ARG_ENABLE(dnotify,
-		AC_HELP_STRING([--disable-dnotify], [Disable the DNotify backend]),
-		[dnotify="${enableval}"], [dnotify=true])
-		
-	if test x$dnotify = xyes; then
-		dnotify=true
-	elif test x$dnotify = xno; then
-		dnotify=false
-	elif test x$dnotify != xtrue; then
-		AC_MSG_ERROR(bad value ${enableval} for --disable-dnotify)
-	fi
-fi
-
-dnl check if dnotify backend is enabled
-AM_CONDITIONAL(ENABLE_DNOTIFY, test x$dnotify = xtrue)
-
-if test x$dnotify = xtrue; then
-	AC_DEFINE(ENABLE_DNOTIFY,1,[Use dnotify as backend])
-	backends="${backends}, dnotify"
-fi
 
 if test x$os = xlinux-gnu; then
 	AC_ARG_ENABLE(inotify,
@@ -207,6 +188,36 @@ if test x$inotify = xtrue; then
 	AC_CHECK_HEADERS(linux/inotify.h)
 	AC_DEFINE(ENABLE_INOTIFY,1,[Use inotify as backend])
 	backends="${backends}, inotify"
+fi
+
+if test x$os = xlinux-gnu; then
+	AC_ARG_ENABLE(dnotify,
+		AC_HELP_STRING([--disable-dnotify], [Disable the DNotify backend]),
+		[dnotify="${enableval}"], [dnotify=true])
+		
+	if test x$dnotify = xyes; then
+		dnotify=true
+	elif test x$dnotify = xno; then
+		dnotify=false
+	elif test x$dnotify != xtrue; then
+		AC_MSG_ERROR(bad value ${enableval} for --disable-dnotify)
+	fi
+fi
+
+if test x$dnotify = xfalse; then
+	if test x$inotify = xtrue; then
+		echo "When using inotify, gamin sometimes needs dnotify as a fallback"
+		echo "so dnotify support will be enabled"
+		dnotify=true
+	fi
+fi
+
+dnl check if dnotify backend is enabled
+AM_CONDITIONAL(ENABLE_DNOTIFY, test x$dnotify = xtrue)
+
+if test x$dnotify = xtrue; then
+	AC_DEFINE(ENABLE_DNOTIFY,1,[Use dnotify as backend])
+	backends="${backends}, dnotify"
 fi
 
 if test x$os != xBogusOS; then
@@ -508,14 +519,14 @@ fi
 
 if test "$GCC" = "yes" -a "$debug" = "yes"; then
 	CFLAGS="$CFLAGS -g"
-#don't optimise with -g
 else
+#don't optimise with -g
 	if test -z "$ENV_CFLAGS"; then
 		ENV_CFLAGS="-O2"
 	fi
 fi
-# force the inclusion of debug data
-CFLAGS="$CFLAGS $ENV_CFLAGS -g"
+
+CFLAGS="$CFLAGS $ENV_CFLAGS"
 
 dnl ==========================================================================
 
@@ -541,7 +552,9 @@ gamin-$VERSION:
         prefix:                   ${prefix}
         source code location:     ${srcdir}
         compiler:                 ${CC}
+        compiler flags:           ${CFLAGS}
                                                                                 
 	backends:                 ${backends}
 	build documentation:      ${build_docs}
+	debug support:            ${debug}
 "
