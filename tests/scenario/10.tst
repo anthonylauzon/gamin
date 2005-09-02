@@ -4,10 +4,10 @@ mkfile /tmp/test_gamin/subdir/foo
 connect test
 mondir /tmp/test_gamin
 wait
-expect 2
+expect 3
 monfile /tmp/test_gamin/subdir/foo
 wait
-expect 1
+expect 2
 cancel 0
 expect 1
 wait

@@ -365,6 +365,24 @@ processCommand(char *line, int no)
             return (-1);
         }
         printf("chmod %s to %s\n", arg, arg2);
+    } else if (!strcmp(command, "chown")) {
+        if (args != 3) {
+            fprintf(stderr, "chown line %d: lacks path and owner\n", no);
+            return (-1);
+        }
+		struct stat sb;
+		if (!lstat (arg, &sb)) {
+			ret = (S_ISLNK (sb.st_mode)) ?
+				lchown(arg, strtol(arg2, NULL, 10), -1) :
+				chown(arg, strtol(arg2, NULL, 10), -1);
+		} else
+			ret=-1;
+        if (ret < 0) {
+            fprintf(stderr, "chown line %d: failed to chown %s to %s\n", no,
+                    arg, arg2);
+            return (-1);
+        }
+        printf("chown %s to %s\n", arg, arg2);
     } else if (!strcmp(command, "mkfile")) {
         if (args != 2) {
             fprintf(stderr, "mkfile line %d: lacks name\n", no);
@@ -428,6 +446,16 @@ processCommand(char *line, int no)
 			return (-1);
 		}
 		printf("move %s %s\n", arg, arg2);
+	} else if (!strcmp(command, "link")) {
+		if (args != 3) {
+		fprintf(stderr, "link line %d: lacks target and name\n", no); return (-1);
+		}
+		ret = symlink(arg, arg2);
+		if (ret < 0) {
+			fprintf(stderr, "link line %d: failed to link to %s\n", no, arg);
+			return (-1);
+		}
+		printf("link %s to %s\n", arg2, arg);
     } else if (!strcmp(command, "event")) {
         printEvent(no);
     } else if (!strcmp(command, "events")) {

@@ -1,3 +1,10 @@
+Fri Sep  2 11:17:17 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* tests/testing.c: applied patch from TomPh adding link and chown
+	  commands.
+	* tests/scenario/10.tst: patch from TomPh fixing the number of
+	  events to expect
+
 Fri Sep  2 10:57:12 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in: applied the 3 patches from TomPh plus a bit of
