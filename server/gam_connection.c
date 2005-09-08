@@ -15,6 +15,9 @@
 #ifdef GAMIN_DEBUG_API
 #include "gam_debugging.h"
 #endif
+#ifdef ENABLE_INOTIFY
+#include "gam_inotify.h"
+#endif
 #include "fam.h"
 
 /************************************************************************
@@ -383,6 +386,10 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
 
 	    gam_listener_remove_subscription(conn->listener, sub);
 	    gam_remove_subscription(sub);
+#ifdef ENABLE_INOTIFY
+	    if (gam_inotify_is_running())
+		gam_subscription_free(sub);
+#endif
 
 	    if (gam_send_ack(conn, req->seq, path, pathlen) < 0) {
 		GAM_DEBUG(DEBUG_INFO, "Failed to send cancel ack to PID %d\n",

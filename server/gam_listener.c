@@ -25,6 +25,9 @@
 #include "gam_server.h"
 #include "gam_error.h"
 #include "gam_pidname.h"
+#ifdef ENABLE_INOTIFY
+#include "gam_inotify.h"
+#endif
 
 //#define GAM_LISTENER_VERBOSE
 /* private struct representing a single listener */
@@ -90,6 +93,10 @@ gam_listener_free_subscription(GamListener *listener,
     g_assert(sub);
     g_assert(g_list_find(listener->subs, sub));
     gam_remove_subscription(sub);
+#ifdef ENABLE_INOTIFY
+    if (gam_inotify_is_running())
+	gam_subscription_free(sub);
+#endif
 }
 
 /**

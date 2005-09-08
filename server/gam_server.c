@@ -1,6 +1,6 @@
 /* Gamin
  * Copyright (C) 2003 James Willcox, Corey Bowers
- * Copyright (C) 2004 Red Hat, Inc.
+ * Copyright (C) 2004 Daniel Veillard, Red Hat, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

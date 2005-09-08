@@ -1,3 +1,10 @@
+Thu Sep  8 08:10:15 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_listener.c server/gam_connection.c: removing the 
+	  subscriptions memory leaks when running under inotify
+	* server/gam_server.c: need to make a pass over all C files to
+	  fix the headers and Copyrights
+
 Thu Sep  8 10:01:15 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* lib/gam_error.c: restore stderr debug on GAM_DEBUG
