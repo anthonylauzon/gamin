@@ -1,3 +1,7 @@
+Thu Sep  8 10:01:15 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* lib/gam_error.c: restore stderr debug on GAM_DEBUG
+
 Fri Sep  2 11:17:17 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* tests/testing.c: applied patch from TomPh adding link and chown
