@@ -88,6 +88,10 @@ rm -fr %{buildroot}
 %doc doc/python.html
 
 %changelog
+* Thu Sep  8 2005 Daniel Veillard <veillard@redhat.com> 0.1.6-1
+- revamp of the inotify back-end
+- memory leak fix
+- various fixes and cleanups
 * Tue Aug  9 2005 Daniel Veillard <veillard@redhat.com> 0.1.5-1
 - Improvement of configuration, system wide configuration files and
   per filesystem type default

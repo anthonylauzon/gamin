@@ -110,6 +110,20 @@ example override the default one for <code>/mnt/*</code> .</p>
 
 <h2><a name="News">News</a></h2>
 
+<h3>0.1.6: Sep  8 2005</h3>
+<ul>
+  <li>Large revamp of the inotify back-end (John McCutchan)</li>
+  <li>Code reorganization, changes for polling (John McCutchan)</li>
+  <li>Portability patches for NetBSD (Johnny Lam)</li>
+  <li>Fix compilation without inotify</li>
+  <li>environment variable GAM_TEST_DNOTIFY to force dnotify on inotify kernels
+      (John McCutchan)</li>
+  <li>Inotify race conditions fixes (John McCutchan)</li>
+  <li>Removal of some asserts resulting in crashes</li>
+  <li>Applied some testing patches (TomPh)</li>
+  <li>Fixed a memory leak on inotify back-end</li>
+  <li>Python detection fix</li>
+</ul>
 <h3>0.1.5: Aug  9 2005</h3>
 <ul>
   <li>Improvement of configuration, system wide configuration files and

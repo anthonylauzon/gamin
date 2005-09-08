@@ -1,3 +1,10 @@
+Thu Sep  8 14:55:07 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS doc/gamin.html doc/news.html: release of 0.1.6
+	* configure.in: release of 0.1.6 and python detection fix #315368
+	* Makefile.am tests/Makefile.am: adding make valgrind now that
+	  3.0.1 works fine.
+
 Thu Sep  8 08:10:15 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_listener.c server/gam_connection.c: removing the 

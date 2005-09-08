@@ -25,8 +25,12 @@ rpm: clean
 	@(unset CDPATH ; $(MAKE) dist && rpmbuild -ta $(distdir).tar.gz)
 
 tests: all
-	(cd tests ; $(MAKE) tests)
-	(cd python ; $(MAKE) tests)
+	(cd tests ; $(MAKE) CHECKER='$(CHECKER)' tests)
+	(cd python ; $(MAKE) CHECKER='$(CHECKER)' tests)
 	
+valgrind:
+	@echo '## Running the regression tests under Valgrind'
+	$(MAKE) CHECKER='valgrind' tests
+
 dist-hook:
 	(cd $(srcdir) ; tar -cf - --exclude CVS doc) | (cd $(distdir); tar xf -)

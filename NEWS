@@ -5,6 +5,20 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.1.6: Sep  8 2005:
+   - Large revamp of the inotify back-end (John McCutchan)
+   - Code reorganization, changes for polling (John McCutchan)
+   - Portability patches for NetBSD (Johnny Lam)
+   - Fix compilation without inotify
+   - environment variable GAM_TEST_DNOTIFY to force dnotify on inotify kernels
+      (John McCutchan)
+   - Inotify race conditions fixes (John McCutchan)
+   - Removal of some asserts resulting in crashes
+   - Applied some testing patches (TomPh)
+   - Fixed a memory leak on inotify back-end
+   - Python detection fix
+
+
 0.1.5: Aug  9 2005:
    - Improvement of configuration, system wide configuration files and
       per filesystem type default (John McCutchan)
