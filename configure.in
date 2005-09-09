@@ -415,7 +415,6 @@ dnl
 dnl check for python
 dnl
 
-PYTHON=
 PYTHON_VERSION=
 PYTHON_INCLUDES=
 PYTHON_SITE_PACKAGES=

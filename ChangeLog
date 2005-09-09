@@ -1,3 +1,8 @@
+Fri Sep  9 12:43:53 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: I lost one of the changes for #315368 as pointed by
+	  Joseph Sacco
+
 Thu Sep  8 14:55:07 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS doc/gamin.html doc/news.html: release of 0.1.6
