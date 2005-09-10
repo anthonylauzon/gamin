@@ -1,3 +1,8 @@
+Sat Sep 10 12:46:38 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_connection.c: fixed a portability problem raised by
+	  Sjoerd Simons
+
 Fri Sep  9 13:08:09 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_data.c: portability fix for non glibc systems

@@ -500,10 +500,14 @@ gam_connection_data(GamConnDataPtr conn, int len)
         if (conn->request_len == 0)
             break;
 
+#if defined(__i386__) || defined(__x86_64__)
 	req = (void *) req + req->len;
+#else
+        memmove(&conn->request, (void *)req + req->len, conn->request_len);
+#endif
     }
 
-    if (conn->request_len > 0 && req != &conn->request)
+    if ((conn->request_len > 0) && (req != &conn->request))
 	memmove(&conn->request, req, conn->request_len);
 
     return (0);
