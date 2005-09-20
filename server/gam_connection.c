@@ -387,7 +387,7 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
 	    gam_listener_remove_subscription(conn->listener, sub);
 	    gam_remove_subscription(sub);
 #ifdef ENABLE_INOTIFY
-	    if (gam_inotify_is_running())
+	    if ((gam_inotify_is_running()) && (!gam_exclude_check(path)))
 		gam_subscription_free(sub);
 #endif
 
@@ -396,7 +396,8 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
 			  gam_connection_get_pid(conn));
 	    }
 	    g_free(path);
-        }   break;
+	    break;
+        }   
         case GAM_REQ_DEBUG:
 #ifdef GAMIN_DEBUG_API
 	    gam_debug_add(conn, req->path, options);
