@@ -1,3 +1,9 @@
+Thu Sep 22 10:07:30 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_connection.c: reproduced RH bug #168744, one need to
+	  force nfs mounts to use poll and run from nfs. Seems to have a
+	  fix for it.
+
 Thu Sep 22 08:54:55 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* tests/Makefile.am: cleanups for make valgrind

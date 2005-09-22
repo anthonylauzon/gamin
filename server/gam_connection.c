@@ -387,8 +387,13 @@ gam_connection_request(GamConnDataPtr conn, GAMPacketPtr req)
 	    gam_listener_remove_subscription(conn->listener, sub);
 	    gam_remove_subscription(sub);
 #ifdef ENABLE_INOTIFY
-	    if ((gam_inotify_is_running()) && (!gam_exclude_check(path)))
-		gam_subscription_free(sub);
+	    if ((gam_inotify_is_running()) && (!gam_exclude_check(path))) {
+		gam_fs_mon_type type;
+
+                type = gam_fs_get_mon_type (path);
+		if (type != GFS_MT_POLL)
+		    gam_subscription_free(sub);
+	    }
 #endif
 
 	    if (gam_send_ack(conn, req->seq, path, pathlen) < 0) {
