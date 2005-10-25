@@ -966,6 +966,7 @@ gam_inotify_init(void)
 			       G_IO_IN | G_IO_HUP | G_IO_ERR);
     g_source_set_callback(source, gam_inotify_read_handler, NULL, NULL);
     g_source_attach(source, NULL);
+    g_source_unref (source);
     g_timeout_add (SCAN_MISSING_TIME, gam_inotify_scan_missing, NULL);
     g_timeout_add (SCAN_LINKS_TIME, gam_inotify_scan_links, NULL);
     g_timeout_add (PROCESS_EVENTS_TIME, gam_inotify_process_event_queue, NULL);

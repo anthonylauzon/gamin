@@ -368,6 +368,7 @@ gam_dnotify_init(void)
     g_source_set_callback(source, gam_dnotify_pipe_handler, NULL, NULL);
 
     g_source_attach(source, NULL);
+    g_source_unref(source);
 
     /* setup some signal stuff */
     act.sa_sigaction = dnotify_signal_handler;

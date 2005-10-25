@@ -1,3 +1,10 @@
+Tue Oct 25 2005  Christopher Aillon  <caillon@redhat.com>
+
+	* server/gam_dnotify.c:
+	* server/gam_hurd_mach_notify.c:
+	* server/gam_inotify.c:
+	Fix up minor leaks of GSource*
+
 Thu Sep 22 10:07:30 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_connection.c: reproduced RH bug #168744, one need to

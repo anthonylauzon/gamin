@@ -643,6 +643,7 @@ gam_hurd_notify_consume_subscriptions(void)
 			       gam_hurd_notify_consume_subscriptions_real,
 			       NULL, NULL);
 	g_source_attach (source, NULL);
+	g_source_unref (source);
     }
 }
 
