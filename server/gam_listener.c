@@ -89,14 +89,24 @@ static void
 gam_listener_free_subscription(GamListener *listener,
 			       GamSubscription *sub)
 {
+    char *path;
+    
     g_assert(listener);
     g_assert(sub);
     g_assert(g_list_find(listener->subs, sub));
+    path = g_strdup(gam_subscription_get_path(sub));
+    
     gam_remove_subscription(sub);
 #ifdef ENABLE_INOTIFY
-    if (gam_inotify_is_running())
-	gam_subscription_free(sub);
+    if (gam_inotify_is_running() && (!gam_exclude_check(path))) {
+	gam_fs_mon_type type;
+
+	type = gam_fs_get_mon_type (path);
+	if (type != GFS_MT_POLL)
+	    gam_subscription_free(sub);
+    }
 #endif
+    g_free(path);
 }
 
 /**

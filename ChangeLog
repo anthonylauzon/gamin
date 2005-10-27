@@ -1,3 +1,8 @@
+Thu Oct 27 13:00:25 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_listener.c: applied patch from Ed Catmur fixing 
+	  gam_server segfaulting on inotify backend, should fix #319697
+
 Thu Oct 27 12:51:17 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in libgamin/gam_fork.c tests/testing.c: applied patch
