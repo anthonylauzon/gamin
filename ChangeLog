@@ -1,3 +1,8 @@
+Thu Oct 27 12:51:17 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in libgamin/gam_fork.c tests/testing.c: applied patch
+	  from Daichi Kawahata to compile on systems without setenv()
+
 Tue Oct 25 2005  Christopher Aillon  <caillon@redhat.com>
 
 	* server/gam_dnotify.c:

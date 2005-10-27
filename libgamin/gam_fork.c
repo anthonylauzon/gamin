@@ -77,7 +77,17 @@ gamin_fork_server(const char *fam_client_id)
 
         setsid();
         if (fork() == 0) {
+#ifdef HAVE_SETENV
             setenv("GAM_CLIENT_ID", fam_client_id, 0);
+#elif HAVE_PUTENV
+            char *client_id = malloc (strlen (fam_client_id) + sizeof "GAM_CLIENT_ID=");
+              if (client_id)
+              {
+                strcpy (client_id, "GAM_CLIENT_ID=");
+                strcat (client_id, fam_client_id);
+                putenv (client_id);
+              }
+#endif /* HAVE_SETENV */
             execl(server_path, server_path, NULL);
             gam_error(DEBUG_INFO, "failed to exec %s\n", server_path);
         }

@@ -86,7 +86,7 @@ fi
 
 AM_CONDITIONAL(ENABLE_GTK_DOC, test x$enable_gtk_doc = xyes)
 
-AC_CHECK_FUNCS(usleep setsid getlogin_r)
+AC_CHECK_FUNCS(usleep setsid setenv putenv getlogin_r)
 AC_STRUCT_ST_MTIM_NSEC
 
 dnl

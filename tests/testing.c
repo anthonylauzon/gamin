@@ -241,7 +241,17 @@ processCommand(char *line, int no)
             return (-1);
         }
         if (arg != NULL) {
+#ifdef HAVE_SETENV
             setenv("GAM_CLIENT_ID", arg, 1);
+#elif HAVE_PUTENV
+            char *client_id = malloc (strlen (arg) + sizeof "GAM_CLIENT_ID=");
+              if (client_id)
+              {
+                strcpy (client_id, "GAM_CLIENT_ID=");
+                strcat (client_id, arg);
+                putenv (client_id);
+              }
+#endif /* HAVE_SETENV */
         }
         ret = FAMOpen(&(testState.fc));
         if (ret < 0) {
