@@ -5,6 +5,13 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.1.7: Oct 27 2005:
+   - Portability fixes (Diego Pettenò, Sjoerd Simons, Daichi Kawahata)
+   - A small memory leak fix (Christopher Aillon)
+   - Fixes for gam_server segfaults (Ed Catmur, DV)
+   - One last patch for Python detection
+
+
 0.1.6: Sep  8 2005:
    - Large revamp of the inotify back-end (John McCutchan)
    - Code reorganization, changes for polling (John McCutchan)

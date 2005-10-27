@@ -1,3 +1,7 @@
+Thu Oct 27 15:28:14 CEST 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in gamin.spec.in NEWS doc/*: release of 0.1.7
+
 Thu Oct 27 13:00:25 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_listener.c: applied patch from Ed Catmur fixing 
