@@ -89,9 +89,9 @@ rm -fr %{buildroot}
 
 %changelog
 * Thu Oct 27 2005 Daniel Veillard <veillard@redhat.com> 0.1.7-1
-* hopefully fixes gam_server crashes
-* some portability fixes
-* removed a minor leak
+- hopefully fixes gam_server crashes
+- some portability fixes
+- removed a minor leak
 * Thu Sep  8 2005 Daniel Veillard <veillard@redhat.com> 0.1.6-1
 - revamp of the inotify back-end
 - memory leak fix
