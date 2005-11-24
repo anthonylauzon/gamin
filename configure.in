@@ -186,6 +186,7 @@ AM_CONDITIONAL(ENABLE_INOTIFY, test x$inotify = xtrue)
 
 if test x$inotify = xtrue; then
 	AC_CHECK_HEADERS(linux/inotify.h)
+	AC_CHECK_HEADERS(sys/inotify.h)
 	AC_DEFINE(ENABLE_INOTIFY,1,[Use inotify as backend])
 	backends="${backends}, inotify"
 fi

@@ -37,7 +37,11 @@
 #ifdef HAVE_LINUX_INOTIFY_H
 #include <linux/inotify.h>
 #else
+#ifdef HAVE_SYS_INOTIFY_H
+#include <sys/inotify.h>
+#else
 #include "local_inotify.h"
+#endif
 #endif
 #include "local_inotify_syscalls.h"
 #include "gam_inotify.h"

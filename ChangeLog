@@ -1,3 +1,8 @@
+Thu Nov 24 17:15:49 CET 2005 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in server/gam_inotify.c: inotify.h may be found
+	  under <sys/inotify.h> too
+
 Thu Oct 27 15:28:14 CEST 2005 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in gamin.spec.in NEWS doc/*: release of 0.1.7
