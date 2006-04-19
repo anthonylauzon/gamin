@@ -1,3 +1,10 @@
+2006-04-19  Bastien Nocera  <hadess@hadess.net>
+
+	* lib/gam_error.c: (gam_error_init): avoid changing the signal at all
+	as it would break applications if they setup their signal handlers
+	with sigaction, and used the SA_SIGINFO flag (which would change
+	the number of arguments to the handler)
+
 Mon Mar  6 13:52:40 CET 2006 Daniel Veillard <veillard@redhat.com>
 
 	* gamin.pc.in: fix cflags for pkg-config as raised by

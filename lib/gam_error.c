@@ -76,7 +76,7 @@ void
 gam_error_init(void)
 {
     if (initialized == 0) {
-        signal_handler prev;
+        struct sigaction oldact;
 
         initialized = 1;
 
@@ -89,11 +89,12 @@ gam_error_init(void)
             gam_error_handle_signal();
         }
 
-        prev = signal(SIGUSR2, gam_error_signal);
-        /* if there is already an handler switch back to the original
-         * to avoid disturbing the application behaviour */
-        if ((prev != SIG_IGN) && (prev != SIG_DFL) && (prev != NULL))
-            signal(SIGUSR2, prev);
+	/* if there is already an handler, leave it as is to
+	 * avoid disturbing the application's behaviour */
+	if (sigaction (SIGUSR2, NULL, &oldact) == 0) {
+	    if (oldact.sa_handler == NULL && oldact.sa_sigaction == NULL)
+	        signal(SIGUSR2, gam_error_signal);
+	}
     }
 }
 
