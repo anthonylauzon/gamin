@@ -1,3 +1,11 @@
+Tue Apr 25 16:40:31 CEST 2006 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: applied patch from Joseph Sacco for python detection
+	  should close bug #338524
+	* configure.in server/gam_inotify.c server/local_inotify_syscalls.h:
+	  get the damn thing to compile again on Fedora Core 5
+	* libgamin/gam_data.c: cleanup
+
 2006-04-19  Bastien Nocera  <hadess@hadess.net>
 
 	* lib/gam_error.c: (gam_error_init): avoid changing the signal at all

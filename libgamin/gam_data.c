@@ -459,7 +459,6 @@ gamin_data_new(void)
         if ((pthread_mutexattr_init != NULL) &&
 	    (pthread_mutexattr_settype != NULL) &&
 	    (pthread_mutex_init != NULL) &&
-	    (pthread_mutexattr_destroy != NULL) &&
 	    (pthread_mutex_lock != NULL) &&
 	    (pthread_mutex_unlock != NULL) &&
 	    (pthread_mutexattr_destroy != NULL)) {

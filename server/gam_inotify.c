@@ -34,6 +34,9 @@
 #endif
 #include "gam_error.h"
 #include "gam_poll_basic.h"
+#ifdef HAVE_LINUX_TYPES_H
+#include <linux/types.h> /* for __u32 */
+#endif
 #ifdef HAVE_LINUX_INOTIFY_H
 #include <linux/inotify.h>
 #else

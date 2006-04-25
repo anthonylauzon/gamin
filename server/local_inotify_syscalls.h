@@ -1,3 +1,4 @@
+#ifndef _SYS_INOTIFY_H
 #ifndef _LINUX_INOTIFY_SYSCALLS_H
 #define _LINUX_INOTIFY_SYSCALLS_H
 
@@ -81,3 +82,4 @@ static inline int inotify_rm_watch (int fd, __u32 wd)
 #endif
 
 #endif /* _LINUX_INOTIFY_SYSCALLS_H */
+#endif /* _SYS_INOTIFY_H */
