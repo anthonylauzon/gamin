@@ -423,6 +423,7 @@ AC_ARG_WITH(python,
 PYTHON_VERSION=
 PYTHON_INCLUDES=
 PYTHON_SITE_PACKAGES=
+PYTHON_TESTS=
 pythondir=
 if test "$with_python" != "no" ; then
     if test -x "$with_python/bin/python"
@@ -455,17 +456,17 @@ if test "$with_python" != "no" ; then
 	   -d $with_python/lib/python$PYTHON_VERSION/site-packages
 	then
 	    PYTHON_INCLUDES=$with_python/include/python$PYTHON_VERSION
-	    PYTHON_SITE_PACKAGES=$libdir/lib/python$PYTHON_VERSION/site-packages
+	    PYTHON_SITE_PACKAGES=$libdir/python$PYTHON_VERSION/site-packages
 	else
 	    if test -r $prefix/include/python$PYTHON_VERSION/Python.h
 	    then
 	        PYTHON_INCLUDES=$prefix/include/python$PYTHON_VERSION
-		PYTHON_SITE_PACKAGES=$libdir/python$PYTHON_VERSION/site-packages
+	        PYTHON_SITE_PACKAGES=$libdir/python$PYTHON_VERSION/site-packages
 	    else
 		if test -r /usr/include/python$PYTHON_VERSION/Python.h
 		then
 		    PYTHON_INCLUDES=/usr/include/python$PYTHON_VERSION
-		    PYTHON_SITE_PACKAGES=$libdir/python$PYTHON_VERSION/site-packages
+	            PYTHON_SITE_PACKAGES=$libdir/python$PYTHON_VERSION/site-packages
 		else
 		    echo could not find python$PYTHON_VERSION/Python.h
 		fi
@@ -478,10 +479,12 @@ if test "$with_python" != "no" ; then
     fi
     if test "$with_python" != ""
     then
-        pythondir=$PYTHON_SITE_PACKAGES
+        pythondir='$(PYTHON_SITE_PACKAGES)'
     else
-        pythondir=$libdir/python$PYTHON_VERSION/site-packages
+        pythondir='$(libdir)/python$(PYTHON_VERSION)/site-packages'
     fi
+else
+    PYTHON=
 fi
 AM_CONDITIONAL(WITH_PYTHON, test "$PYTHON_INCLUDES" != "")
 if test "$PYTHON_INCLUDES" != ""
@@ -490,6 +493,8 @@ then
 else
     PYTHON_SUBDIR=
 fi
+AC_SUBST(pythondir)
+AC_SUBST(PYTHON_SUBDIR)
 AC_SUBST(pythondir)
 AC_SUBST(PYTHON_VERSION)
 AC_SUBST(PYTHON_SUBDIR)

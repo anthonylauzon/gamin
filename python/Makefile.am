@@ -1,4 +1,6 @@
 ## Process this file with automake to produce Makefile.in
+AUTOMAKE_OPTIONS = 1.4 foreign
+
 SUBDIRS=tests
 
 INCLUDES =			\
@@ -25,7 +27,7 @@ _gamin_la_LIBADD = $(mylibs)
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pythondir)
-	@INSTALL@ -m 0644 gamin.py $(DESTDIR)$(pythondir)
+	@INSTALL@ -m 0644 $(srcdir)/gamin.py $(DESTDIR)$(pythondir)
 
 test:
 	@(cd tests ; make tests)

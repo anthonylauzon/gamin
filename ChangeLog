@@ -1,3 +1,9 @@
+Fri Aug 11 12:52:34 CEST 2006 Daniel Veillard <veillard@redhat.com>
+
+	* python/Makefile.am: applied patch from Loïc Minier to allow install
+	  when built out of tree.
+	* configure.in: fix python detection code, updated with libxml2 one.
+
 Fri Aug 11 11:35:50 CEST 2006 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_data.c: applied patch from Loïc Minier/Petr Salinger
