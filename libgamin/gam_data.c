@@ -29,7 +29,7 @@ static int is_threaded = -1;
  * libraries.
  */
 #ifdef __GNUC__
-#ifdef linux
+#ifdef linux || defined(__GLIBC__)
 #if (__GNUC__ == 3 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 3)
 extern int pthread_mutexattr_init(pthread_mutexattr_t *attr)
            __attribute((weak));

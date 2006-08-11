@@ -1,3 +1,8 @@
+Fri Aug 11 11:35:50 CEST 2006 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_data.c: applied patch from Loïc Minier/Petr Salinger
+	  to build on GNU/kFreeBSD
+
 Tue Apr 25 16:40:31 CEST 2006 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in: applied patch from Joseph Sacco for python detection
