@@ -744,7 +744,6 @@ retry:
     return(0);
 
 failed:
-    close(fd);
     return (-1);
 }
 
@@ -891,26 +890,10 @@ gamin_try_reconnect(GAMDataPtr conn, int fd)
     /*
      * try to reopen a connection to the server
      */
-    close(fd);
     newfd = gamin_connect_unix_socket(socket_name);
-
     free(socket_name);
     if (newfd < 0) {
         return (-1);
-    }
-
-    if (newfd != fd) {
-	/*
-	 * reuse the same descriptor
-	 */
-	ret = dup2(newfd, fd);
-	if (ret < 0) {
-	    gam_error(DEBUG_INFO,
-	              "Failed to reuse descriptor %d on reconnect\n",
-		      fd);
-	    close(newfd);
-	    return (-1);
-	}
     }
 
     /*
@@ -918,12 +901,27 @@ gamin_try_reconnect(GAMDataPtr conn, int fd)
      * start the authentication again and resubscribe all existing
      * monitoring commands.
      */
-    ret = gamin_write_credential_byte(fd);
+    ret = gamin_write_credential_byte(newfd);
     if (ret != 0) {
-        close(fd);
+        close(newfd);
         return (-1);
     }
 
+    /*
+     * reuse the same descriptor. We never close the original fd, dup2
+     * atomically overwrites it and closes the original. This way we
+     * never leave the original fd closed, since that can cause trouble
+     * if the app keeps the fd around.
+     */
+    ret = dup2(newfd, fd);
+    close(newfd);
+    if (ret < 0) {
+	gam_error(DEBUG_INFO,
+		  "Failed to reuse descriptor %d on reconnect\n",
+		  fd);
+	return (-1);
+    }
+    
     nb_req = gamin_data_reset(conn, &reqs);
     if (reqs != NULL) {
 	for (i = 0; i < nb_req;i++) {

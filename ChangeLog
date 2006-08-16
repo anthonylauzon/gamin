@@ -1,3 +1,10 @@
+2006-08-16  Alexander Larsson  <alexl@redhat.com>
+
+	* libgamin/gam_api.c: (gamin_check_cred), (gamin_try_reconnect):
+	Never close the connection fd until FAMClose. That can easily
+	cause clients to use 100% cpu with a closed fd getting into
+	the main loop. (#351633)
+
 Fri Aug 11 12:52:34 CEST 2006 Daniel Veillard <veillard@redhat.com>
 
 	* python/Makefile.am: applied patch from Loïc Minier to allow install
