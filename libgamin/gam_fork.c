@@ -67,6 +67,7 @@ gamin_fork_server(const char *fam_client_id)
     /* Become a daemon */
     pid = fork();
     if (pid == 0) {
+	int fd;
         long open_max;
 	long i;
 
@@ -75,6 +76,20 @@ gamin_fork_server(const char *fam_client_id)
 	for (i = 0; i < open_max; i++)
 	    fcntl (i, F_SETFD, FD_CLOEXEC);
 
+	/* /dev/null for stdin, stdout, stderr */
+	fd = open ("/dev/null", O_RDONLY);
+	if (fd != -1) {
+	    dup2 (fd, 0);
+	    close (fd);
+	}
+	
+	fd = open ("/dev/null", O_WRONLY);
+	if (fd != -1) {
+	    dup2 (fd, 1);
+	    dup2 (fd, 2);
+	    close (fd);
+	}
+	
         setsid();
         if (fork() == 0) {
 #ifdef HAVE_SETENV

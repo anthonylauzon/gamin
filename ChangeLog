@@ -1,3 +1,9 @@
+2006-08-22  Alexander Larsson  <alexl@redhat.com>
+
+	* libgamin/gam_fork.c: (gamin_fork_server):
+	Open fd 0-2 to /dev/null to avoid possible problems if things
+	write to them.
+
 2006-08-16  Alexander Larsson  <alexl@redhat.com>
 
 	* libgamin/gam_api.c: (gamin_check_cred), (gamin_try_reconnect):
