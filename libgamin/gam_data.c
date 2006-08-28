@@ -539,6 +539,7 @@ gamin_data_reset(GAMDataPtr conn, GAMReqDataPtr **requests)
     conn->reqno = 1;
     conn->restarted = 1;
     conn->evn_ready = 0;
+    conn->evn_read = 0;
     return(conn->req_nr);
 }
 

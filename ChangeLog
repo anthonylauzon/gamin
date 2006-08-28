@@ -1,3 +1,9 @@
+2006-08-28  Alexander Larsson  <alexl@redhat.com>
+
+	* libgamin/gam_data.c: (gamin_data_reset):
+	Empty read-buffer on connection reset.
+	Patch from Ariel T. Glenn
+
 2006-08-22  Alexander Larsson  <alexl@redhat.com>
 
 	* libgamin/gam_fork.c: (gamin_fork_server):
