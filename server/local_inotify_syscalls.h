@@ -1,8 +1,9 @@
-#ifndef _SYS_INOTIFY_H
 #ifndef _LINUX_INOTIFY_SYSCALLS_H
 #define _LINUX_INOTIFY_SYSCALLS_H
 
+#include <asm/types.h>
 #include <sys/syscall.h>
+#include <unistd.h>
 
 #if defined(__i386__)
 # define __NR_inotify_init	291
@@ -82,4 +83,3 @@ static inline int inotify_rm_watch (int fd, __u32 wd)
 #endif
 
 #endif /* _LINUX_INOTIFY_SYSCALLS_H */
-#endif /* _SYS_INOTIFY_H */

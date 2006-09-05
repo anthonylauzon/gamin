@@ -51,6 +51,12 @@ gam_server_SOURCES =					\
 
 if ENABLE_INOTIFY
 gam_server_SOURCES += gam_inotify.c gam_inotify.h	\
+	inotify-helper.c inotify-helper.h \
+	inotify-kernel.c inotify-kernel.h \
+	inotify-missing.c inotify-missing.h \
+	inotify-path.c inotify-path.h \
+	inotify-sub.c inotify-sub.h \
+	inotify-diag.c inotify-diag.h \
 	local_inotify.h local_inotify_syscalls.h
 endif
 

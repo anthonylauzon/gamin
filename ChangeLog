@@ -1,3 +1,19 @@
+2006-09-04  John McCutchan  <john@johnmccutchan.com>
+
+	* server/Makefile.am:
+	* server/gam_inotify.c: Ported to inotify-helper.
+	* server/inotify-diag.c: inotify-helper debug output
+	* server/inotify-helper.c: easy interface to inotify
+	* server/inotify-kernel.c: kernel part of inotify-helper
+	* server/inotify-missing.c: missing list part of inotify-helper
+	* server/inotify-path.c: path based interface for inotify-kernel
+	* server/inotify-sub.c: inotify-helper subscription
+	* server/local_inotify.h: Updated to latest version
+	* server/local_inotify_syscalls.h: Updated to latest version
+
+	The above amounts to a complete replacement of gamin's inotify
+	backend with the current gnome-vfs backend.
+
 2006-08-28  Alexander Larsson  <alexl@redhat.com>
 
 	* libgamin/gam_data.c: (gamin_data_reset):
