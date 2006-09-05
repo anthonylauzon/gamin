@@ -147,6 +147,12 @@ gam_inotify_found_callback (const char *fullpath, void *subdata)
 gboolean
 gam_inotify_init (void)
 {
+	gam_server_install_kernel_hooks (GAMIN_K_INOTIFY2, 
+					 gam_inotify_add_subscription,
+					 gam_inotify_remove_subscription,
+					 gam_inotify_remove_all_for,
+					 NULL, NULL);
+	
 	return ih_startup (gam_inotify_event_callback,
 			   gam_inotify_found_callback);
 }

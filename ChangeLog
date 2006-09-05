@@ -1,3 +1,8 @@
+2006-09-05  Alexander Larsson  <alexl@redhat.com>
+
+	* server/gam_inotify.c: (gam_inotify_init):
+	Install kernel monitoring hooks to fix previous commit.
+
 2006-09-04  John McCutchan  <john@johnmccutchan.com>
 
 	* server/Makefile.am:
