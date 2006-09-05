@@ -1,5 +1,14 @@
 2006-09-05  Alexander Larsson  <alexl@redhat.com>
 
+	* lib/gam_error.c:
+	* libgamin/gam_api.c:
+	* server/gam_connection.[ch]:
+	* server/gam_server.[ch]:
+	Don't use running timers for server idle timeout
+	and debug signal handler.
+
+2006-09-05  Alexander Larsson  <alexl@redhat.com>
+
 	* server/gam_connection.c: 
 	* server/gam_eq.[ch]:
 	Only run connection flush timeout when needed.

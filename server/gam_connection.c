@@ -42,6 +42,9 @@ struct GamConnData {
     guint eq_source;            /* the event queue GSource id */
 };
 
+static void gam_cancel_server_timeout (void);
+
+
 static const char *
 gam_reqtype_to_string (GAMReqType type)
 {
@@ -126,6 +129,9 @@ gam_connection_close(GamConnDataPtr conn)
     g_free(conn->pidname);
     g_free(conn);
 
+    if (gamConnList == NULL && gam_server_use_timeout ())
+      gam_schedule_server_timeout ();
+
     return (0);
 }
 
@@ -199,6 +205,8 @@ gam_connection_new(GMainLoop *loop, GIOChannel *source)
     ret->eq_source = g_timeout_add (100 /* 100 milisecond */, gam_connection_eq_flush, ret);
     gamConnList = g_list_prepend(gamConnList, ret);
 
+    gam_cancel_server_timeout ();
+    
     GAM_DEBUG(DEBUG_INFO, "Created connection %d\n", ret->fd);
 
     return (ret);
@@ -688,7 +696,9 @@ gam_send_ack(GamConnDataPtr conn, int reqno,
  *									*
  ************************************************************************/
 
-#define MAX_IDLE_TIMEOUT 30
+#define MAX_IDLE_TIMEOUT_MSEC (30*1000) /* 30 seconds */
+
+static guint server_timeout_id = 0;
 
 /**
  * gam_connections_check:
@@ -697,27 +707,33 @@ gam_send_ack(GamConnDataPtr conn, int reqno,
  * shuts the server down if there have been no outstanding connections
  * for a while.
  */
-gboolean
+static gboolean
 gam_connections_check(void)
 {
-    static time_t timeout;
-
-    if (g_list_first(gamConnList) != NULL) {
-        if (timeout != 0) {
-            GAM_DEBUG(DEBUG_INFO, "New active connection\n");
-        }
-        timeout = 0;
-        return (TRUE);
-    }
-    if (timeout == 0) {
-        GAM_DEBUG(DEBUG_INFO, "No more active connections\n");
-        timeout = time(NULL);
-    } else if (time(NULL) - timeout > MAX_IDLE_TIMEOUT) {
+    server_timeout_id = 0;
+    
+    if (gamConnList == NULL) {
         GAM_DEBUG(DEBUG_INFO, "Exiting on timeout\n");
 	gam_shutdown();
         exit(0);
     }
-    return (TRUE);
+    return (FALSE);
+}
+
+static void
+gam_cancel_server_timeout (void)
+{
+  if (server_timeout_id)
+    g_source_remove (server_timeout_id);
+  server_timeout_id = 0;
+}
+
+void
+gam_schedule_server_timeout (void)
+{
+  gam_cancel_server_timeout ();
+  server_timeout_id =
+    g_timeout_add(MAX_IDLE_TIMEOUT_MSEC, (GSourceFunc) gam_connections_check, NULL);
 }
 
 /**

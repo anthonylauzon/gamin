@@ -18,6 +18,7 @@
 typedef void (*signal_handler) (int);
 
 extern void gam_show_debug(void);
+extern void gam_got_signal (void);
 
 int gam_debug_active = 0;
 static int initialized = 0;
@@ -60,11 +61,13 @@ gam_error_handle_signal(void)
     }
 }
 
+
 static void
 gam_error_signal(int no)
 {
     got_signal = !got_signal;
     gam_debug_active = -1;      /* force going into gam_debug() */
+    gam_got_signal ();
 }
 
 /**

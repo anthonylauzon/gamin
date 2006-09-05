@@ -87,6 +87,13 @@ void
 gam_show_debug(void) {
 }
 
+void gam_got_signal(void);
+
+void
+gam_got_signal(void) {
+}
+
+
 /************************************************************************
  *									*
  *			Path for the socket connection			*

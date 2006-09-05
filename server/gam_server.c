@@ -279,6 +279,17 @@ static GHashTable *listeners = NULL;
 static GIOChannel *socket = NULL;
 
 /**
+ * gam_server_use_timeout:
+ *
+ * Returns TRUE if idle server should exit after a timeout.
+ */
+gboolean
+gam_server_use_timeout (void)
+{
+  return !no_timeout;
+}
+
+/**
  * gam_server_emit_one_event:
  * @path: the file/directory path
  * @event: the event type
@@ -507,6 +518,58 @@ gam_poll_file (GamNode *node)
 	return 0;
 }
 
+#ifdef GAM_DEBUG_ENABLED
+
+static GIOChannel *pipe_read_ioc = NULL;
+static GIOChannel *pipe_write_ioc = NULL;
+
+static gboolean
+gam_error_signal_pipe_handler(gpointer user_data)
+{
+  char buf[5000];
+
+  if (pipe_read_ioc)
+    g_io_channel_read_chars(pipe_read_ioc, buf, sizeof(buf), NULL, NULL);
+
+  gam_error_check();
+}  
+
+static void
+gam_setup_error_handler (void)
+{
+  int signal_pipe[2];
+  GSource *source;
+  
+  if (pipe(signal_pipe) != -1) {
+    pipe_read_ioc = g_io_channel_unix_new(signal_pipe[0]);
+    pipe_write_ioc = g_io_channel_unix_new(signal_pipe[1]);
+    
+    g_io_channel_set_flags(pipe_read_ioc, G_IO_FLAG_NONBLOCK, NULL);
+    g_io_channel_set_flags(pipe_write_ioc, G_IO_FLAG_NONBLOCK, NULL);
+    
+    source = g_io_create_watch(pipe_read_ioc, G_IO_IN | G_IO_HUP | G_IO_ERR);
+    g_source_set_callback(source, gam_error_signal_pipe_handler, NULL, NULL);
+    
+    g_source_attach(source, NULL);
+    g_source_unref(source);
+  }
+}
+#endif
+
+void
+gam_got_signal()
+{
+#ifdef GAM_DEBUG_ENABLED
+  /* Wake up main loop */
+  if (pipe_write_ioc) {
+    g_io_channel_write_chars(pipe_write_ioc, "a", 1, NULL, NULL);
+    g_io_channel_flush(pipe_write_ioc, NULL);
+  }
+#endif
+}
+
+
+
 /**
  * gam_server_init:
  * @loop:  the main event loop of the daemon
@@ -533,11 +596,11 @@ gam_server_init(GMainLoop * loop, const char *session)
      * Register the timeout checking function
      */
     if (no_timeout == 0)
-	g_timeout_add(1000, (GSourceFunc) gam_connections_check, NULL);
+      gam_schedule_server_timeout ();
 #ifdef GAM_DEBUG_ENABLED
-    g_timeout_add(1000, (GSourceFunc) gam_error_check, NULL);
+    gam_setup_error_handler ();
 #endif
-
+    
     return TRUE;
 }
 

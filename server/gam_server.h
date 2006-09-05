@@ -33,6 +33,7 @@ typedef enum pollHandlerMode {
 } pollHandlerMode;
 
 gboolean        gam_init_subscriptions          (void);
+gboolean        gam_server_use_timeout          (void);
 gboolean        gam_add_subscription            (GamSubscription *sub);
 gboolean        gam_remove_subscription         (GamSubscription *sub);
 int             gam_server_num_listeners        (void);
@@ -48,6 +49,7 @@ void            gam_server_emit_event           (const char *path,
 						 int force);
 void		gam_shutdown			(void);
 void		gam_show_debug			(void);
+void		gam_got_signal			(void);
 
 void		gam_server_install_kernel_hooks	(GamKernelHandler name,
 						 gboolean (*add)(GamSubscription *sub),

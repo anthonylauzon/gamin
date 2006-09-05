@@ -25,7 +25,7 @@ typedef enum {
 
 int		gam_connections_init	(void);
 int		gam_connections_close	(void);
-gboolean	gam_connections_check	(void);
+void            gam_schedule_server_timeout (void);
 
 GamConnDataPtr	gam_connection_new	(GMainLoop *loop,
 					 GIOChannel *source);
