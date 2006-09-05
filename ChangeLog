@@ -1,5 +1,11 @@
 2006-09-05  Alexander Larsson  <alexl@redhat.com>
 
+	* server/gam_connection.c: 
+	* server/gam_eq.[ch]:
+	Only run connection flush timeout when needed.
+
+2006-09-05  Alexander Larsson  <alexl@redhat.com>
+
 	* server/gam_inotify.c: (gam_inotify_init):
 	Install kernel monitoring hooks to fix previous commit.
 

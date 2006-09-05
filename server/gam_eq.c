@@ -119,9 +119,10 @@ gam_eq_flush_callback (gam_eq_t *eq, gam_eq_event_t *event, GamConnDataPtr conn)
 	gam_eq_event_free (event);
 }
 
-void
+gboolean
 gam_eq_flush (gam_eq_t *eq, GamConnDataPtr conn)
 {
+	gboolean done_work = FALSE;
 	if (!eq)
 		return;
 
@@ -130,8 +131,10 @@ gam_eq_flush (gam_eq_t *eq, GamConnDataPtr conn)
 #endif
 	while (!g_queue_is_empty (eq->event_queue))
 	{
+		done_work = TRUE;
 		gam_eq_event_t *event = g_queue_pop_head (eq->event_queue);
 		g_assert (event);
 		gam_eq_flush_callback (eq, event, conn);
 	}
+	return done_work;
 }
