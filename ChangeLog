@@ -1,5 +1,10 @@
 2006-09-08  Alexander Larsson  <alexl@redhat.com>
 
+	* server/gam_inotify.c: (gam_inotify_send_initial_events):
+	Send correct initial events for missing files
+
+2006-09-08  Alexander Larsson  <alexl@redhat.com>
+
 	* server/gam_connection.c: (gam_connection_close):
 	Don't remove 0 source (from connection flush timeout fix)
 	

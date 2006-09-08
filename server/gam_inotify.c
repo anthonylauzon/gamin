@@ -84,7 +84,14 @@ gam_inotify_send_initial_events (const char *pathname, GamSubscription *sub, gbo
 {
 	GaminEventType gevent;
 
-	gevent = was_missing ? GAMIN_EVENT_CREATED : GAMIN_EVENT_EXISTS;
+	if (was_missing) {
+	  gevent = GAMIN_EVENT_CREATED;
+	} else {
+	  if (g_file_test (pathname, G_FILE_TEST_EXISTS))
+	    gevent = GAMIN_EVENT_EXISTS;
+	  else
+	    gevent = GAMIN_EVENT_DELETED;
+	}
 
 	gam_server_emit_one_event (pathname, is_dir ? 1 : 0, gevent, sub, 1);
 
