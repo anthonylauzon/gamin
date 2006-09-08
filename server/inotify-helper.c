@@ -161,28 +161,21 @@ static void
 ih_sub_foreach_worker (void *callerdata, gboolean (*f)(ih_sub_t *sub, void *callerdata), gboolean free)
 {
 	GList *l = NULL;
-	GList *removed = NULL;
+	GList *next = NULL;
 
 	G_LOCK(inotify_lock);
 
-	for (l = sub_list; l; l = l->next)
+	for (l = sub_list; l; l = next)
 	{
 		ih_sub_t *sub = l->data;
-
+		next = l->next;
+		
 		if (f(sub, callerdata))
 		{
-			removed = g_list_prepend (removed, l);
-			ih_sub_cancel (sub);
+			ih_sub_cancel (sub); /* Removes sub from sub_list */
 			if (free)
 				ih_sub_free (sub);
 		}
-	}
-
-	for (l = removed; l ; l = l->next)
-	{
-		GList *llink = l->data;
-		sub_list = g_list_remove_link (sub_list, llink);
-		g_list_free_1 (llink);
 	}
 
 	G_UNLOCK(inotify_lock);

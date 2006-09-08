@@ -161,6 +161,9 @@ gboolean
 gam_inotify_add_subscription (GamSubscription *sub)
 {
 	ih_sub_t *isub = NULL;
+
+	gam_listener_add_subscription(gam_subscription_get_listener(sub), sub);
+	
 	isub = ih_sub_new (gam_subscription_get_path (sub), gam_subscription_is_dir (sub), 0, sub);
 
 	if (!ih_sub_add (isub))

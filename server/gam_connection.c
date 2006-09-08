@@ -108,7 +108,8 @@ gam_connection_close(GamConnDataPtr conn)
     g_assert(conn->source);
 
     /* Kill the queue event source */
-    g_source_remove (conn->eq_source);
+    if (conn->eq_source != 0)
+      g_source_remove (conn->eq_source);
     /* Flush the event queue */
     gam_eq_flush (conn->eq, conn);
     /* Kill the event queue */

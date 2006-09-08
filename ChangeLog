@@ -1,3 +1,17 @@
+2006-09-08  Alexander Larsson  <alexl@redhat.com>
+
+	* server/gam_connection.c: (gam_connection_close):
+	Don't remove 0 source (from connection flush timeout fix)
+	
+	* server/gam_inotify.c: (gam_inotify_add_subscription):
+	Add the sub to the listener so it will get freed with it
+	
+	* server/inotify-helper.c: (ih_sub_foreach_worker):
+	Don't free sub_list items twice
+	
+	* server/inotify-sub.c: (ih_sub_get_filename):
+	Actually get the filename
+
 2006-09-05  Alexander Larsson  <alexl@redhat.com>
 
 	* lib/gam_error.c:

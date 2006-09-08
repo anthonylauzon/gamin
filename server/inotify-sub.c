@@ -71,9 +71,7 @@ gchar *ih_sub_get_dirname (gchar *pathname)
 static
 gchar *ih_sub_get_filename (gchar *pathname)
 {
-	gchar *out;
-	// FIXME: return filename here
-	return out;
+	return g_path_get_basename (pathname);
 }
 
 static 
