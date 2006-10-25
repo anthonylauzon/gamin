@@ -1,3 +1,8 @@
+Wed Oct 25 18:14:11 CEST 2006 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: applied atch from James Andrewartha fixing
+	  compilation with Sun's compiler c.f. #365029
+
 2006-09-08  Alexander Larsson  <alexl@redhat.com>
 
 	* server/gam_inotify.c: (gam_inotify_send_initial_events):

@@ -532,12 +532,14 @@ else
 	unset CFLAGS
 fi
 
-if test "$GCC" = "yes" -a "$debug" = "yes"; then
-	CFLAGS="$CFLAGS -g"
-else
-#don't optimise with -g
-	if test -z "$ENV_CFLAGS"; then
-		ENV_CFLAGS="-O2"
+if test "$GCC" = "yes"; then
+	if "$debug" = "yes"; then
+		CFLAGS="$CFLAGS -g"
+	else
+		#don't optimise with -g
+		if test -z "$ENV_CFLAGS"; then
+			ENV_CFLAGS="-O2"
+		fi
 	fi
 fi
 
