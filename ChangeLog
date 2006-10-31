@@ -1,3 +1,7 @@
+Tue Oct 31 15:33:28 CET 2006 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS configure.in doc//*: prepare release of 0.1.8 rebuild the docs
+
 Wed Oct 25 18:14:11 CEST 2006 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in: applied atch from James Andrewartha fixing

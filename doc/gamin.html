@@ -50,9 +50,8 @@ should be found in the source under the COPYING file.</p>
 <h2><a name="Using">Using gamin</a></h2>
 
 <p>Basically it is exactly like for using the fam interface. From a
-programmer point of view this is the same API, and one can make use of <a
-href="http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=0650&amp;db=bks&amp;fname=/SGI_Developer/books/IIDsktp_IG/sgi_html/ch08.html">the
-existing FAM documentation</a>.</p>
+programmer point of view this is the same API, and one can make use of
+the existing FAM documentation.</p>
 
 <h2><a name="Config">Configuration</a></h2>
 
@@ -110,6 +109,21 @@ example override the default one for <code>/mnt/*</code> .</p>
 
 <h2><a name="News">News</a></h2>
 
+<h3>0.1.8: Oct 31 2006</h3>
+<ul>
+  <li>Build and portability fixes: handle sys/inotify.h, Python detection
+      (Joseph Sacco), FreeBSD portability fix (Loïc Minier/Petr Salinger),
+      out of tree build and install (Loïc Minier), fix build with Sun's
+      compiler (James Andrewartha)</li>
+  <li>Bug fixes: pkg-config cflags (Claudio Fontana), debug signal hookup
+      fix (Bastien Nocera), client filedescriptor close trouble (Alexander
+      Larsson), low filedescriptor handling in the server (Alexander Larsson),
+      buffer on connection reset cleanup (Ariel T. Glenn), inotify new backend
+      fixes (Alexander Larsson)</li>
+  <li>Improvements: update the inotify backend to the version used by 
+      gnome-vfs (John McCutchan), minimize the timeouts usage
+      to not wake up apps unduely (Alexander Larsson)</li>
+</ul>
 <h3>0.1.7: Oct 27 2005</h3>
 <ul>
   <li>Portability fixes (Diego Pettenò, Sjoerd Simons, Daichi Kawahata)</li>

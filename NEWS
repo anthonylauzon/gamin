@@ -5,6 +5,21 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.1.8: Oct 31 2006:
+   - Build and portability fixes: handle sys/inotify.h, Python detection
+      (Joseph Sacco), FreeBSD portability fix (Loïc Minier/Petr Salinger),
+      out of tree build and install (Loïc Minier), fix build with Sun's
+      compiler (James Andrewartha)
+   - Bug fixes: pkg-config cflags (Claudio Fontana), debug signal hookup
+      fix (Bastien Nocera), client filedescriptor close trouble (Alexander
+      Larsson), low filedescriptor handling in the server (Alexander Larsson),
+      buffer on connection reset cleanup (Ariel T. Glenn), inotify new backend
+      fixes (Alexander Larsson)
+   - Improvements: update the inotify backend to the version used by 
+      gnome-vfs (John McCutchan), minimize the timeouts usage
+      to not wake up apps unduely (Alexander Larsson)
+
+
 0.1.7: Oct 27 2005:
    - Portability fixes (Diego Pettenò, Sjoerd Simons, Daichi Kawahata)
    - A small memory leak fix (Christopher Aillon)

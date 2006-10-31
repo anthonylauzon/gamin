@@ -93,7 +93,6 @@
     <ul>
       <li><a href="http://mail.gnome.org/archives/gamin-list/">Mail archive</a></li>
       <li><a href="http://oss.sgi.com/projects/fam/">FAM project</a></li>
-      <li><a href="http://techpubs.sgi.com/library/tpl/cgi-bin/getdoc.cgi?coll=0650&amp;db=bks&amp;fname=/SGI_Developer/books/IIDsktp_IG/sgi_html/ch08.html">FAM docs</a></li>
        <li><a href="sources/">sources</a></li>
        <li><a href="http://bugzilla.gnome.org/buglist.cgi?product=gamin&amp;bug_status=UNCONFIRMED&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=NEEDINFO&amp;bug_status=REOPENED&amp;bug_status=RESOLVED&amp;bug_status=VERIFIED&amp;form_name=query">GNOME Bugzilla</a></li>
        <li><a href="https://bugzilla.redhat.com/bugzilla/buglist.cgi?product=Fedora+Core&amp;product=Red+Hat+Enterprise+Linux&amp;component=fam&amp;component=gamin&amp;bug_status=NEW&amp;bug_status=ASSIGNED&amp;bug_status=REOPENED&amp;bug_status=MODIFIED&amp;short_desc_type=allwordssubstr&amp;short_desc=&amp;long_desc_type=allwordssubstr&amp;long_desc=&amp;Search=Search">Red Hat Bugzilla</a></li>
