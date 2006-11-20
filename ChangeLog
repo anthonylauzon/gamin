@@ -1,3 +1,9 @@
+2006-11-20  Alexander Larsson  <alexl@redhat.com>
+
+	* server/gam_inotify.c: (gam_inotify_init):
+	Enable the basic polling code for the inotify
+	backend so e.g. polling on NFS works.
+
 Tue Oct 31 15:33:28 CET 2006 Daniel Veillard <veillard@redhat.com>
 
 	* NEWS configure.in doc//*: prepare release of 0.1.8 rebuild the docs
