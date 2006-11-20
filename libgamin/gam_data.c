@@ -29,7 +29,7 @@ static int is_threaded = -1;
  * libraries.
  */
 #ifdef __GNUC__
-#ifdef linux || defined(__GLIBC__)
+#if defined(linux) || defined(__GLIBC__)
 #if (__GNUC__ == 3 && __GNUC_MINOR__ >= 3) || (__GNUC__ > 3)
 extern int pthread_mutexattr_init(pthread_mutexattr_t *attr)
            __attribute((weak));
@@ -470,7 +470,7 @@ gamin_data_new(void)
     }
     if (is_threaded > 0) {
 	pthread_mutexattr_init(&attr);
-#ifdef __GLIBC__
+#if defined(linux) || defined(PTHREAD_MUTEX_RECURSIVE_NP)
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE_NP);
 #else
 	pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);

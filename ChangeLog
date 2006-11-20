@@ -1,3 +1,9 @@
+Mon Nov 20 18:01:03 CET 2006 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/gam_data.c: applied patches based on Michael Banck
+	  suggestions to build on Hurd and kFreeBSD, should fix #377050
+	  and #377066
+
 2006-11-20  Alexander Larsson  <alexl@redhat.com>
 
 	* server/gam_inotify.c: (gam_inotify_init):
