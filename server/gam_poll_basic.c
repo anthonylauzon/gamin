@@ -46,6 +46,8 @@ static gboolean gam_poll_basic_remove_all_for(GamListener * listener);
 static GaminEventType gam_poll_basic_poll_file(GamNode * node);
 static gboolean gam_poll_basic_scan_callback(gpointer data);
 
+static gboolean scan_callback_running = FALSE;
+
 gboolean
 gam_poll_basic_init ()
 {
@@ -56,7 +58,6 @@ gam_poll_basic_init ()
 				       gam_poll_basic_remove_all_for,
 				       gam_poll_basic_poll_file);
 
-	g_timeout_add(1000, gam_poll_basic_scan_callback, NULL);
 	GAM_DEBUG(DEBUG_INFO, "basic poll backend initialized\n");
 	return TRUE;
 }
@@ -116,6 +117,12 @@ gam_poll_basic_add_subscription(GamSubscription * sub)
 
 	gam_poll_generic_add (node);
 
+	if (!scan_callback_running)
+	{
+	  scan_callback_running = TRUE;
+	  g_timeout_add (1000, gam_poll_basic_scan_callback, NULL);
+	}
+	
 	GAM_DEBUG(DEBUG_INFO, "Poll: added subscription for %s\n", path);
 	return TRUE;
 }
@@ -356,6 +363,7 @@ static gboolean
 gam_poll_basic_scan_callback(gpointer data)
 {
 	int idx;
+	gboolean did_something = FALSE;
 
 	gam_poll_generic_update_time ();
 
@@ -371,6 +379,8 @@ gam_poll_basic_scan_callback(gpointer data)
 
 		g_assert (node);
 
+		did_something = TRUE;
+		
 		if (node->is_dir) {
 			gam_poll_generic_scan_directory_internal(node);
 		} else {
@@ -391,6 +401,8 @@ gam_poll_basic_scan_callback(gpointer data)
 
 		g_assert (node);
 
+		did_something = TRUE;
+		
 #ifdef VERBOSE_POLL
 		GAM_DEBUG(DEBUG_INFO, "Checking missing file %s\n", node->path);
 #endif
@@ -412,5 +424,10 @@ gam_poll_basic_scan_callback(gpointer data)
 		}
 	}
 
+	if (!did_something) {
+	  scan_callback_running = FALSE;
+	  return FALSE;
+	}
+	
 	return TRUE;
 }

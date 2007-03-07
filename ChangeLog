@@ -1,3 +1,8 @@
+2007-03-07  Alexander Larsson  <alexl@redhat.com>
+
+	* server/gam_poll_basic.c (gam_poll_basic_poll_file):
+	Don't run polling idle handler if not needed.
+
 Mon Nov 20 18:01:03 CET 2006 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/gam_data.c: applied patches based on Michael Banck
