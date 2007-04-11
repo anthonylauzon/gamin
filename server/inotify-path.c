@@ -96,13 +96,13 @@ gboolean ip_startup (void (*cb)(ik_event_t *event, ih_sub_t *sub))
 		return result;
 	}
 
-	initialized = TRUE;
 	event_callback = cb;
 	result = ik_startup (ip_event_callback);
 
 	if (!result) {
 		return FALSE;
 	}
+	initialized = TRUE;
 
 	path_dir_hash = g_hash_table_new(g_str_hash, g_str_equal);
 	sub_dir_hash = g_hash_table_new(g_direct_hash, g_direct_equal);

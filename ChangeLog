@@ -1,3 +1,13 @@
+2007-04-11  Alexander Larsson  <alexl@redhat.com>
+
+        * server/inotify-helper.c:
+        * server/inotify-kernel.c:
+        * server/inotify-path.c:
+	Handle inotify initialization failing better by
+	only setting initialized to TRUE if initialization
+	succeeded.
+	Patch from Robert Clark (robert3@ratty.org.uk)
+
 2007-03-07  Alexander Larsson  <alexl@redhat.com>
 
 	* server/gam_poll_basic.c (gam_poll_basic_poll_file):

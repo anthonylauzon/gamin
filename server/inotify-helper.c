@@ -87,14 +87,13 @@ ih_startup (event_callback_t ecb,
 		return result;
 	}
 
-	initialized = TRUE;
-
 	result = ip_startup (ih_event_callback);
 	if (!result) {
 		g_warning( "Could not initialize inotify\n");
 		G_UNLOCK(inotify_lock);
 		return FALSE;
 	}
+	initialized = TRUE;
 	user_ecb = ecb;
 	user_fcb = fcb;
 	im_startup (ih_found_callback);

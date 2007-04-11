@@ -200,12 +200,12 @@ gboolean ik_startup (void (*cb)(ik_event_t *event))
 		return inotify_instance_fd >= 0;
 	}
 
-	initialized = TRUE;
 	inotify_instance_fd = inotify_init ();
 
 	if (inotify_instance_fd < 0) {
 		return FALSE;
 	}
+	initialized = TRUE;
 
 	inotify_read_ioc = g_io_channel_unix_new(inotify_instance_fd);
 	ik_poll_fd.fd = inotify_instance_fd;
