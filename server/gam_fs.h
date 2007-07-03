@@ -5,6 +5,14 @@ typedef enum {
 	GFS_MT_KERNEL,
 	GFS_MT_POLL,
 	GFS_MT_NONE,
+#if !defined(ENABLE_DNOTIFY) && \
+    !defined(ENABLE_INOTIFY) && \
+    !defined(ENABLE_KQUEUE) && \
+    !defined(ENABLE_HURD_MACH_NOTIFY)
+	GFS_MT_DEFAULT = GFS_MT_POLL,
+#else
+	GFS_MT_DEFAULT = GFS_MT_KERNEL,
+#endif
 } gam_fs_mon_type;
 
 void		gam_fs_init			(void);

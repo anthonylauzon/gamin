@@ -172,10 +172,10 @@ gam_fs_init (void)
 	if (initialized == FALSE)
 	{
 		initialized = TRUE;
-		gam_fs_set ("ext3", GFS_MT_KERNEL, 0);
-		gam_fs_set ("ext2", GFS_MT_KERNEL, 0);
-		gam_fs_set ("reiser4", GFS_MT_KERNEL, 0);
-		gam_fs_set ("reiserfs", GFS_MT_KERNEL, 0);
+		gam_fs_set ("ext3", GFS_MT_DEFAULT, 0);
+		gam_fs_set ("ext2", GFS_MT_DEFAULT, 0);
+		gam_fs_set ("reiser4", GFS_MT_DEFAULT, 0);
+		gam_fs_set ("reiserfs", GFS_MT_DEFAULT, 0);
 		gam_fs_set ("novfs", GFS_MT_POLL, 30);
 		gam_fs_set ("nfs", GFS_MT_POLL, 5);
 		if (stat("/etc/mtab", &mtab_sbuf) != 0)
@@ -210,7 +210,7 @@ gam_fs_get_mon_type (const char *path)
 	props = gam_fs_find_fs_props (path);
 
 	if (!props)
-		return GFS_MT_KERNEL;
+		return GFS_MT_DEFAULT;
 
 	return props->mon_type;
 }

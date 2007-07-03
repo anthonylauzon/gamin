@@ -1,3 +1,10 @@
+2007-07-03  Ray Strode  <rstrode@redhat.com>
+
+	* server/gam_service.c:
+	* server/gam_fs.c:
+	* server/gam_fs.h: always poll if --disable-inotify and
+	--disable-dnotify are passed (bug 335411).
+
 2007-04-11  Alexander Larsson  <alexl@redhat.com>
 
         * server/inotify-helper.c:

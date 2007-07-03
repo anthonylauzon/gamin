@@ -164,7 +164,7 @@ gam_init_subscriptions(void)
 #endif	
 	}
 
-	if (gam_poll_generic_init()) {
+	if (gam_poll_basic_init()) {
 		GAM_DEBUG(DEBUG_INFO, "Using poll as backend\n");
 		return(TRUE);
 	}
