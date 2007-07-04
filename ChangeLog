@@ -1,3 +1,8 @@
+Wed Jul  4 15:37:23 CEST 2007 Daniel Veillard <veillard@redhat.com>
+
+	* server/gam_kqueue.c server/gam_poll_basic.c: changes from
+	  Brendan Cully to compile on OS X
+
 2007-07-03  Ray Strode  <rstrode@redhat.com>
 
 	* server/gam_service.c:
