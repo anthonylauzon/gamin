@@ -1,3 +1,7 @@
+Fri Jul 27 16:50:02 CEST 2007 Daniel Veillard <veillard@redhat.com>
+
+	* NEWS configure.in doc//*: prepare release of 0.1.9 rebuild the docs
+
 Wed Jul  4 15:37:23 CEST 2007 Daniel Veillard <veillard@redhat.com>
 
 	* server/gam_kqueue.c server/gam_poll_basic.c: changes from

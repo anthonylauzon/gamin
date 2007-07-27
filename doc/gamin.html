@@ -109,6 +109,16 @@ example override the default one for <code>/mnt/*</code> .</p>
 
 <h2><a name="News">News</a></h2>
 
+<h3>0.1.9: Jul 27 2007</h3>
+<ul>
+  <li>Bug fixes: enable polling when using inotify this fixes support for NFS 
+      partitions (Alexander Larsson), do not run idle handler if not needed
+      reduce wakeups (Alexander Larsson), handling of failure of inotify
+      initialization (Robert Clark), force poll support if compiled without
+      inotify and dnotify (Ray Strode)</li>
+  <li>Portability: patches to allow compiling again on Hurd and kFreeBSD
+      (Michael Banck), patches to ease compilation on OS X (Brendan Cully)</li>
+</ul>
 <h3>0.1.8: Oct 31 2006</h3>
 <ul>
   <li>Build and portability fixes: handle sys/inotify.h, Python detection

@@ -5,6 +5,16 @@
        http://www.gnome.org/~veillard/gamin/news.html
 
 
+0.1.9: Jul 27 2007:
+   - Bug fixes: enable polling when using inotify this fixes support for NFS 
+      partitions (Alexander Larsson), do not run idle handler if not needed
+      reduce wakeups (Alexander Larsson), handling of failure of inotify
+      initialization (Robert Clark), force poll support if compiled without
+      inotify and dnotify (Ray Strode)
+   - Portability: patches to allow compiling again on Hurd and kFreeBSD
+      (Michael Banck), patches to ease compilation on OS X (Brendan Cully)
+
+
 0.1.8: Oct 31 2006:
    - Build and portability fixes: handle sys/inotify.h, Python detection
       (Joseph Sacco), FreeBSD portability fix (Loïc Minier/Petr Salinger),
