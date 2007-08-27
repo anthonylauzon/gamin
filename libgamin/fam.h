@@ -190,6 +190,30 @@ extern int FAMPending		(FAMConnection* fc);
 extern int FAMErrno;
 
 /**
+ * FAMDebugLevel:
+ *
+ * Currently unimplemented as in the SGI FAM.  Exists only for
+ * compatibility.
+ */
+extern int FAMDebugLevel (FAMConnection *fc,
+			  int level);
+/**
+ * FAM_DEBUG_OFF:
+ * Unused macro, compatibility for SGI FAM API.
+ */
+#define FAM_DEBUG_OFF 0
+/**
+ * FAM_DEBUG_ON:
+ * Unused macro, compatibility for SGI FAM API.
+ */
+#define FAM_DEBUG_ON  1
+/**
+ * FAM_DEBUG_VERBOSE:
+ * Unused macro, compatibility for SGI FAM API.
+ */
+#define FAM_DEBUG_VERBOSE 2
+
+/**
  * FamErrList:
  *
  * In case FAMErrno is set, FAMErrlist is a global string array indexed

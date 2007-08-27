@@ -1,3 +1,9 @@
+Mon Aug 27 12:22:40 CEST 2007 Daniel Veillard <veillard@redhat.com>
+
+	* libgamin/fam.h libgamin/gam_api.c: applied suggested changes
+	  from Ryan Underwood about missing (empty) entry point in the
+	  API and ABI, should close 398405.
+
 Mon Aug  6 10:39:13 CEST 2007 Daniel Veillard <veillard@redhat.com>
 
 	* configure.in: applied patch from Daniel Drake to fix the way

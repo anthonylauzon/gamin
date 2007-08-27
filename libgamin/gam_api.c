@@ -1529,4 +1529,20 @@ FAMDebug(FAMConnection *fc, const char *filename, FAMRequest * fr,
     }
     return(ret);
 }
+
+/**
+ * FAMDebugLevel:
+ * @fc: pointer to a connection structure.
+ * @level: level of debug
+ * 
+ * Entry point installed only for ABI compatibility with SGI FAM,
+ * doesn't do anything.
+ *
+ * Returns 1
+ */
+int
+FAMDebugLevel(FAMConnection *fc, int level)
+{
+       return(1);
+}
 #endif
