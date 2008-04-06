@@ -1,3 +1,11 @@
+2008-04-04  Ray Strode  <rstrode@redhat.com>
+
+	* server/inotify-path.c
+	(ip_watch_parent), (ip_start_watching), (ip_event_dispatch),
+	(ip_event_callback): If a file being watched doesn't exist
+	yet, then watch its parent to find out when it shows up
+	instead of polling (bug 476938).
+
 Mon Aug 27 12:22:40 CEST 2007 Daniel Veillard <veillard@redhat.com>
 
 	* libgamin/fam.h libgamin/gam_api.c: applied suggested changes

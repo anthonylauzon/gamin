@@ -40,6 +40,7 @@
 #include <linux/inotify.h>
 #endif
 #endif
+#include <errno.h>
 #include <string.h>
 #include <glib.h>
 #include "inotify-kernel.h"
@@ -136,6 +137,38 @@ ip_map_wd_dir (gint32 wd, ip_watched_dir_t *dir)
 	g_hash_table_replace(wd_dir_hash, GINT_TO_POINTER(dir->wd), dir_list);
 }
 
+static gint32
+ip_watch_parent (const char *path, guint mask, int *err, char **parent_path)
+{
+	gint32 wd;
+	gchar *path_copy;
+	gchar *p;
+
+	path_copy = g_strdup (path);
+
+        wd = -1;
+        do
+        {
+                p = g_strrstr (path_copy, G_DIR_SEPARATOR_S);
+
+                if (p == NULL)
+                        return -1;
+
+                if (p != &path_copy[0])
+                        *p = '\0';
+
+                wd = ik_watch (path_copy, mask, err);
+        } 
+        while (wd < 0 && errno == ENOENT);
+
+        if (parent_path != NULL && wd >= 0)
+                *parent_path = path_copy;
+        else
+                g_free (path_copy);
+
+	return wd;
+}
+
 gboolean ip_start_watching (ih_sub_t *sub)
 {
 	gint32 wd;
@@ -156,8 +189,35 @@ gboolean ip_start_watching (ih_sub_t *sub)
 	
 	IP_W("Trying to add inotify watch ");
 	wd = ik_watch (sub->dirname, IP_INOTIFY_MASK|IN_ONLYDIR|sub->extra_flags, &err);
-	if (wd < 0) 
-	{
+
+        if (wd < 0 && errno == ENOENT)
+        {
+                char *parent_path;
+
+		IP_W("Directory '%s' does not yet exist, finding and watching existing parent\n",
+                     sub->dirname);
+
+                parent_path = NULL;
+		wd = ip_watch_parent (sub->dirname,
+                                      IP_INOTIFY_MASK|IN_ONLYDIR|sub->extra_flags,
+                                      &err, &parent_path);
+
+		if (wd < 0)
+		{
+                        g_assert (parent_path == NULL);
+			IP_W("Failed\n");
+			return FALSE;
+		}
+
+		IP_W("Found parent '%s', will watch it for now until '%s' becomes available\n",
+                     parent_path, sub->dirname);
+
+                dir = ip_watched_dir_new (parent_path, wd);
+                g_free (parent_path);
+
+		ip_map_wd_dir (wd, dir);
+		ip_map_path_dir (parent_path, dir);
+        } else if (wd < 0) {
 		IP_W("Failed\n");
 		return FALSE;
 	} else {
@@ -294,6 +354,7 @@ static void ip_wd_delete (gpointer data, gpointer user_data)
 static void ip_event_dispatch (GList *dir_list, GList *pair_dir_list, ik_event_t *event)
 {
 	GList *dirl;
+        GList *subl, *resubscription_list;
 
 	if (!event)
 		return;
@@ -302,10 +363,16 @@ static void ip_event_dispatch (GList *dir_list, GList *pair_dir_list, ik_event_t
 	 *
 	 * Figure out how we will deliver move events
 	 */
+
+        resubscription_list = NULL;
 	for (dirl = dir_list; dirl; dirl = dirl->next)
 	{
-		GList *subl;
 		ip_watched_dir_t *dir = dirl->data;
+                char *event_path;
+
+                event_path = g_build_filename (dir->path, event->name, NULL);
+
+
 
 		for (subl = dir->subs; subl; subl = subl->next)
 		{
@@ -315,23 +382,61 @@ static void ip_event_dispatch (GList *dir_list, GList *pair_dir_list, ik_event_t
 			 * they need to match before the event could be delivered.
 			 */
 			if (event->name && sub->filename) {
-				if (strcmp (event->name, sub->filename))
+
+                               if (strcmp (event->name, sub->filename))
+                                {
 					continue;
+                                }
+
 			/* If the event doesn't have a filename, but the subscription does
 			 * we shouldn't deliever the event */
 			} else if (sub->filename)
 				continue;
 
+                        if (g_str_has_prefix (sub->dirname, event_path)) {
+
+                            IP_W("Adding directory %s to resubscription list (because of event %s)", 
+                                 sub->dirname, event_path);
+
+                            resubscription_list = g_list_prepend (resubscription_list, sub);
+
+                            if (strcmp (sub->dirname, event_path) == 0) {
+                                        char *subscription_dir;
+
+                                        IP_W("directory '%s' is now available!", 
+                                             sub->dirname);
+
+                                        /* Normally, the subscription directory name,
+                                         * matches the directory getting watched.  This 
+                                         * isn't necessarily true, though, if we're watching
+                                         * a parent since the directory we're actually interested 
+                                         * in doesn't exist anymore.  When the directory we *are*
+                                         * interested in shows up, we find out relative to the
+                                         * directory we're watching.  We need to fudge our subscription
+                                         * temporarily to account for that.
+                                         *
+                                         * FIXME: This is a hack, we should send the dirname that the 
+                                         * event came from, along with the subscription, or store a 
+                                         * full path in the event structure
+                                         */
+                                        subscription_dir = sub->dirname;
+                                        sub->dirname = dir->path;
+                                        event_callback (event, sub);
+                                        sub->dirname = subscription_dir;
+                            }
+
+                            continue;
+                        }
+
 			event_callback (event, sub);
 		}
+
+                g_free (event_path);
 	}
 
-	if (!event->pair)
-		return;
-
+	if (event->pair)
 	for (dirl = pair_dir_list; dirl; dirl = dirl->next)
 	{
-		GList *subl;
 		ip_watched_dir_t *dir = dirl->data;
 
 		for (subl = dir->subs; subl; subl = subl->next)
@@ -352,6 +457,13 @@ static void ip_event_dispatch (GList *dir_list, GList *pair_dir_list, ik_event_t
 			event_callback (event->pair, sub);
 		}
 	}
+
+        for (subl = resubscription_list; subl; subl = subl->next)
+        {
+            ip_stop_watching (subl->data);
+            ip_start_watching (subl->data);
+        }
+        g_list_free (resubscription_list);
 }
 
 static void
@@ -371,8 +483,10 @@ ip_event_callback (ik_event_t *event)
 	if (event->pair)
 		pair_dir_list = g_hash_table_lookup (wd_dir_hash, GINT_TO_POINTER(event->pair->wd));
 
-	if (event->mask & IP_INOTIFY_MASK)
+	if (event->mask & IP_INOTIFY_MASK) {
 		ip_event_dispatch (dir_list, pair_dir_list, event);
+	        dir_list = g_hash_table_lookup (wd_dir_hash, GINT_TO_POINTER(event->wd));
+        }
 
 	/* We have to manage the missing list when we get a DELETE event. */
 	if (event->mask & IN_DELETE_SELF || event->mask & IN_MOVE_SELF)
