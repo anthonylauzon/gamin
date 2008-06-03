@@ -1,3 +1,9 @@
+Tue Jun  3 17:30:51 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: patch from dodji seketeli to change configure.in
+	  to use AC_USE_SYSTEM_EXTENSIONS instead of AC_ISC_POSIX, otherwise
+	  struct ucred won't show up.
+
 2008-04-04  Ray Strode  <rstrode@redhat.com>
 
 	* server/inotify-path.c
