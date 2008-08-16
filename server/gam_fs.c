@@ -40,13 +40,13 @@ gam_fs_free_filesystems (void)
 	{
 		fs = iterator->data;
 
+		iterator = g_list_next (iterator);
+
 		filesystems = g_list_remove (filesystems, fs);
 
 		g_free (fs->path);
 		g_free (fs->fsname);
 		g_free (fs);
-
-		iterator = g_list_next (filesystems);
 	}
 }
 
