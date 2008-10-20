@@ -1,3 +1,8 @@
+Mon Oct 20 17:25:48 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* configure.in: the glib dependency is not needed for libgamin,
+	  patch from Rémi Cardona #530635
+
 Mon Oct 20 17:19:01 CEST 2008 Daniel Veillard <veillard@redhat.com>
 
 	* Makefile.am: change daemon build flags, patch from Rémi Cardona
