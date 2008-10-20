@@ -5,7 +5,7 @@ INCLUDES =						\
 	-I$(top_builddir)/protocol			\
 	-I$(top_srcdir)/lib				\
 	-I$(top_srcdir)/libgamin			\
-	$(LIBGAMIN_CFLAGS)				\
+	$(DAEMON_CFLAGS)				\
 	-DBINDIR=\""$(libexecdir)"\"			\
 	-DG_DISABLE_DEPRECATED				
 
@@ -81,7 +81,7 @@ endif
 
 gam_server_LDFLAGS =
 gam_server_DEPENDENCIES = $(DEPS)
-gam_server_LDADD= $(top_builddir)/lib/libgamin_shared.a $(LDADDS) $(LIBGAMIN_LIBS)
+gam_server_LDADD= $(top_builddir)/lib/libgamin_shared.a $(LDADDS) $(DAEMON_LIBS)
 
 if ENABLE_HURD_MACH_NOTIFY
 gam_server_LDADD += -lports -lthreads
