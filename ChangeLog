@@ -1,3 +1,12 @@
+Mon Oct 20 18:05:19 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* server/local_inotify.h server/local_inotify_syscalls.h: remove
+	  the local copies of the linux kernel inotify headers
+	* configure.in server/inotify-kernel.c server/inotify-helper.c
+	  server/gam_inotify.c server/inotify-path.c server/Makefile.am:
+	  associated cleanups, check for the presence of sys/inotify.h
+	  and use it, patch by  Adrian Bunk, solves #553158
+
 Mon Oct 20 17:39:28 CEST 2008 Daniel Veillard <veillard@redhat.com>
 
 	* Makefile.am configure.in: add configure switches to restrict

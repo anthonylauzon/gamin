@@ -25,21 +25,8 @@
 
 #include "config.h"
 
-/* Don't put conflicting kernel types in the global namespace: */
-#define __KERNEL_STRICT_NAMES
+#include <sys/inotify.h>
 
-#include "local_inotify.h"
-#if 0
-#ifdef HAVE_SYS_INOTIFY_H
-/* We don't actually include the libc header, because there has been
- * problems with libc versions that was built without inotify support.
- * Instead we use the local version.
- */
-#include "local_inotify.h"
-#elif defined (HAVE_LINUX_INOTIFY_H)
-#include <linux/inotify.h>
-#endif
-#endif
 #include <errno.h>
 #include <string.h>
 #include <glib.h>

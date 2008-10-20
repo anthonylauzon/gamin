@@ -196,30 +196,32 @@ dnl We use polling no matter what.
 AC_DEFINE(ENABLE_POLLING,1,[Use polling as backend])
 backends="polling"
 
-if test x$os = xlinux-gnu; then
-	AC_ARG_ENABLE(inotify,
-		AC_HELP_STRING([--disable-inotify], [Disable the INotify backend]),
-		[inotify="${enableval}"], [inotify=true])
+AC_ARG_ENABLE(inotify,
+	AC_HELP_STRING([--disable-inotify], [Disable the INotify backend]),
+	[inotify="${enableval}"], [inotify=auto])
 
-	if test x$inotify = xyes; then
+if test x$inotify = xyes; then
+	inotify=true
+elif test x$inotify = xno; then
+	inotify=false
+fi
+
+if test x$inotify = xtrue -o x$inotify = xauto; then
+	AC_CHECK_HEADERS(sys/inotify.h)
+	if test x"$ac_cv_header_sys_inotify_h" = x"no" -a x"$inotify" = xtrue; then
+		AC_MSG_ERROR([sys/inotify.h requested but not available])
+	fi
+	if test x"$ac_cv_header_sys_inotify_h" = xyes; then
+		AC_DEFINE(ENABLE_INOTIFY,1,[Use inotify as backend])
+		backends="${backends}, inotify"
 		inotify=true
-	elif test x$inotify = xno; then
+	else
 		inotify=false
-	elif test x$inotify != xtrue; then
-		AC_MSG_ERROR(bad value ${enableval} for --disable-inotify)
 	fi
 fi
 
 dnl check if inotify backend is enabled
 AM_CONDITIONAL(ENABLE_INOTIFY, test x$inotify = xtrue)
-
-if test x$inotify = xtrue; then
-	AC_CHECK_HEADERS(linux/types.h)
-	AC_CHECK_HEADERS(linux/inotify.h)
-	AC_CHECK_HEADERS(sys/inotify.h)
-	AC_DEFINE(ENABLE_INOTIFY,1,[Use inotify as backend])
-	backends="${backends}, inotify"
-fi
 
 if test x$os = xlinux-gnu; then
 	AC_ARG_ENABLE(dnotify,
