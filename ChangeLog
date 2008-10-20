@@ -1,3 +1,10 @@
+Mon Oct 20 17:39:28 CEST 2008 Daniel Veillard <veillard@redhat.com>
+
+	* Makefile.am configure.in: add configure switches to restrict
+	  building the server or the libs, as Gentoo had a dependancy
+	  problem, default behaviour of building both unchanged,
+	  patch from Rémi Cardona #530635
+
 Mon Oct 20 17:35:20 CEST 2008 Daniel Veillard <veillard@redhat.com>
 
 	* Makefile.am configure.in python/Makefile.am: simplify python

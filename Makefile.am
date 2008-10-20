@@ -1,12 +1,25 @@
 ## Process this file with automake to produce Makefile.in
 
-SUBDIRS = lib libgamin server tests doc
+SUBDIRS = lib doc
 
+if BUILD_LIBGAMIN
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gamin.pc
 
+SUBDIRS += libgamin
+
 if WITH_PYTHON
 SUBDIRS += python
+endif
+
+endif
+
+if BUILD_SERVER
+SUBDIRS += lib server
+endif
+
+if BUILD_TESTS
+SUBDIRS += tests
 endif
 
 #if BUILD_DOCS
