@@ -490,15 +490,12 @@ fi
 AM_CONDITIONAL(WITH_PYTHON, test "$PYTHON_INCLUDES" != "")
 if test "$PYTHON_INCLUDES" != ""
 then
-    PYTHON_SUBDIR=python
+    enable_python="yes"
 else
-    PYTHON_SUBDIR=
+    enable_python="no"
 fi
 AC_SUBST(pythondir)
-AC_SUBST(PYTHON_SUBDIR)
-AC_SUBST(pythondir)
 AC_SUBST(PYTHON_VERSION)
-AC_SUBST(PYTHON_SUBDIR)
 AC_SUBST(PYTHON_INCLUDES)
 AC_SUBST(PYTHON_SITE_PACKAGES)
 
