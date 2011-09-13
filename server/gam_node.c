@@ -122,7 +122,7 @@ gam_node_set_is_dir(GamNode * node, gboolean is_dir)
  * it has finished with the string.  If it must keep it longer, it
  * should makes its own copy.  The returned string must not be freed.
  */
-G_CONST_RETURN char *
+const char *
 gam_node_get_path(GamNode * node)
 {
     g_assert(node);

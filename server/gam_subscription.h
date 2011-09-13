@@ -21,7 +21,7 @@ int                  gam_subscription_pathlen      (GamSubscription *sub);
 
 int                  gam_subscription_get_reqno    (GamSubscription *sub);
 
-G_CONST_RETURN char *gam_subscription_get_path     (GamSubscription *sub);
+const char          *gam_subscription_get_path     (GamSubscription *sub);
 
 GamListener         *gam_subscription_get_listener (GamSubscription *sub);
 

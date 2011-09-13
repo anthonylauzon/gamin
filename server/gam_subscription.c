@@ -141,7 +141,7 @@ gam_subscription_pathlen(GamSubscription * sub)
  * @param sub the GamSubscription
  * @returns The path being monitored.  It should not be freed.
  */
-G_CONST_RETURN char *
+const char *
 gam_subscription_get_path(GamSubscription * sub)
 {
     if (sub == NULL)
