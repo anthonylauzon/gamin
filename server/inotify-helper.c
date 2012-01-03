@@ -123,13 +123,11 @@ ih_sub_add (ih_sub_t * sub)
 
 /**
  * Cancels a subscription which was being monitored.
+ * inotify_lock must be held when calling.
  */
-gboolean
+static gboolean
 ih_sub_cancel (ih_sub_t * sub)
 {
-	G_LOCK(inotify_lock);
-
-
 	if (!sub->cancelled)
 	{
 		IH_W("cancelling %s\n", sub->pathname);
@@ -140,7 +138,6 @@ ih_sub_cancel (ih_sub_t * sub)
 		sub_list = g_list_remove (sub_list, sub);
 	}
 
-	G_UNLOCK(inotify_lock);
 	return TRUE;
 }
 

@@ -34,7 +34,6 @@ gboolean	 ih_startup		(event_callback_t ecb,
 					 found_callback_t fcb);
 gboolean	 ih_running		(void);
 gboolean	 ih_sub_add		(ih_sub_t *sub);
-gboolean	 ih_sub_cancel		(ih_sub_t *sub);
 
 /* Return FALSE from 'f' if the subscription should be cancelled */
 void		 ih_sub_foreach		(void *callerdata, gboolean (*f)(ih_sub_t *sub, void *callerdata));
