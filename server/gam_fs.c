@@ -178,6 +178,7 @@ gam_fs_init (void)
 		gam_fs_set ("reiserfs", GFS_MT_DEFAULT, 0);
 		gam_fs_set ("novfs", GFS_MT_POLL, 30);
 		gam_fs_set ("nfs", GFS_MT_POLL, 5);
+		gam_fs_set ("nfs4", GFS_MT_POLL, 5);
 		if (stat("/etc/mtab", &mtab_sbuf) != 0)
 		{
 			GAM_DEBUG(DEBUG_INFO, "Could not stat /etc/mtab\n");
