@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Project xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+         xmlns:foaf="http://xmlns.com/foaf/0.1/"
+         xmlns:gnome="http://api.gnome.org/doap-extensions#"
+         xmlns="http://usefulinc.com/ns/doap#">
+
+  <name>gamin</name>
+  <shortname>gamin</shortname>
+
+  <shortdesc xml:lang="en">A fam implementation</shortdesc>
+
+  <description xml:lang="en">Gamin is a file and directory monitoring system defined to be a subset of the FAM (File Alteration Monitor) system.</description>
+
+  <homepage rdf:resource="http://www.gnome.org/~veillard/gamin/" />
+  <license rdf:resource="http://usefulinc.com/doap/licenses/lgpl" />
+  <bug-database rdf:resource="http://bugzilla.gnome.org/enter_bug.cgi?product=gamin"/>
+  <download-page rdf:resource="http://download.gnome.org/sources/gamin/" />
+  <mailing-list rdf:resource="mailto:gamin-list@gnome.org" />
+  <category rdf:resource="http://api.gnome.org/doap-extensions#platform" />
+
+  <programming-language>C</programming-language>
+
+  <maintainer>
+    <foaf:Person>
+      <foaf:name>Daniel Veillard</foaf:name>
+      <foaf:mbox rdf:resource="mailto:veillard@redhat.com"/>
+      <gnome:userid>veillard</gnome:userid>
+    </foaf:Person>
+  </maintainer>
+
+  <repository>
+    <GitRepository>
+        <browse rdf:resource="http://git.gnome.org/browse/gamin/"/>
+      <location rdf:resource="git://git.gnome.org/gamin"/>
+    </GitRepository>
+  </repository>
+
+</Project>
