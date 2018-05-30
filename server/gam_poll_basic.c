@@ -122,7 +122,7 @@ gam_poll_basic_add_subscription(GamSubscription * sub)
 	  scan_callback_running = TRUE;
 	  g_timeout_add (1000, gam_poll_basic_scan_callback, NULL);
 	}
-	
+
 	GAM_DEBUG(DEBUG_INFO, "Poll: added subscription for %s\n", path);
 	return TRUE;
 }
@@ -144,7 +144,7 @@ node_remove_directory_subscription(GamNode * node, GamSubscription * sub)
 		GamNode *child = (GamNode *) l->data;
 
 		if ((!gam_node_get_subscriptions(child)) && (remove_dir) &&
-		    (!gam_tree_has_children(gam_poll_generic_get_tree(), child))) 
+		    (!gam_tree_has_children(gam_poll_generic_get_tree(), child)))
 		{
 			gam_poll_generic_unregister_node (child);
 
@@ -195,7 +195,7 @@ gam_poll_basic_remove_subscription(GamSubscription * sub)
 		GAM_DEBUG(DEBUG_INFO, "Removing node %s\n", gam_subscription_get_path(sub));
 		gam_node_remove_subscription(node, sub);
 
-		if (!gam_node_get_subscriptions(node)) 
+		if (!gam_node_get_subscriptions(node))
 		{
 			GamNode *parent;
 			gam_poll_generic_unregister_node (node);
@@ -261,15 +261,15 @@ gam_poll_generic_node_changed (GamNode *node, struct stat sbuf)
 {
 	g_assert(node);
 #ifdef ST_MTIM_NSEC
-	return ((node->sbuf.st_mtim.tv_sec != sbuf.st_mtim.tv_sec) ||
-		(node->sbuf.st_mtim.tv_nsec != sbuf.st_mtim.tv_nsec) ||
+	return ((node->sbuf.st_mtimespec.tv_sec != sbuf.st_mtimespec.tv_sec) ||
+		(node->sbuf.st_mtimespec.tv_nsec != sbuf.st_mtimespec.tv_nsec) ||
 		(node->sbuf.st_size != sbuf.st_size) ||
-		(node->sbuf.st_ctim.tv_sec != sbuf.st_ctim.tv_sec) ||
-		(node->sbuf.st_ctim.tv_nsec != sbuf.st_ctim.tv_nsec));
+		(node->sbuf.st_ctimespec.tv_sec != sbuf.st_ctimespec.tv_sec) ||
+		(node->sbuf.st_ctimespec.tv_nsec != sbuf.st_ctimespec.tv_nsec));
 #else
-	return ((node->sbuf.st_mtime != sbuf.st_mtime) ||
+	return ((node->sbuf.st_mtimespec.tv_sec != sbuf.st_mtimespec.tv_sec) ||
 		(node->sbuf.st_size != sbuf.st_size) ||
-		(node->sbuf.st_ctime != sbuf.st_ctime));
+		(node->sbuf.st_ctimespec.tv_sec != sbuf.st_ctimespec.tv_sec));
 #endif
 }
 
@@ -297,7 +297,7 @@ gam_poll_basic_poll_file(GamNode * node)
 	GAM_DEBUG(DEBUG_INFO, "Poll: poll_file for %s called\n", path);
 #endif
 	memset(&sbuf, 0, sizeof(struct stat));
-	if (node->lasttime == 0) 
+	if (node->lasttime == 0)
 	{
 #ifdef VERBOSE_POLL
 		GAM_DEBUG(DEBUG_INFO, "Poll: file is new\n");
@@ -343,9 +343,9 @@ gam_poll_basic_poll_file(GamNode * node)
 #ifdef VERBOSE_POLL
 		GAM_DEBUG(DEBUG_INFO, "Poll: poll_file %s unchanged\n", path);
 #ifdef ST_MTIM_NSEC
-		GAM_DEBUG(DEBUG_INFO, "%d %d : %d %d\n", node->sbuf.st_mtim.tv_sec, node->sbuf.st_mtim.tv_nsec, sbuf.st_mtim.tv_sec, sbuf.st_mtim.tv_nsec);
+		GAM_DEBUG(DEBUG_INFO, "%d %d : %d %d\n", node->sbuf.st_mtimespec.tv_sec, node->sbuf.st_mtimespec.tv_nsec, sbuf.st_mtimespec.tv_sec, sbuf.st_mtimespec.tv_nsec);
 #else
-		GAM_DEBUG(DEBUG_INFO, "%d : %d\n", node->sbuf.st_mtime, sbuf.st_mtim.tv_nsec);
+		GAM_DEBUG(DEBUG_INFO, "%d : %d\n", node->sbuf.st_mtimespec, sbuf.st_mtimespec.tv_nsec);
 #endif /* ST_MTIM_NSEC */
 #endif /* VERBOSE_POLL */
 	}
@@ -358,7 +358,7 @@ gam_poll_basic_poll_file(GamNode * node)
 		gam_node_set_is_dir(node, (S_ISDIR(sbuf.st_mode) != 0));
 
 	memcpy(&(node->sbuf), &(sbuf), sizeof(struct stat));
-	node->sbuf.st_mtime = sbuf.st_mtime; // VALGRIND!
+	node->sbuf.st_mtimespec = sbuf.st_mtimespec; // VALGRIND!
 
 	return event;
 }
@@ -371,7 +371,7 @@ gam_poll_basic_scan_callback(gpointer data)
 
 	gam_poll_generic_update_time ();
 
-	for (idx = 0;; idx++) 
+	for (idx = 0;; idx++)
 	{
 		/*
 		 * do not simply walk the list as it may be modified in the callback
@@ -384,7 +384,7 @@ gam_poll_basic_scan_callback(gpointer data)
 		g_assert (node);
 
 		did_something = TRUE;
-		
+
 		if (node->is_dir) {
 			gam_poll_generic_scan_directory_internal(node);
 		} else {
@@ -406,7 +406,7 @@ gam_poll_basic_scan_callback(gpointer data)
 		g_assert (node);
 
 		did_something = TRUE;
-		
+
 #ifdef VERBOSE_POLL
 		GAM_DEBUG(DEBUG_INFO, "Checking missing file %s\n", node->path);
 #endif
@@ -421,7 +421,7 @@ gam_poll_basic_scan_callback(gpointer data)
 		* if the resource exists again and is not in a special monitoring
 		* mode then switch back to dnotify for monitoring.
 		*/
-		if (!gam_node_has_pflags (node, MON_MISSING)) 
+		if (!gam_node_has_pflags (node, MON_MISSING))
 		{
 			gam_poll_generic_remove_missing(node);
 			gam_poll_generic_add (node);
@@ -432,6 +432,6 @@ gam_poll_basic_scan_callback(gpointer data)
 	  scan_callback_running = FALSE;
 	  return FALSE;
 	}
-	
+
 	return TRUE;
 }
